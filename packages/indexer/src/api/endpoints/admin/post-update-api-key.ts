@@ -8,7 +8,9 @@ import { logger } from "@/common/logger";
 import { config } from "@/config/index";
 import { ApiKeyManager } from "@/models/api-keys";
 import { regex } from "@/common/utils";
-
+import { OrderKind } from "@/orderbook/orders";
+import { OrderbookFees } from "@/models/api-keys/api-key-entity";
+import _ from "lodash";
 export const postUpdateApiKeyOptions: RouteOptions = {
   description: "Update the given api key",
   tags: ["api", "x-admin"],
@@ -33,6 +35,63 @@ export const postUpdateApiKeyOptions: RouteOptions = {
         set_collection_magiceden_verification_status: Joi.boolean().optional(),
       }).optional(),
       revShareBps: Joi.number().allow(null).optional(),
+      orderbookFees: Joi.array()
+        .items(
+          Joi.object({
+            orderbook: Joi.string()
+              .valid(
+                "wyvern-v2",
+                "wyvern-v2.3",
+                "looks-rare",
+                "zeroex-v4-erc721",
+                "zeroex-v4-erc1155",
+                "foundation",
+                "x2y2",
+                "seaport",
+                "seaport-v1.4",
+                "seaport-v1.5",
+                "seaport-v1.6",
+                "alienswap",
+                "rarible",
+                "element-erc721",
+                "element-erc1155",
+                "quixotic",
+                "nouns",
+                "zora-v3",
+                "mint",
+                "cryptopunks",
+                "sudoswap",
+                "nftx",
+                "nftx-v3",
+                "blur",
+                "manifold",
+                "tofu-nft",
+                "decentraland",
+                "nft-trader",
+                "okex",
+                "bend-dao",
+                "superrare",
+                "zeroex-v2",
+                "zeroex-v3",
+                "treasure",
+                "looks-rare-v2",
+                "blend",
+                "collectionxyz",
+                "sudoswap-v2",
+                "midaswap",
+                "caviar-v1",
+                "payment-processor",
+                "blur-v2",
+                "joepeg",
+                "payment-processor-v2",
+                "mooar"
+              )
+              .required(),
+            feeBps: Joi.number().allow(null).required(),
+          })
+        )
+        .optional(),
+      disableOrderbookFees: Joi.boolean().allow(null).optional(),
     }),
   },
   handler: async (request: Request) => {
@@ -41,6 +100,16 @@ export const postUpdateApiKeyOptions: RouteOptions = {
     }
 
     const payload = request.payload as any;
+    let orderbookFees: OrderbookFees | undefined = undefined;
+
+    if (payload.orderbookFees) {
+      orderbookFees = {};
+      for (const orderbookFee of payload.orderbookFees) {
+        orderbookFees[orderbookFee.orderbook as OrderKind] = _.isNull(orderbookFee.feeBps)
+          ? null
+          : { feeBps: orderbookFee.feeBps };
+      }
+    }
 
     try {
       await ApiKeyManager.update(payload.apiKey, {
@@ -50,6 +119,8 @@ export const postUpdateApiKeyOptions: RouteOptions = {
         origins: payload.origins,
         revShareBps: payload.revShareBps,
         permissions: payload.permissions,
+        disableOrderbookFees: payload.disableOrderbookFees,
+        orderbookFees,
       });
 
       return {

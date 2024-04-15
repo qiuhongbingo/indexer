@@ -1,4 +1,5 @@
 import { ApiKeyManager } from "@/models/api-keys/index";
+import { OrderKind } from "@/orderbook/orders";
 
 export enum ApiKeyPermission {
   override_collection_refresh_cool_down = "override_collection_refresh_cool_down",
@@ -11,6 +12,12 @@ export enum ApiKeyPermission {
   set_collection_magiceden_verification_status = "set_collection_magiceden_verification_status",
 }
 
+export type OrderbookFees = {
+  [key in OrderKind]?: {
+    feeBps: number;
+  } | null;
+};
+
 // Define the fields we can update
 export type ApiKeyUpdateParams = {
   website?: string;
@@ -20,6 +27,8 @@ export type ApiKeyUpdateParams = {
   ips?: string[];
   origins?: string[];
   revShareBps?: number | null;
+  orderbookFees?: OrderbookFees;
+  disableOrderbookFees?: boolean;
 };
 
 export type ApiKeyEntityParams = {
@@ -34,6 +43,8 @@ export type ApiKeyEntityParams = {
   ips: string[];
   origins: string[];
   rev_share_bps: number | null;
+  orderbook_fees: OrderbookFees;
+  disable_orderbook_fees: boolean;
 };
 
 export class ApiKeyEntity {
@@ -48,6 +59,8 @@ export class ApiKeyEntity {
   ips: string[];
   origins: string[];
   revShareBps: number | null;
+  orderbookFees: OrderbookFees;
+  disableOrderbookFees: boolean;
 
   constructor(params: ApiKeyEntityParams) {
     this.key = params.key;
@@ -61,5 +74,7 @@ export class ApiKeyEntity {
     this.ips = params.ips;
     this.origins = params.origins;
     this.revShareBps = params.rev_share_bps ?? ApiKeyManager.defaultRevShareBps;
+    this.orderbookFees = params.orderbook_fees;
+    this.disableOrderbookFees = params.disable_orderbook_fees;
   }
 }

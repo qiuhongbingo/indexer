@@ -21,6 +21,7 @@ import tracer from "@/common/tracer";
 import flat from "flat";
 import { fromBuffer, regex } from "@/common/utils";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
+import { OrderKind } from "@/orderbook/orders";
 
 export type ApiKeyRecord = {
   appName: string;
@@ -41,6 +42,7 @@ export type NewApiKeyResponse = {
 
 export class ApiKeyManager {
   public static defaultRevShareBps = 3000;
+  public static defaultOrderbookFeeBps = 50;
 
   private static apiKeys: Map<string, ApiKeyEntity> = new Map();
 
@@ -134,6 +136,8 @@ export class ApiKeyManager {
         ips: [],
         origins: [],
         rev_share_bps: ApiKeyManager.defaultRevShareBps,
+        orderbook_fees: {},
+        disable_orderbook_fees: false,
       });
     }
 
@@ -383,9 +387,18 @@ export class ApiKeyManager {
           updateString += `${_.snakeCase(fieldName)} = '$/${fieldName}:raw/'::jsonb,`;
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else if (_.isObject(value)) {
-          updateString += `${_.snakeCase(
-            fieldName
-          )} = COALESCE(${fieldName}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
+          Object.keys(value).forEach((key) => {
+            if (_.isNull((value as any)[key])) {
+              updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
+                fieldName
+              )}, '{}') - '${key}',`;
+            } else {
+              updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
+                fieldName
+              )}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
+            }
+          });
+
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else {
           updateString += `${_.snakeCase(fieldName)} = $/${fieldName}/,`;
@@ -414,6 +427,15 @@ export class ApiKeyManager {
     }
 
     logger.info("api-key", `Update key ${key} with ${JSON.stringify(fields)}`);
+  }
+
+  public static async getOrderbookFee(key: string, orderbook: OrderKind) {
+    const apiKey = await ApiKeyManager.getApiKey(key);
+    if (apiKey?.disableOrderbookFees) {
+      return 0;
+    }
+
+    return apiKey?.orderbookFees[orderbook]?.feeBps ?? ApiKeyManager.defaultOrderbookFeeBps;
   }
 
   static async notifyApiKeyCreated(values: ApiKeyRecord) {
