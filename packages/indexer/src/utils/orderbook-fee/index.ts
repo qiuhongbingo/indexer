@@ -10,6 +10,11 @@ export const FEE_BPS = 0;
 export const FEE_RECIPIENT = AddressZero;
 
 const SINGLE_FEE_ORDER_KINDS: OrderKind[] = ["payment-processor-v2"];
+const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
+  "payment-processor-v2",
+  "seaport-v1.5",
+  "seaport-v1.6",
+];
 
 export const attachOrderbookFee = async (
   params: {
@@ -26,8 +31,7 @@ export const attachOrderbookFee = async (
   }
 
   // Only certain order kinds
-  const matchingOrderKinds: OrderKind[] = ["payment-processor-v2", "seaport-v1.5", "seaport-v1.6"];
-  if (!matchingOrderKinds.includes(params.orderKind)) {
+  if (!ORDERBOOK_FEE_ORDER_KINDS.includes(params.orderKind)) {
     return;
   }
 
@@ -75,6 +79,17 @@ export const validateOrderbookFee = async (
     bps: number;
   }[]
 ) => {
+  // This is not the best place to add this check, but it does the job for now
+  const totalBps = feeBreakdown.reduce((t, b) => t + b.bps, 0);
+  if (totalBps > 10000) {
+    throw new Error("invalid-fee");
+  }
+
+  // Only certain order kinds
+  if (!ORDERBOOK_FEE_ORDER_KINDS.includes(orderKind)) {
+    return;
+  }
+
   if (FEE_BPS > 0) {
     let foundOrderbookFee = false;
 

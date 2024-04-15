@@ -5,7 +5,7 @@ import { jest, describe, it, expect } from "@jest/globals";
 import * as utils from "@/events-sync/utils";
 import { extractByTx } from "../../orderbook/mints/calldata/detector/nfts2me";
 // import { simulateCollectionMint } from "@/orderbook/mints/simulation";
-// import { generateCollectionMintTxData } from "@/orderbook/mints/calldata";
+import { generateCollectionMintTxData } from "@/orderbook/mints/calldata";
 
 jest.setTimeout(1000 * 1000);
 
@@ -50,5 +50,28 @@ describe("Mints - Mirror", () => {
     //     const result = await simulateCollectionMint(collectionMint);
     //     expect(result).toBe(true);
     // }
+  });
+
+  it("v2-mintingType", async () => {
+    // Blast
+    const transcation = await utils.fetchTransaction(
+      "0x302201e0a0b922bbb20ddda65ef18eda3fe26ea545e8b68b726fcce71a5be6aa"
+    );
+    const collectionMints = await extractByTx(
+      "0x0ba2172438841695a2517e2333a934363b5e4f6a",
+      transcation
+    );
+    // expect(collectionMints[0].stage.includes("public-")).not.toBe(false);
+    for (const collectionMint of collectionMints) {
+      const data = await generateCollectionMintTxData(
+        collectionMint,
+        "0x0000000000000000000000000000000000000001",
+        1
+      );
+      expect(data.txData.data.includes("0x1d7df191")).toBe(true);
+      // console.log('data', data)
+      //     const result = await simulateCollectionMint(collectionMint);
+      //     expect(result).toBe(true);
+    }
   });
 });

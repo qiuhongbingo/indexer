@@ -46,6 +46,7 @@ export const ReservoirConduitKey: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
   [Network.Garnet]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
   [Network.Redstone]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
+  [Network.Amoy]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
 };
 
 export const ConduitController: ChainIdToAddress = {
@@ -81,6 +82,7 @@ export const ConduitController: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0x00000000f9490004c11cef243f5400493c00ad63",
   [Network.Garnet]: "0x00000000f9490004c11cef243f5400493c00ad63",
   [Network.Redstone]: "0x00000000f9490004c11cef243f5400493c00ad63",
+  [Network.Amoy]: "0x00000000f9490004c11cef243f5400493c00ad63",
 };
 
 // https://github.com/ProjectOpenSea/seaport/blob/0a8e82ce7262b5ce0e67fa98a2131fd4c47c84e9/contracts/conduit/ConduitController.sol#L493
@@ -161,6 +163,7 @@ export const OpenSeaV16SignedZone: ChainIdToAddress = {
   [Network.ArbitrumNova]: "0x000056f7000000ece9003ca63978907a00ffd100",
   [Network.Mumbai]: "0x000056f7000000ece9003ca63978907a00ffd100",
   [Network.Blast]: "0x000056f7000000ece9003ca63978907a00ffd100",
+  [Network.Amoy]: "0x000056f7000000ece9003ca63978907a00ffd100",
 };
 
 export const OpenSeaCustomTransferValidator: ChainIdToAddress = {
@@ -175,6 +178,7 @@ export const OpenSeaCustomTransferValidator: ChainIdToAddress = {
   [Network.ArbitrumNova]: "0xa000027a9b2802e1ddf7000061001e5c005a0000",
   [Network.Mumbai]: "0xa000027a9b2802e1ddf7000061001e5c005a0000",
   [Network.Blast]: "0xa000027a9b2802e1ddf7000061001e5c005a0000",
+  [Network.Amoy]: "0xa000027a9b2802e1ddf7000061001e5c005a0000",
 };
 
 export const FxHashPausableZone: ChainIdToAddress = {
@@ -208,6 +212,7 @@ export const ReservoirCancellationZone: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
   [Network.Garnet]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
   [Network.Redstone]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
+  [Network.Amoy]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
 };
 
 export const ReservoirV16CancellationZone: ChainIdToAddress = {

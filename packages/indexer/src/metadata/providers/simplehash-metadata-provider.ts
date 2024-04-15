@@ -104,6 +104,11 @@ export class SimplehashMetadataProvider extends AbstractBaseMetadataProvider {
 
     let imageUrl = metadata.image_url || image_original_url;
 
+    if (_.toLower(metadata.contract_address) === "0x3a68024f7fd0f1d1ed22956dfaeb00c9b24c1d2b") {
+      imageUrl =
+        "https://ipfs.io/ipfs/bafybeifbpjx5p4c2xh4jd4aixpnayodejskgpk5jsqgc73uvb2hrynqhbm/0.gif";
+    }
+
     if (
       metadata?.image_properties?.mime_type === "image/gif" &&
       metadata?.image_properties?.size > 1000000 &&
@@ -192,6 +197,10 @@ export class SimplehashMetadataProvider extends AbstractBaseMetadataProvider {
 
     if (network == "mumbai") {
       return "polygon-mumbai";
+    }
+
+    if (network == "amoy") {
+      return "polygon-amoy";
     }
 
     if (network == "sepolia") {

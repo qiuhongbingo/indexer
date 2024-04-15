@@ -159,6 +159,7 @@ export enum Network {
   BerachainTestnet = 80085,
   Garnet = 17069,
   Redstone = 690,
+  Amoy = 80002,
 }
 
 export type ChainIdToAddress = { [chainId: number]: string };

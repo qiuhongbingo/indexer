@@ -2037,6 +2037,7 @@ export const getListedTokensFromES = async (query: any, attributeFloorAskPriceAs
                 AND nb.amount > 0
               LIMIT 1
             ) AS owner,
+            o.currency AS c_floor_sell_currency,
           ${selectCollectionFloorAskQueryPart}
           ${selectAttributesQueryPart}  
           ${selectLastSaleQueryPart}
@@ -2048,6 +2049,14 @@ export const getListedTokensFromES = async (query: any, attributeFloorAskPriceAs
           ${joinMintStagesQueryPart}
           JOIN collections c ON t.collection_id = c.id
           JOIN contracts con ON t.contract = con.address
+          LEFT JOIN LATERAL (
+            SELECT
+              orders.currency
+            FROM orders
+            WHERE orders.id = c.${
+              query.normalizeRoyalties ? "normalized_floor_sell_id" : "floor_sell_id"
+            }
+          ) o ON TRUE
           WHERE (t.contract, t.token_id) IN ($/tokensFilter:raw/)
         `,
       { tokensFilter: _.join(tokensFilter, ",") }

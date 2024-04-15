@@ -35,6 +35,7 @@ export const Router: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.Garnet]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.Redstone]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.Amoy]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
 };
 
 // Approval proxy
@@ -70,6 +71,7 @@ export const ApprovalProxy: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
   [Network.Garnet]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
   [Network.Redstone]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
+  [Network.Amoy]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
 };
 
 // Permit proxy

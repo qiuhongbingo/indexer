@@ -45,6 +45,9 @@ export const getNetworkName = () => {
     case 80001:
       return "mumbai";
 
+    case 80002:
+      return "amoy";
+
     case 42170:
       return "arbitrum-nova";
 
@@ -135,6 +138,8 @@ export const getOpenseaNetworkName = () => {
       return "sepolia";
     case 80001:
       return "mumbai";
+    case 80002:
+      return "amoy";
     case 8453:
       return "base";
     case 7777777:
@@ -1180,6 +1185,47 @@ export const getNetworkSettings = (): NetworkSettings => {
             },
           ],
         ]),
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Matic',
+                  'MATIC',
+                  18,
+                  '{"coingeckoCurrencyId": "matic-network"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Amoy
+    case 80002: {
+      return {
+        ...defaultNetworkSettings,
+        isTestnet: true,
+        enableWebSocket: true,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        elasticsearch: {
+          indexes: {
+            activities: {
+              ...defaultNetworkSettings.elasticsearch?.indexes?.activities,
+              numberOfShards: 10,
+            },
+          },
+        },
         onStartup: async () => {
           // Insert the native currency
           await Promise.all([

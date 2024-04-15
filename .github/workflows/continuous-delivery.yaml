@@ -315,6 +315,11 @@ jobs:
             ./prod/platform/indexer-worker-redstone.yaml \
             ./prod/platform/indexer-worker-master-redstone.yaml
 
+          ./utils/version_update_batch.sh indexer-amoy ${{ github.sha }} \
+            ./prod/platform/indexer-api-amoy.yaml \
+            ./prod/platform/indexer-worker-amoy.yaml \
+            ./prod/platform/indexer-worker-master-amoy.yaml
+
       - name: Post to Slack
         if: ${{ always() }}
         id: slack-deploy-prod

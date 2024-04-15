@@ -238,7 +238,7 @@ export const getAvailableUSDPrice = async (
 };
 
 const isTestnetCurrency = (currencyAddress: string) => {
-  if ([5, 11155111, 59140, 5001, 80001, 84532].includes(config.chainId)) {
+  if ([5, 11155111, 59140, 5001, 80001, 80002, 84532].includes(config.chainId)) {
     return [
       Sdk.Common.Addresses.Native[config.chainId],
       Sdk.Common.Addresses.WNative[config.chainId],

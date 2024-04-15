@@ -30,6 +30,7 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
       "function mintFee(uint256 amount) view returns (uint256)",
       "function protocolFee() view returns (uint256)",
       "function merkleRoot() view returns (bytes32)",
+      "function mintingType() view returns (uint8)",
     ]),
     baseProvider
   );
@@ -43,13 +44,17 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
     const n2mVersion = version.toString();
 
     let price: string;
+    let mintingType: number | undefined;
     if (bn(n2mVersion).gt(1999)) {
-      const [mintFee, protocolFee, merkleRoot] = await Promise.all([
+      const [mintFee, protocolFee, merkleRoot, mType] = await Promise.all([
         contract.mintFee(1),
         contract.protocolFee(),
         contract.merkleRoot(),
+        contract.mintingType(),
       ]);
+
       price = protocolFee.add(mintFee).toString();
+      mintingType = mType;
 
       if (merkleRoot !== HashZero) {
         // Skip allowlist mints for now
@@ -61,36 +66,71 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
     }
 
     const maxPerAddress = await contract.maxPerAddress();
-    results.push({
-      collection,
-      contract: collection,
-      stage: "public-sale",
-      kind: "public",
-      status: "open",
-      standard: STANDARD,
-      details: {
-        tx: {
-          to: collection,
-          data: {
-            // "mintTo"
-            signature: "0x449a52f8",
-            params: [
-              {
-                kind: "recipient",
-                abiType: "address",
-              },
-              {
-                kind: "quantity",
-                abiType: "uint256",
-              },
-            ],
+
+    // Random Mint
+    if (mintingType === 1) {
+      results.push({
+        collection,
+        contract: collection,
+        stage: "public-sale",
+        kind: "public",
+        status: "open",
+        standard: STANDARD,
+        details: {
+          tx: {
+            to: collection,
+            data: {
+              // "mintRandomTo"
+              signature: "0x1d7df191",
+              params: [
+                {
+                  kind: "recipient",
+                  abiType: "address",
+                },
+                {
+                  kind: "quantity",
+                  abiType: "uint256",
+                },
+              ],
+            },
           },
         },
-      },
-      currency: Sdk.Common.Addresses.Native[config.chainId],
-      price,
-      maxMintsPerWallet: toSafeNumber(maxPerAddress),
-    });
+        currency: Sdk.Common.Addresses.Native[config.chainId],
+        price,
+        maxMintsPerWallet: toSafeNumber(maxPerAddress),
+      });
+    } else {
+      results.push({
+        collection,
+        contract: collection,
+        stage: "public-sale",
+        kind: "public",
+        status: "open",
+        standard: STANDARD,
+        details: {
+          tx: {
+            to: collection,
+            data: {
+              // "mintTo"
+              signature: "0x449a52f8",
+              params: [
+                {
+                  kind: "recipient",
+                  abiType: "address",
+                },
+                {
+                  kind: "quantity",
+                  abiType: "uint256",
+                },
+              ],
+            },
+          },
+        },
+        currency: Sdk.Common.Addresses.Native[config.chainId],
+        price,
+        maxMintsPerWallet: toSafeNumber(maxPerAddress),
+      });
+    }
   } catch (error) {
     logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }

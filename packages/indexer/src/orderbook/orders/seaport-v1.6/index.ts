@@ -578,7 +578,7 @@ export const save = async (
       }
 
       // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("payment-processor-v2", feeBreakdown);
+      await validateOrderbookFee("seaport-v1.6", feeBreakdown);
 
       // Handle: royalties on top
       const defaultRoyalties =

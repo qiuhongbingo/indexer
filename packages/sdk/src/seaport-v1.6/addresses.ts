@@ -14,4 +14,5 @@ export const Exchange: ChainIdToAddress = {
   [Network.Bsc]: "0x0000000000000068f116a894984e2db1123eb395",
   [Network.Zora]: "0x0000000000000068f116a894984e2db1123eb395",
   [Network.Blast]: "0x0000000000000068f116a894984e2db1123eb395",
+  [Network.Amoy]: "0x0000000000000068f116a894984e2db1123eb395",
 };

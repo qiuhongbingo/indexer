@@ -31,4 +31,5 @@ export const Exchange: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Garnet]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Redstone]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
+  [Network.Amoy]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
 };
