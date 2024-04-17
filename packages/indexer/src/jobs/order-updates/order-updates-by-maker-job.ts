@@ -191,8 +191,8 @@ export default class OrderUpdatesByMakerJob extends AbstractRabbitMqJobHandler {
                 bn(c.quantity_available).gt(0) &&
                 bn(c.quantity_available).lt(c.quantity_remaining)
               ) {
-                c.quantity_remaining = c.quantity_available;
                 c.new_status = "fillable";
+                c.quantity_remaining = c.quantity_available;
                 c.expiration = c.expiration_if_fillable;
               }
 
