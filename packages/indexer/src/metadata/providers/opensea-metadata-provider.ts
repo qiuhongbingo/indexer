@@ -481,6 +481,7 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
       case 5:
       case 11155111:
       case 80001:
+      case 80002:
         return true;
     }
 

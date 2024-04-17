@@ -280,6 +280,8 @@ export const postSimulateOrderV1Options: RouteOptions = {
         "0x39ee2c7b3cb80254225884ca001f57118c8f21b6:1",
         // The Plague
         "0xc379e535caff250a01caa6c3724ed1359fe5c29b:1",
+        // JRNYERS
+        "0xf6228c82fc2404d90827d9d7a1340106a3407b06:1",
         // y00ts
         "0x670fd103b1a08628e9557cd66b87ded841115190:137",
       ];

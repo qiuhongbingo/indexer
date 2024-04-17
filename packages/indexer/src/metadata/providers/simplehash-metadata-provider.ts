@@ -109,6 +109,11 @@ export class SimplehashMetadataProvider extends AbstractBaseMetadataProvider {
         "https://ipfs.io/ipfs/bafybeifbpjx5p4c2xh4jd4aixpnayodejskgpk5jsqgc73uvb2hrynqhbm/0.gif";
     }
 
+    if (_.toLower(metadata.contract_address) === "0x5589cc3e514967cde22c772fb02d9261b1f580ae") {
+      imageUrl =
+        "https://ipfs.io/ipfs/bafybeicxlowk5olconjph66yjhxk6humqkxsdolvkeabmjmpya52l5ujay/0.png";
+    }
+
     if (
       metadata?.image_properties?.mime_type === "image/gif" &&
       metadata?.image_properties?.size > 1000000 &&
@@ -116,12 +121,12 @@ export class SimplehashMetadataProvider extends AbstractBaseMetadataProvider {
     ) {
       imageUrl = metadata.previews.image_medium_url;
 
-      logger.info(
-        "simplehash-fetcher",
-        JSON.stringify({
-          message: `_parseToken. Detected GIF over 1MB. contract=${metadata.contract_address}, tokenId=${metadata.token_id}, imageUrl=${imageUrl}`,
-        })
-      );
+      // logger.info(
+      //   "simplehash-fetcher",
+      //   JSON.stringify({
+      //     message: `_parseToken. Detected GIF over 1MB. contract=${metadata.contract_address}, tokenId=${metadata.token_id}, imageUrl=${imageUrl}`,
+      //   })
+      // );
     }
 
     return {

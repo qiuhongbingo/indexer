@@ -73,7 +73,7 @@ export const WNative: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0x5806e416da447b267cea759358cf22cc41fae80f",
   [Network.Garnet]: "0x4200000000000000000000000000000000000006",
   [Network.Redstone]: "0x4200000000000000000000000000000000000006",
-  [Network.Amoy]: "0xb77739ef9a2e28059754a3649b89c56d892ad5dd",
+  [Network.Amoy]: "0x41Dc3C8eB8368bd9139Cec50434a0C294c8c1102",
 };
 
 export const Usdc: ChainIdToAddressList = {

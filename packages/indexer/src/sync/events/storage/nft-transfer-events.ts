@@ -189,7 +189,7 @@ export const addEvents = async (events: Event[], backfill: boolean) => {
 
       const isErc1155 = _.includes(erc1155Contracts, fromBuffer(event.address));
       const deferUpdate =
-        [1, 137, 80001].includes(config.chainId) &&
+        [1, 137, 80001, 80002].includes(config.chainId) &&
         _.includes(getNetworkSettings().mintAddresses, fromBuffer(event.from)) &&
         isErc1155;
 

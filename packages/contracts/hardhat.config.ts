@@ -439,6 +439,14 @@ const config: HardhatUserConfig = {
           browserURL: "https://www.oklink.com/amoy",
         },
       },
+      {
+        network: "amoy",
+        chainId: 80002,
+        urls: {
+          apiURL: "https://api-amoy.polygonscan.com/api",
+          browserURL: "https://www.oklink.com/amoy",
+        },
+      },
     ],
   },
   gasReporter: {

@@ -197,6 +197,7 @@ import { publishEventToKafkaStreamJob } from "@/jobs/websocket-events/publish-ev
 import { backfillInvalidatedPPV2OrdersJob } from "@/jobs/backfill/backfill-invalidated-ppv2-orders";
 import { resyncAttributeCacheJob } from "@/jobs/update-attribute/resync-attribute-cache-job";
 import { refreshDynamicTokenSetJob } from "@/jobs/token-set-updates/refresh-dynamic-token-set-job";
+import { fixOwnershipJob } from "@/jobs/backfill/fix-ownership";
 
 export const allJobQueues = [
   backfillWrongNftBalances.queue,
@@ -377,6 +378,7 @@ export class RabbitMqJobsConsumer {
       deleteArchivedExpiredBidActivitiesJob,
       backfillDeleteExpiredBidsElasticsearchJob,
       refreshDynamicTokenSetJob,
+      fixOwnershipJob,
     ];
   }
 
