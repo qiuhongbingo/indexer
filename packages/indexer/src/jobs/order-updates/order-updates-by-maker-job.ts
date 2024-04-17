@@ -1,11 +1,11 @@
 import { AddressZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
-import { Network, bn } from "@reservoir0x/sdk/dist/utils";
+import { Network } from "@reservoir0x/sdk/dist/utils";
 
 import { config } from "@/config/index";
 import { idb, pgp } from "@/common/db";
 import { logger } from "@/common/logger";
-import { fromBuffer, toBuffer } from "@/common/utils";
+import { bn, fromBuffer, toBuffer } from "@/common/utils";
 import { AbstractRabbitMqJobHandler, BackoffStrategy } from "@/jobs/abstract-rabbit-mq-job-handler";
 import { orderUpdatesByIdJob } from "@/jobs/order-updates/order-updates-by-id-job";
 import { TriggerKind } from "@/jobs/order-updates/types";
