@@ -369,12 +369,15 @@ export class ApiKeyManager {
 
   public static async update(key: string, fields: ApiKeyUpdateParams) {
     let updateString = "updated_at = now(),";
+    const updatedFields: string[] = [];
     const replacementValues = {
       key,
     };
 
     _.forEach(fields, (value, fieldName) => {
       if (!_.isUndefined(value)) {
+        updatedFields.push(fieldName);
+
         if (_.isArray(value)) {
           value.forEach((v, k) => {
             if (fieldName === "origins") {
@@ -410,11 +413,21 @@ export class ApiKeyManager {
 
     updateString = _.trimEnd(updateString, ",");
 
-    const query = `UPDATE api_keys
-                   SET ${updateString}
-                   WHERE key = $/key/`;
+    const query = `
+      WITH old_values AS (
+        SELECT *
+        FROM api_keys
+        WHERE key = $/key/
+      )
+  
+     UPDATE api_keys
+     SET ${updateString}
+     WHERE key = $/key/
+     RETURNING ${updatedFields
+       .map((fieldName) => `(SELECT ${fieldName} FROM old_values) AS "old_${fieldName}"`)
+       .join(",")}`;
 
-    await idb.none(query, replacementValues);
+    const oldValues = await idb.manyOrNone(query, replacementValues);
 
     await ApiKeyManager.deleteCachedApiKey(key); // reload the cache
     await redis.publish(Channel.ApiKeyUpdated, JSON.stringify({ key }));
@@ -427,7 +440,10 @@ export class ApiKeyManager {
       );
     }
 
-    logger.info("api-key", `Update key ${key} with ${JSON.stringify(fields)}`);
+    logger.info(
+      "api-key",
+      `Update key ${key} with ${JSON.stringify(fields)}, oldValues=${JSON.stringify(oldValues)}`
+    );
   }
 
   public static async getOrderbookFee(key: string, orderbook: OrderKind) {

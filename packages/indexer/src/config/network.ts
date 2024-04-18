@@ -190,6 +190,7 @@ type NetworkSettings = {
   washTradingBlacklistedAddresses: string[];
   trendingExcludedContracts: string[];
   nonSimulatableContracts: string[];
+  customTokenAddresses: string[];
   mintsAsSalesBlacklist: string[];
   mintAddresses: string[];
   burnAddresses: string[];
@@ -229,6 +230,7 @@ export const getNetworkSettings = (): NetworkSettings => {
 
     trendingExcludedContracts: [],
     nonSimulatableContracts: [],
+    customTokenAddresses: [],
     mintsAsSalesBlacklist: [],
     mintAddresses: [
       AddressZero,
@@ -298,6 +300,11 @@ export const getNetworkSettings = (): NetworkSettings => {
         nonSimulatableContracts: [
           "0x4d04bba7f5ea45ac59769a1095762467b1157cc4",
           "0x36e73e5e0aaacf4f9c4e67a32b87e8a4273484a5",
+        ],
+        customTokenAddresses: [
+          "0x95784f7b5c8849b0104eaf5d13d6341d8cc40750",
+          "0xc9cb0fee73f060db66d2693d92d75c825b1afdbf",
+          "0x87d598064c736dd0c712d329afcfaa0ccc1921a1",
         ],
         mintsAsSalesBlacklist: [
           // Uniswap V3: Positions NFT
@@ -1269,6 +1276,7 @@ export const getNetworkSettings = (): NetworkSettings => {
         coingecko: {
           networkId: "arbitrum-nova",
         },
+        customTokenAddresses: ["0x05e986e9ef944ffd425ed07abc2f39e35821d1e0"],
         onStartup: async () => {
           // Insert the native currency
           await Promise.all([
@@ -1369,6 +1377,7 @@ export const getNetworkSettings = (): NetworkSettings => {
         realtimeSyncMaxBlockLag: 32,
         realtimeSyncFrequencySeconds: 5,
         lastBlockLatency: 5,
+        customTokenAddresses: ["0x217ec1ac929a17481446a76ff9b95b9a64f298cf"],
         whitelistedCurrencies: new Map([
           [
             Sdk.Common.Addresses.Usdc[config.chainId][1],

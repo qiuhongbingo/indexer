@@ -45,6 +45,9 @@ import {
   isWNative,
 } from "./utils";
 
+// Tokens
+import ERC721Abi from "../../common/abis/Erc721.json";
+import ERC1155Abi from "../../common/abis/Erc1155.json";
 // Router
 import RouterAbi from "./abis/ReservoirV6_0_1.json";
 // Misc
@@ -4111,6 +4114,8 @@ export class Router {
       source?: string;
       // Skip any errors (either off-chain or on-chain)
       partial?: boolean;
+      // Force filling via the approval proxy
+      forceApprovalProxy?: boolean;
       // What provider to use when doing swaps
       swapProvider?: "uniswap";
       // Out currency
@@ -4421,7 +4426,7 @@ export class Router {
 
       // Only if we're not using the "on-received" hook or the offer is not protected
       // (approvals for protected offers are handled separately from this logic)
-      if (!detail.isProtected) {
+      if (!(details.length === 1 && !options?.forceApprovalProxy) && !detail.isProtected) {
         const contract = detail.contract;
         const owner = taker;
         const conduitController = new Sdk.SeaportBase.ConduitController(this.chainId);
@@ -5874,39 +5879,84 @@ export class Router {
       });
     }
 
-    txs.push({
-      txData: {
-        from: taker,
-        to: this.contracts.approvalProxy.address,
-        data:
-          this.contracts.approvalProxy.interface.encodeFunctionData("bulkTransferWithExecute", [
-            // Exclude any transfer items which don't have a corresponding execution
-            nftTransferItems.filter(({ items }) =>
-              executionsWithDetails.find(
-                ({ detail }) =>
-                  items[0].itemType ===
-                    (detail.contractKind === "erc721"
-                      ? ApprovalProxy.ItemType.ERC721
-                      : ApprovalProxy.ItemType.ERC1155) &&
-                  detail.contract === items[0].token &&
-                  detail.tokenId === items[0].identifier
-              )
-            ),
-            [...executionsWithDetails.map(({ execution }) => execution)],
-            Sdk.SeaportBase.Addresses.ReservoirConduitKey[this.chainId],
-          ]) + generateSourceBytes(options?.source),
-      },
-      txTags: routerTxTags,
-      // Ensure approvals are unique
-      approvals: uniqBy(
-        // TODO: Exclude approvals for unsuccessful items
-        approvals,
-        ({ txData: { from, to, data } }) => `${from}-${to}-${data}`
-      ),
-      ftApprovals: [],
-      preSignatures: [],
-      orderIds: [...new Set(executionsWithDetails.map(({ detail }) => detail.orderId))],
-    });
+    if (executionsWithDetails.length === 1 && !options?.forceApprovalProxy) {
+      const execution = executionsWithDetails[0].execution;
+      const detail = executionsWithDetails[0].detail;
+      const routerLevelTxData = this.contracts.router.interface.encodeFunctionData("execute", [
+        [execution],
+      ]);
+
+      // Use the on-received ERC721/ERC1155 hooks for approval-less bid filling
+      if (detail.contractKind === "erc721") {
+        txs.push({
+          txData: {
+            from: taker,
+            to: detail.contract,
+            data:
+              new Interface(ERC721Abi).encodeFunctionData(
+                "safeTransferFrom(address,address,uint256,bytes)",
+                [taker, execution.module, detail.tokenId, routerLevelTxData]
+              ) + generateSourceBytes(options?.source),
+          },
+          txTags: routerTxTags,
+          approvals: [],
+          ftApprovals: [],
+          preSignatures: [],
+          orderIds: [detail.orderId],
+        });
+      } else {
+        txs.push({
+          txData: {
+            from: taker,
+            to: detail.contract,
+            data:
+              new Interface(ERC1155Abi).encodeFunctionData(
+                "safeTransferFrom(address,address,uint256,uint256,bytes)",
+                [taker, execution.module, detail.tokenId, detail.amount ?? 1, routerLevelTxData]
+              ) + generateSourceBytes(options?.source),
+          },
+          txTags: routerTxTags,
+          approvals: [],
+          ftApprovals: [],
+          preSignatures: [],
+          orderIds: [detail.orderId],
+        });
+      }
+    } else if (executionsWithDetails.length >= 1) {
+      txs.push({
+        txData: {
+          from: taker,
+          to: this.contracts.approvalProxy.address,
+          data:
+            this.contracts.approvalProxy.interface.encodeFunctionData("bulkTransferWithExecute", [
+              // Exclude any transfer items which don't have a corresponding execution
+              nftTransferItems.filter(({ items }) =>
+                executionsWithDetails.find(
+                  ({ detail }) =>
+                    items[0].itemType ===
+                      (detail.contractKind === "erc721"
+                        ? ApprovalProxy.ItemType.ERC721
+                        : ApprovalProxy.ItemType.ERC1155) &&
+                    detail.contract === items[0].token &&
+                    detail.tokenId === items[0].identifier
+                )
+              ),
+              [...executionsWithDetails.map(({ execution }) => execution)],
+              Sdk.SeaportBase.Addresses.ReservoirConduitKey[this.chainId],
+            ]) + generateSourceBytes(options?.source),
+        },
+        txTags: routerTxTags,
+        // Ensure approvals are unique
+        approvals: uniqBy(
+          // TODO: Exclude approvals for unsuccessful items
+          approvals,
+          ({ txData: { from, to, data } }) => `${from}-${to}-${data}`
+        ),
+        ftApprovals: [],
+        preSignatures: [],
+        orderIds: [...new Set(executionsWithDetails.map(({ detail }) => detail.orderId))],
+      });
+    }
 
     // Generate calldata for any needed swaps
     if (successfulSwapInfos.length) {

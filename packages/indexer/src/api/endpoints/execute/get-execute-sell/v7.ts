@@ -19,6 +19,7 @@ import { JoiExecuteFee } from "@/common/joi";
 import { baseProvider } from "@/common/provider";
 import { bn, formatPrice, fromBuffer, now, regex, toBuffer } from "@/common/utils";
 import { config } from "@/config/index";
+import { getNetworkSettings } from "@/config/network";
 import { ApiKeyManager } from "@/models/api-keys";
 import { FeeRecipients } from "@/models/fee-recipients";
 import { Sources } from "@/models/sources";
@@ -1312,6 +1313,10 @@ export const getExecuteSellV7Options: RouteOptions = {
         },
       });
 
+      const { customTokenAddresses } = getNetworkSettings();
+      const forceApprovalProxy =
+        payload.forceRouter || customTokenAddresses.includes(bidDetails[0].contract);
+
       const errors: { orderId: string; message: string }[] = [];
 
       let result: FillBidsResult;
@@ -1320,6 +1325,7 @@ export const getExecuteSellV7Options: RouteOptions = {
           source: payload.source,
           partial: payload.partial,
           sellOutCurrency,
+          forceApprovalProxy,
           onError: async (kind, error, data) => {
             errors.push({
               orderId: data.orderId,
