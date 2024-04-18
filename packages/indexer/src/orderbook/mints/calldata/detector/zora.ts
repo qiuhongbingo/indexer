@@ -32,7 +32,8 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
   const c = new Contract(
     collection,
     new Interface([
-      `function computeTotalReward(uint256 numTokens) view returns(uint256)`,
+      "function computeTotalReward(uint256 mintPrice, uint256 numTokens) view returns (uint256)",
+      "function computeTotalReward(uint256 numTokens) view returns (uint256)",
       `
         function saleDetails() view returns (
           (
@@ -58,9 +59,15 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
   try {
     const saleDetails = await c.saleDetails();
     const fee = await c.zoraFeeForAmount(1).then((f: { fee: BigNumber }) => f.fee);
+
     let totalRewards: BigNumber | undefined;
     try {
-      totalRewards = await c.computeTotalReward(1);
+      totalRewards = await c["computeTotalReward(uint256)"](1);
+    } catch {
+      // Skip error for old version
+    }
+    try {
+      totalRewards = await c["computeTotalReward(uint256,uint256)"](bn(10).pow(18), 1);
     } catch {
       // Skip error for old version
     }
@@ -250,7 +257,8 @@ export const extractByCollectionERC1155 = async (
   const c = new Contract(
     collection,
     new Interface([
-      "function computeTotalReward(uint256 numTokens) view returns(uint256)",
+      "function computeTotalReward(uint256 numTokens) view returns (uint256)",
+      "function computeTotalReward(uint256 mintPrice, uint256 numTokens) view returns (uint256)",
       "function getPermissions(uint256 tokenId, address user) view returns (uint256)",
       "function permissions(uint256 tokenId, address user) view returns (uint256)",
       "function mintFee() external view returns(uint256)",
@@ -268,7 +276,12 @@ export const extractByCollectionERC1155 = async (
   try {
     let totalRewards: BigNumber | undefined;
     try {
-      totalRewards = await c.computeTotalReward(1);
+      totalRewards = await c["computeTotalReward(uint256)"](1);
+    } catch {
+      // Skip error for old version
+    }
+    try {
+      totalRewards = await c["computeTotalReward(uint256,uint256)"](bn(10).pow(18), 1);
     } catch {
       // Skip error for old version
     }
@@ -689,6 +702,7 @@ export const extractByTx = async (
     if (
       [
         "0x731133e9", // `mint`
+        "0x359f1302", // `mint`
         "0x9dbb844d", // `mintWithRewards`
         "0xc9a05470", // `premint`
         "0xd904b94a", // `callSale`
@@ -697,6 +711,7 @@ export const extractByTx = async (
     ) {
       const iface = new Interface([
         "function mint(address minter, uint256 tokenId, uint256 quantity, bytes data)",
+        "function mint(address minter, uint256 tokenId, uint256 quantity, address[] rewardsRecipients, bytes data)",
         "function mintWithRewards(address minter, uint256 tokenId, uint256 quantity, bytes minterArguments, address mintReferral)",
         "function premint((address, string, string) contractConfig, ((string, uint256, uint64, uint96, uint64, uint64, uint32, uint32, address, address), uint32 tokenId, uint32, bool) premintConfig, bytes signature, uint256 quantityToMint, string mintComment)",
         "function callSale(uint256 tokenId, address salesConfig, bytes data)",
@@ -710,6 +725,15 @@ export const extractByTx = async (
           tokenId = iface
             .decodeFunctionData(
               "mint(address minter, uint256 tokenId, uint256 quantity, bytes data)",
+              tx.data
+            )
+            .tokenId.toString();
+          break;
+
+        case "0x359f1302":
+          tokenId = iface
+            .decodeFunctionData(
+              "mint(address minter, uint256 tokenId, uint256 quantity, address[] rewardsRecipients, bytes data)",
               tx.data
             )
             .tokenId.toString();

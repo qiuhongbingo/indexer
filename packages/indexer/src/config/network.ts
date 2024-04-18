@@ -189,7 +189,6 @@ type NetworkSettings = {
   washTradingWhitelistedAddresses: string[];
   washTradingBlacklistedAddresses: string[];
   trendingExcludedContracts: string[];
-  customTokenAddresses: string[];
   nonSimulatableContracts: string[];
   mintsAsSalesBlacklist: string[];
   mintAddresses: string[];
@@ -229,7 +228,6 @@ export const getNetworkSettings = (): NetworkSettings => {
     washTradingBlacklistedAddresses: [],
 
     trendingExcludedContracts: [],
-    customTokenAddresses: [],
     nonSimulatableContracts: [],
     mintsAsSalesBlacklist: [],
     mintAddresses: [
@@ -300,11 +298,6 @@ export const getNetworkSettings = (): NetworkSettings => {
         nonSimulatableContracts: [
           "0x4d04bba7f5ea45ac59769a1095762467b1157cc4",
           "0x36e73e5e0aaacf4f9c4e67a32b87e8a4273484a5",
-        ],
-        customTokenAddresses: [
-          "0x95784f7b5c8849b0104eaf5d13d6341d8cc40750",
-          "0xc9cb0fee73f060db66d2693d92d75c825b1afdbf",
-          "0x87d598064c736dd0c712d329afcfaa0ccc1921a1",
         ],
         mintsAsSalesBlacklist: [
           // Uniswap V3: Positions NFT
@@ -1248,6 +1241,21 @@ export const getNetworkSettings = (): NetworkSettings => {
             ),
           ]);
         },
+        whitelistedCurrencies: new Map([
+          [
+            "0x8ef069e433022cf3625a086096c3d9ec96da0160",
+            {
+              contract: "0x8ef069e433022cf3625a086096c3d9ec96da0160",
+              name: "ZED Token",
+              symbol: "ZED",
+              decimals: 18,
+              metadata: {
+                image:
+                  "https://bafkreidcljrhz7hq4h5rarxgxd63tail24mqawllwhxfrvr3esfv2nvyiy.ipfs.nftstorage.link/",
+              },
+            },
+          ],
+        ]),
       };
     }
     // Arbitrum Nova
@@ -1258,7 +1266,6 @@ export const getNetworkSettings = (): NetworkSettings => {
         realtimeSyncMaxBlockLag: 32,
         realtimeSyncFrequencySeconds: 5,
         lastBlockLatency: 5,
-        customTokenAddresses: ["0x05e986e9ef944ffd425ed07abc2f39e35821d1e0"],
         coingecko: {
           networkId: "arbitrum-nova",
         },
@@ -1362,7 +1369,6 @@ export const getNetworkSettings = (): NetworkSettings => {
         realtimeSyncMaxBlockLag: 32,
         realtimeSyncFrequencySeconds: 5,
         lastBlockLatency: 5,
-        customTokenAddresses: ["0x217ec1ac929a17481446a76ff9b95b9a64f298cf"],
         whitelistedCurrencies: new Map([
           [
             Sdk.Common.Addresses.Usdc[config.chainId][1],
@@ -1665,20 +1671,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1698,20 +1704,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1731,20 +1737,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1758,10 +1764,6 @@ export const getNetworkSettings = (): NetworkSettings => {
         realtimeSyncMaxBlockLag: 32,
         realtimeSyncFrequencySeconds: 5,
         lastBlockLatency: 5,
-        customTokenAddresses: [
-          "0xaf57145e0c09a75ca4a2dc65ac80c91920e537ce",
-          "0x32a93c3e9a3be8f0fdd0835aba7299cba3624b13",
-        ],
         coingecko: {
           networkId: "apex",
         },
@@ -1770,20 +1772,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1805,20 +1807,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1837,20 +1839,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1870,20 +1872,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1903,20 +1905,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1936,20 +1938,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
@@ -1968,20 +1970,20 @@ export const getNetworkSettings = (): NetworkSettings => {
           await Promise.all([
             idb.none(
               `
-                    INSERT INTO currencies (
-                      contract,
-                      name,
-                      symbol,
-                      decimals,
-                      metadata
-                    ) VALUES (
-                      '\\x0000000000000000000000000000000000000000',
-                      'Ether',
-                      'ETH',
-                      18,
-                      '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
-                    ) ON CONFLICT DO NOTHING
-                  `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
             ),
           ]);
         },
