@@ -22,6 +22,7 @@ import flat from "flat";
 import { fromBuffer, regex } from "@/common/utils";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { OrderKind } from "@/orderbook/orders";
+import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
 
 export type ApiKeyRecord = {
   appName: string;
@@ -430,6 +431,11 @@ export class ApiKeyManager {
   }
 
   public static async getOrderbookFee(key: string, orderbook: OrderKind) {
+    // Fees are enforced only for specific orderbooks
+    if (!ORDERBOOK_FEE_ORDER_KINDS.includes(orderbook)) {
+      return 0;
+    }
+
     const apiKey = await ApiKeyManager.getApiKey(key);
     if (apiKey?.disableOrderbookFees) {
       return 0;

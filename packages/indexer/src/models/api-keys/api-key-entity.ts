@@ -1,5 +1,5 @@
 import { ApiKeyManager } from "@/models/api-keys/index";
-import { OrderKind } from "@/orderbook/orders";
+import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
 
 export enum ApiKeyPermission {
   override_collection_refresh_cool_down = "override_collection_refresh_cool_down",
@@ -13,7 +13,7 @@ export enum ApiKeyPermission {
 }
 
 export type OrderbookFees = {
-  [key in OrderKind]?: {
+  [key in (typeof ORDERBOOK_FEE_ORDER_KINDS)[number]]?: {
     feeBps: number;
   } | null;
 };
