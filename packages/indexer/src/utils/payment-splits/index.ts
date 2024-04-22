@@ -24,7 +24,7 @@ type OptionalPaymentSplitData = {
   updatedAt?: number;
 };
 
-type PaymentSplit = RequiredPaymentSplitData & OptionalPaymentSplitData;
+export type PaymentSplit = RequiredPaymentSplitData & OptionalPaymentSplitData;
 
 const MAX_BPS = 1e6;
 
@@ -152,6 +152,48 @@ export const savePaymentSplit = async (paymentSplit: RequiredPaymentSplitData) =
     {
       address: toBuffer(paymentSplit.address),
       apiKey: paymentSplit.apiKey,
+    }
+  );
+};
+
+export const updatePaymentSplitBalance = async (
+  splitAddress: string,
+  currency: string,
+  balance: string
+) => {
+  await idb.none(
+    `
+    INSERT INTO payment_splits_balances(
+      payment_split_address,
+      currency,
+      balance
+    ) VALUES (
+      $/splitAddress/,
+      $/currency/,
+      $/balance/
+    )
+    ON CONFLICT (payment_split_address,currency) DO UPDATE SET
+      balance = $/balance/,
+      updated_at = now()
+  `,
+    {
+      splitAddress,
+      currency,
+      balance,
+    }
+  );
+};
+
+export const setPaymentSplitIsDeployed = async (address: string) => {
+  await idb.none(
+    `
+      UPDATE payment_splits
+        SET is_deployed = $/isDeployed/
+      WHERE payment_splits.address = $/address/
+    `,
+    {
+      address: toBuffer(address),
+      isDeployed: true,
     }
   );
 };
