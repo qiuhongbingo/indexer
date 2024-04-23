@@ -28,6 +28,7 @@ export class TransferWebsocketEventsTriggerQueueJob extends AbstractRabbitMqJobH
 
     try {
       const result = {
+        chain: getNetworkName(),
         id: crypto
           .createHash("sha256")
           .update(`${data.after.tx_hash}${data.after.log_index}${data.after.batch_index}`)
@@ -47,7 +48,6 @@ export class TransferWebsocketEventsTriggerQueueJob extends AbstractRabbitMqJobH
         timestamp: data.after.timestamp,
         createdAt: new Date(data.after.created_at).toISOString(),
         updatedAt: new Date(data.after.updated_at).toISOString(),
-        chain: getNetworkName(),
       };
 
       let eventType = "";
