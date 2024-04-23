@@ -787,16 +787,20 @@ export const getExecuteBidV5Options: RouteOptions = {
 
               const result = await redb.oneOrNone(
                 `
-                  SELECT
-                    sum(orders.currency_price * orders.quantity_remaining) AS total_balance
-                  FROM orders
-                  JOIN token_sets
-                    ON orders.token_set_id = token_sets.id
-                  WHERE token_sets.collection_id = $/collection/
-                    AND orders.side = 'buy'
-                    AND orders.maker = $/maker/
-                    AND orders.currency = $/currency/
-                    AND (orders.fillability_status = 'fillable' OR orders.fillability_status = 'no-balance')
+                  WITH x AS (
+                    SELECT DISTINCT ON (orders.id)
+                      orders.currency_price,
+                      orders.quantity_remaining
+                    FROM orders
+                    JOIN token_sets
+                      ON orders.token_set_id = token_sets.id
+                    WHERE token_sets.collection_id = $/collection/
+                      AND orders.side = 'buy'
+                      AND orders.maker = $/maker/
+                      AND orders.currency = $/currency/
+                      AND (orders.fillability_status = 'fillable' OR orders.fillability_status = 'no-balance')
+                  )
+                  SELECT SUM(x.currency_price * x.quantity_remaining) FROM x
                 `,
                 {
                   collection,
