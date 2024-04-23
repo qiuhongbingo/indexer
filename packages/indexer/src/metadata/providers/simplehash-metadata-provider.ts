@@ -104,21 +104,6 @@ export class SimplehashMetadataProvider extends AbstractBaseMetadataProvider {
 
     let imageUrl = metadata.image_url || image_original_url;
 
-    const nftStorageLinkMatch = imageUrl.match(
-      /^(http)s?:\/\/(.*?)\.ipfs\.nftstorage\.link\/(.*?)$/
-    );
-
-    if (nftStorageLinkMatch) {
-      imageUrl = `https://ipfs.io/ipfs/${nftStorageLinkMatch[2]}/${nftStorageLinkMatch[3]}`;
-
-      logger.info(
-        "simplehash-fetcher",
-        JSON.stringify({
-          message: `_parseToken. Detected nft Storage Link. contract=${metadata.contract_address}, tokenId=${metadata.token_id}, imageUrl=${imageUrl}, image_url=${metadata.image_url}, image_original_url=${image_original_url}`,
-        })
-      );
-    }
-
     if (
       metadata?.image_properties?.mime_type === "image/gif" &&
       metadata?.image_properties?.size > 1000000 &&
