@@ -811,7 +811,7 @@ export const getExecuteBidV5Options: RouteOptions = {
 
             const currency = new Sdk.Common.Helpers.Erc20(baseProvider, params.currency);
             const currencyBalance = await currency.getBalance(maker);
-            if (bn(currencyBalance).lt(totalPrice)) {
+            if (bn(currencyBalance).sub(makerOutstandingBalance).lt(totalPrice)) {
               if ([WNATIVE, BETH].includes(params.currency)) {
                 const nativeBalance = await baseProvider.getBalance(maker);
                 if (
@@ -836,7 +836,7 @@ export const getExecuteBidV5Options: RouteOptions = {
                 }
               } else {
                 return errors.push({
-                  message: `Maker does not have sufficient balance WNATIVE=${WNATIVE}, BETH=${BETH}, currency=${params.currency}`,
+                  message: `Maker does not have sufficient balance (currencyBalance = ${currencyBalance.toString()}, totalPrice = ${totalPrice.toString()}, makerOutstandingBalance = ${makerOutstandingBalance.toString()})`,
                   orderIndex: i,
                 });
               }
