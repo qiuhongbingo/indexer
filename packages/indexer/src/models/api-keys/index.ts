@@ -5,7 +5,7 @@ import Hapi, { Request } from "@hapi/hapi";
 
 import { idb, pgp, redb } from "@/common/db";
 import { logger } from "@/common/logger";
-import { allChainsSyncRedis, redis } from "@/common/redis";
+import { redis } from "@/common/redis";
 import {
   ApiKeyEntity,
   ApiKeyPermission,
@@ -21,6 +21,7 @@ import tracer from "@/common/tracer";
 import flat from "flat";
 import { fromBuffer, regex } from "@/common/utils";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
+import { AllChainsPubSub, PubSub } from "@/pubsub/index";
 
 export type ApiKeyRecord = {
   appName: string;
@@ -84,7 +85,7 @@ export class ApiKeyManager {
     // Sync to other chains only if created on mainnet
     if (created && config.chainId === 1) {
       await ApiKeyManager.notifyApiKeyCreated(values);
-      await allChainsSyncRedis.publish(AllChainsChannel.ApiKeyCreated, JSON.stringify({ values }));
+      await AllChainsPubSub.publish(AllChainsChannel.ApiKeyCreated, JSON.stringify({ values }));
 
       // Trigger delayed jobs to make sure all chains have the new api key
       await syncApiKeysJob.addToQueue({ apiKey: values.key }, 30 * 1000);
@@ -416,11 +417,11 @@ export class ApiKeyManager {
     const oldValues = await idb.manyOrNone(query, replacementValues);
 
     await ApiKeyManager.deleteCachedApiKey(key); // reload the cache
-    await redis.publish(Channel.ApiKeyUpdated, JSON.stringify({ key }));
+    await PubSub.publish(Channel.ApiKeyUpdated, JSON.stringify({ key }));
 
     // Sync to other chains only if created on mainnet
     if (config.chainId === 1) {
-      await allChainsSyncRedis.publish(
+      await AllChainsPubSub.publish(
         AllChainsChannel.ApiKeyUpdated,
         JSON.stringify({ key, fields })
       );
