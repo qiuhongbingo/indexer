@@ -1,0 +1,27 @@
+name: Notify Slack on Change
+
+on:
+  push:
+    paths:
+      - 'packages/sdk/src/index.ts'
+
+jobs:
+  notifySlack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get the last commit message
+        id: get_commit_msg
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=format:%s)
+          echo "::set-output name=commit_msg::${COMMIT_MSG}"
+      - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' --data \
+          "{
+            \"text\": \"Reservoir NFT marketplace has been updated. <https://github.com/qiuhongbingo/indexer/blob/main/packages/sdk/src/index.ts|Commit> message: ${{ steps.get_commit_msg.outputs.commit_msg }} <@U010Y124P6J>\"
+          }" $SLACK_WEBHOOK_URL
