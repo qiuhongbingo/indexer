@@ -38,12 +38,15 @@ export class PubSub {
 
   public static async subscribe() {
     // Subscribe to all channels defined in the `Channel` enum
-    redisSubscriber.subscribe(_.values(Channel), (error, count) => {
-      if (error) {
-        logger.error("pubsub", `Failed to subscribe ${error.message}`);
+    redisSubscriber.subscribe(
+      _.values(Channel).map((channel) => PubSub.getFullChannelName(channel)),
+      (error, count) => {
+        if (error) {
+          logger.error("pubsub", `Failed to subscribe ${error.message}`);
+        }
+        logger.info("pubsub", `subscribed to ${count} channels`);
       }
-      logger.info("pubsub", `subscribed to ${count} channels`);
-    });
+    );
 
     redisSubscriber.on("message", async (channel, message) => {
       logger.info("pubsub", `Received message on channel ${channel}, message = ${message}`);
@@ -92,12 +95,15 @@ export class AllChainsPubSub {
 
   public static async subscribe() {
     // Subscribe to all channels defined in the `AllChainsChannel` enum
-    allChainsSyncRedisSubscriber.subscribe(_.values(AllChainsChannel), (error, count) => {
-      if (error) {
-        logger.error("pubsub-all-chains", `Failed to subscribe ${error.message}`);
+    allChainsSyncRedisSubscriber.subscribe(
+      _.values(AllChainsChannel).map((channel) => AllChainsPubSub.getFullChannelName(channel)),
+      (error, count) => {
+        if (error) {
+          logger.error("pubsub-all-chains", `Failed to subscribe ${error.message}`);
+        }
+        logger.info("pubsub-all-chains", `subscribed to ${count} channels`);
       }
-      logger.info("pubsub-all-chains", `subscribed to ${count} channels`);
-    });
+    );
 
     allChainsSyncRedisSubscriber.on("message", async (channel, message) => {
       // For some events prevent multiple pods processing same message
