@@ -104,14 +104,19 @@ export class SimplehashMetadataProvider extends AbstractBaseMetadataProvider {
 
     let imageUrl = metadata.image_url || image_original_url;
 
-    if (_.toLower(metadata.contract_address) === "0x3a68024f7fd0f1d1ed22956dfaeb00c9b24c1d2b") {
-      imageUrl =
-        "https://ipfs.io/ipfs/bafybeifbpjx5p4c2xh4jd4aixpnayodejskgpk5jsqgc73uvb2hrynqhbm/0.gif";
-    }
+    const nftStorageLinkMatch = imageUrl.match(
+      /^(http)s?:\/\/(.*?)\.ipfs\.nftstorage\.link\/(.*?)$/
+    );
 
-    if (_.toLower(metadata.contract_address) === "0x5589cc3e514967cde22c772fb02d9261b1f580ae") {
-      imageUrl =
-        "https://ipfs.io/ipfs/bafybeicxlowk5olconjph66yjhxk6humqkxsdolvkeabmjmpya52l5ujay/0.png";
+    if (nftStorageLinkMatch) {
+      imageUrl = `https://ipfs.io/ipfs/${nftStorageLinkMatch[2]}/${nftStorageLinkMatch[3]}`;
+
+      logger.info(
+        "simplehash-fetcher",
+        JSON.stringify({
+          message: `_parseToken. Detected nft Storage Link. contract=${metadata.contract_address}, tokenId=${metadata.token_id}, imageUrl=${imageUrl}, image_url=${metadata.image_url}, image_original_url=${image_original_url}`,
+        })
+      );
     }
 
     if (
@@ -136,7 +141,7 @@ export class SimplehashMetadataProvider extends AbstractBaseMetadataProvider {
       collection: _.toLower(metadata.contract_address),
       flagged: null,
       slug:
-        metadata.collection.marketplace_pages?.filter(
+        metadata.collection?.marketplace_pages?.filter(
           (market: any) => market.marketplace_id === "opensea"
         )[0]?.marketplace_collection_id ?? undefined,
       // Token descriptions are a waste of space for most collections we deal with

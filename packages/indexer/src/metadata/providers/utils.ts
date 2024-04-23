@@ -25,6 +25,12 @@ export const normalizeLink = (link: string) => {
     return "";
   }
 
+  // const nftStorageLinkMatch = link.match(/^(http)s?:\/\/(.*?)\.ipfs\.nftstorage\.link\//);
+  //
+  // if (nftStorageLinkMatch) {
+  //   link = `https://ipfs.io/ipfs/${nftStorageLinkMatch[2]}/${nftStorageLinkMatch[3]}`;
+  // }
+
   return link?.trim();
 };
 
