@@ -5,7 +5,6 @@ import crypto from "crypto";
 import { AbstractRabbitMqJobHandler, BackoffStrategy } from "@/jobs/abstract-rabbit-mq-job-handler";
 import { DbEvent } from "@/events-sync/storage/nft-transfer-events";
 import { publishKafkaEvent } from "@/jobs/websocket-events/utils";
-import { getNetworkName } from "@/config/network";
 
 export type TransferWebsocketEventsTriggerQueueJobPayload = {
   data: TransferWebsocketEventInfo;
@@ -28,7 +27,6 @@ export class TransferWebsocketEventsTriggerQueueJob extends AbstractRabbitMqJobH
 
     try {
       const result = {
-        chain: getNetworkName(),
         id: crypto
           .createHash("sha256")
           .update(`${data.after.tx_hash}${data.after.log_index}${data.after.batch_index}`)
