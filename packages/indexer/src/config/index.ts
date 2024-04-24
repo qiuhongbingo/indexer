@@ -110,6 +110,9 @@ export const config = {
   // Custom taker (used for simulation)
   customTakerPrivateKey: process.env.CUSTOM_TAKER_PRIVATE_KEY,
 
+  // Distributor (used for split fee distribute)
+  splitFeeDistributorPrivateKey: process.env.SPLIT_FEE_DISTRIBUTOR_PRIVATE_KEY,
+
   openSeaTokenMetadataApiKey: String(
     process.env.OPENSEA_TOKENS_API_KEY || process.env.OPENSEA_API_KEY
   ),

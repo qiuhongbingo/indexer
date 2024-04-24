@@ -6,6 +6,8 @@ import {
   getPaymentSplitFromDb,
   generatePaymentSplit,
   supportsPaymentSplits,
+  getPaymentSplitBalance,
+  updatePaymentSplitBalance,
 } from "@/utils/payment-splits";
 
 export const FEE_BPS = config.chainId === 11155111 ? 50 : 0;
@@ -25,6 +27,7 @@ export const attachOrderbookFee = async (
     feeRecipient?: string[];
     orderKind: OrderKind;
     orderbook: string;
+    currency: string;
   },
   apiKey: string
 ) => {
@@ -62,6 +65,12 @@ export const attachOrderbookFee = async (
       );
       if (!paymentSplit) {
         throw new Error("Could not generate payment split");
+      }
+
+      const balance = await getPaymentSplitBalance(paymentSplit.address, params.currency);
+      if (balance === undefined) {
+        // Record the currency has used
+        await updatePaymentSplitBalance(paymentSplit.address, params.currency, "0");
       }
 
       // Override

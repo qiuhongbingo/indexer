@@ -198,6 +198,7 @@ import { backfillInvalidatedPPV2OrdersJob } from "@/jobs/backfill/backfill-inval
 import { resyncAttributeCacheJob } from "@/jobs/update-attribute/resync-attribute-cache-job";
 import { refreshDynamicTokenSetJob } from "@/jobs/token-set-updates/refresh-dynamic-token-set-job";
 import { fixOwnershipJob } from "@/jobs/backfill/fix-ownership";
+import { distributeFeeJob } from "@/jobs/orderbook/distribute-fee-job";
 
 export const allJobQueues = [
   backfillWrongNftBalances.queue,
@@ -379,6 +380,7 @@ export class RabbitMqJobsConsumer {
       backfillDeleteExpiredBidsElasticsearchJob,
       refreshDynamicTokenSetJob,
       fixOwnershipJob,
+      distributeFeeJob,
     ];
   }
 
