@@ -59,7 +59,7 @@ export const getUserCollectionsV4Options: RouteOptions = {
           )
       ),
       excludeCollections: Joi.alternatives()
-        .try(Joi.array().max(50).items(Joi.string()), Joi.string())
+        .try(Joi.array().max(100).items(Joi.string()), Joi.string())
         .description(
           "Exclude particular collection. Example: `0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63`"
         ),
