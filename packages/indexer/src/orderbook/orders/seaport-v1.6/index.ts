@@ -583,12 +583,10 @@ export const save = async (
       try {
         await validateOrderbookFee("seaport-v1.6", feeBreakdown);
       } catch (error: any) {
-        if (config.chainId === 11155111) {
-          return results.push({
-            id,
-            status: error.message,
-          });
-        }
+        return results.push({
+          id,
+          status: error.message,
+        });
       }
 
       // Handle: royalties on top

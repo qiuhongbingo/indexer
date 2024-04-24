@@ -3,7 +3,6 @@ import _ from "lodash";
 import { logger } from "@/common/logger";
 import { AbstractRabbitMqJobHandler } from "@/jobs/abstract-rabbit-mq-job-handler";
 import * as orders from "@/orderbook/orders";
-import { config } from "@/config/index";
 
 type CommonOrderInfo = {
   delayBeforeProcessing?: number;
@@ -221,18 +220,6 @@ export const processOrder = async (job: AbstractRabbitMqJobHandler, payload: Gen
         message: `[${kind}] Order save result: ${JSON.stringify(result)}`,
         orderKind: kind,
         resultStatus: result[0]?.status,
-      })
-    );
-  }
-
-  if (config.chainId === 11155111) {
-    logger.info(
-      job.queueName,
-      JSON.stringify({
-        message: `[${kind}] Order save result: ${JSON.stringify(result)} ${JSON.stringify(info)}`,
-        orderKind: kind,
-        resultStatus: result[0]?.status,
-        orderInfo: info,
       })
     );
   }
