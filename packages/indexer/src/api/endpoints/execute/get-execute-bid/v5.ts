@@ -800,7 +800,9 @@ export const getExecuteBidV5Options: RouteOptions = {
                       AND orders.currency = $/currency/
                       AND (orders.fillability_status = 'fillable' OR orders.fillability_status = 'no-balance')
                   )
-                  SELECT SUM(x.currency_price * x.quantity_remaining) FROM x
+                  SELECT
+                    SUM(x.currency_price * x.quantity_remaining) AS total_balance
+                  FROM x
                 `,
                 {
                   collection,
