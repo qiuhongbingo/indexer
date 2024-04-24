@@ -40,7 +40,7 @@ const erc1155Interface = new ethers.utils.Interface([
 
 export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
   method = "onchain";
-  disableWarnLogging = config.chainId !== 11155111;
+  disableWarnLogging = true;
 
   // get metadata methods
 

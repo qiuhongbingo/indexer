@@ -320,4 +320,5 @@ export const SeaportV16Module: ChainIdToAddress = {
   [Network.Avalanche]: "0xd8f24f5f0382e197c1e87ad82b357209383470cf",
   [Network.Bsc]: "0xd8f24f5f0382e197c1e87ad82b357209383470cf",
   [Network.Zora]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+  [Network.Blast]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
 };

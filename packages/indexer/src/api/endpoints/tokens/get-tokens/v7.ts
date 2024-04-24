@@ -721,11 +721,13 @@ export const getTokensV7Options: RouteOptions = {
           }
         )`;
     } else {
-      collectionFloorAskQuery = ", o.currency AS c_floor_sell_currency";
+      collectionFloorAskQuery =
+        ", o.currency AS c_floor_sell_currency, o.currency_value AS c_floor_sell_currency_value";
       selectCollectionFloorAsk = `
           LEFT JOIN LATERAL (
             SELECT
-              orders.currency
+              orders.currency,
+              orders.currency_value
             FROM orders
             WHERE orders.id = c.${
               query.normalizeRoyalties ? "normalized_floor_sell_id" : "floor_sell_id"

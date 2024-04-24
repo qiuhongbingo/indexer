@@ -213,10 +213,11 @@ export const processOrder = async (job: AbstractRabbitMqJobHandler, payload: Gen
     throw error;
   }
 
-  if (_.random(100) <= 75) {
-    logger.debug(
+  if (_.random(100) <= 50) {
+    logger.info(
       job.queueName,
       JSON.stringify({
+        topic: "orderbook-metrics",
         message: `[${kind}] Order save result: ${JSON.stringify(result)}`,
         orderKind: kind,
         resultStatus: result[0]?.status,

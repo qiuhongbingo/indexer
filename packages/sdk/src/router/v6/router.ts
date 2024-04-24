@@ -5929,7 +5929,6 @@ export class Router {
           to: this.contracts.approvalProxy.address,
           data:
             this.contracts.approvalProxy.interface.encodeFunctionData("bulkTransferWithExecute", [
-              // Exclude any transfer items which don't have a corresponding execution
               nftTransferItems.filter(({ items }) =>
                 executionsWithDetails.find(
                   ({ detail }) =>
