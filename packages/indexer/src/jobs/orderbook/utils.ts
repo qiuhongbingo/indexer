@@ -214,14 +214,25 @@ export const processOrder = async (job: AbstractRabbitMqJobHandler, payload: Gen
     throw error;
   }
 
-  if (config.chainId === 11155111 || _.random(100) <= 75) {
+  if (_.random(100) <= 50) {
     logger.debug(
       job.queueName,
       JSON.stringify({
         message: `[${kind}] Order save result: ${JSON.stringify(result)}`,
         orderKind: kind,
         resultStatus: result[0]?.status,
-        orderInfo: config.chainId === 11155111 ? JSON.stringify(info) : undefined,
+      })
+    );
+  }
+
+  if (config.chainId === 11155111) {
+    logger.info(
+      job.queueName,
+      JSON.stringify({
+        message: `[${kind}] Order save result: ${JSON.stringify(result)} ${JSON.stringify(info)}`,
+        orderKind: kind,
+        resultStatus: result[0]?.status,
+        orderInfo: info,
       })
     );
   }

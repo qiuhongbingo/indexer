@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { AddressZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
 import { generateMerkleTree } from "@reservoir0x/sdk/dist/common/helpers/merkle";
@@ -578,7 +580,16 @@ export const save = async (
       }
 
       // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("seaport-v1.6", feeBreakdown);
+      try {
+        await validateOrderbookFee("seaport-v1.6", feeBreakdown);
+      } catch (error: any) {
+        if (config.chainId === 11155111) {
+          return results.push({
+            id,
+            status: error.message,
+          });
+        }
+      }
 
       // Handle: royalties on top
       const defaultRoyalties =
