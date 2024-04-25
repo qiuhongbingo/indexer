@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { AddressZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
 import { Network } from "@reservoir0x/sdk/dist/utils";
@@ -7,7 +5,7 @@ import { Network } from "@reservoir0x/sdk/dist/utils";
 import { config } from "@/config/index";
 import { idb, pgp } from "@/common/db";
 import { logger } from "@/common/logger";
-import { fromBuffer, toBuffer } from "@/common/utils";
+import { bn, fromBuffer, toBuffer } from "@/common/utils";
 import { AbstractRabbitMqJobHandler, BackoffStrategy } from "@/jobs/abstract-rabbit-mq-job-handler";
 import { orderUpdatesByIdJob } from "@/jobs/order-updates/order-updates-by-id-job";
 import { TriggerKind } from "@/jobs/order-updates/types";
@@ -153,6 +151,11 @@ export default class OrderUpdatesByMakerJob extends AbstractRabbitMqJobHandler {
                 orders.id,
                 orders.source_id_int,
                 orders.fillability_status AS old_status,
+                orders.raw_data->>'zone' as seaport_zone,
+                orders.raw_data->>'cosigner' as pp_cosigner,
+                orders.quantity_remaining,
+                floor(ft_balances.amount / orders.currency_price) AS quantity_available,
+                nullif(upper(orders.valid_between), 'infinity')::TIMESTAMPTZ AS expiration_if_fillable,
                 (CASE
                   WHEN ft_balances.amount >= (orders.currency_price * orders.quantity_remaining) THEN 'fillable'
                   ELSE 'no-balance'
@@ -160,7 +163,7 @@ export default class OrderUpdatesByMakerJob extends AbstractRabbitMqJobHandler {
                 (CASE
                   WHEN ft_balances.amount >= (orders.currency_price * orders.quantity_remaining) THEN nullif(upper(orders.valid_between), 'infinity')
                   ELSE to_timestamp($/timestamp/)
-                END)::timestamptz AS expiration
+                END)::TIMESTAMPTZ AS expiration
               FROM orders
               JOIN ft_balances
                 ON orders.maker = ft_balances.owner
@@ -177,9 +180,29 @@ export default class OrderUpdatesByMakerJob extends AbstractRabbitMqJobHandler {
             }
           );
 
-          // Filter any orders that didn't change status
           const values = fillabilityStatuses
-            .filter(({ old_status, new_status }) => old_status !== new_status)
+            .map((c) => {
+              c.old_quantity_remaining = c.quantity_remaining;
+
+              // For cosigned orders only, override the remaining quantity if the order still has quantity available for filling
+              if (
+                c.new_status === "no-balance" &&
+                isCosignedOrder(c.seaport_zone, c.pp_cosigner) &&
+                bn(c.quantity_available).gt(0) &&
+                bn(c.quantity_available).lt(c.quantity_remaining)
+              ) {
+                c.new_status = "fillable";
+                c.quantity_remaining = c.quantity_available;
+                c.expiration = c.expiration_if_fillable;
+              }
+
+              return c;
+            })
+            // Filter any orders that didn't change status (or quantities)
+            .filter(
+              ({ old_status, new_status, old_quantity_remaining, quantity_remaining }) =>
+                old_status !== new_status || old_quantity_remaining !== quantity_remaining
+            )
             // Some orders should never get revalidated
             .map((data) =>
               data.new_status === "no-balance" &&
@@ -189,28 +212,33 @@ export default class OrderUpdatesByMakerJob extends AbstractRabbitMqJobHandler {
                 ? { ...data, new_status: "cancelled" }
                 : data
             )
-            .map(({ id, new_status, expiration }) => ({
+            .map(({ id, new_status, quantity_remaining, expiration }) => ({
               id,
               fillability_status: new_status,
+              quantity_remaining,
               expiration: expiration || "infinity",
             }));
 
           // Update any orders that did change status
           if (values.length) {
-            const columns = new pgp.helpers.ColumnSet(["id", "fillability_status", "expiration"], {
-              table: "orders",
-            });
+            const columns = new pgp.helpers.ColumnSet(
+              ["id", "fillability_status", "quantity_remaining", "expiration"],
+              {
+                table: "orders",
+              }
+            );
 
             await idb.none(
               `
                 UPDATE orders SET
                   fillability_status = x.fillability_status::order_fillability_status_t,
+                  quantity_remaining = x.quantity_remaining::NUMERIC(78, 0),
                   expiration = x.expiration::TIMESTAMPTZ,
                   updated_at = now()
                 FROM (VALUES ${pgp.helpers.values(
                   values,
                   columns
-                )}) AS x(id, fillability_status, expiration)
+                )}) AS x(id, fillability_status, quantity_remaining, expiration)
                 WHERE orders.id = x.id::TEXT
               `
             );
@@ -292,7 +320,7 @@ export default class OrderUpdatesByMakerJob extends AbstractRabbitMqJobHandler {
                         WHEN (orders.currency_price * orders.quantity_remaining) > y.value THEN to_timestamp($/timestamp/)
                         ELSE nullif(upper(orders.valid_between), 'infinity')
                       END
-                    )::timestamptz,
+                    )::TIMESTAMPTZ,
                     updated_at = now()
                   FROM x
                   LEFT JOIN y ON TRUE
