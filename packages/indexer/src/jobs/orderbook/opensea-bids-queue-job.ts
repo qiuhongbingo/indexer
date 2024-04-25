@@ -132,9 +132,10 @@ export default class OpenseaBidsQueueJob extends AbstractRabbitMqJobHandler {
     }
 
     if (_.random(100) <= 75) {
-      logger.debug(
+      logger.info(
         this.queueName,
         JSON.stringify({
+          topic: "orderbook-metrics",
           message: `[${kind}] Order save result: ${JSON.stringify(result)}`,
           orderKind: kind,
           resultStatus: result[0]?.status,

@@ -8,7 +8,7 @@ import {
   supportsPaymentSplits,
 } from "@/utils/payment-splits";
 
-export const FEE_BPS = config.chainId === 11155111 ? 50 : 0;
+export const FEE_BPS = config.environment !== "prod" && config.chainId === 11155111 ? 50 : 0;
 export const FEE_RECIPIENT =
   config.chainId === 11155111 ? "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e" : AddressZero;
 
@@ -110,7 +110,7 @@ export const validateOrderbookFee = async (
     }
 
     if (!foundOrderbookFee) {
-      throw new Error("mising-orderbook-fee");
+      throw new Error("missing-orderbook-fee");
     }
   }
 };

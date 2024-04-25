@@ -340,7 +340,9 @@ export class ApiKeyManager {
   public static async logRequest(request: Request) {
     const log: any = await ApiKeyManager.getBaseLog(request);
 
-    logger.info("metrics", JSON.stringify(log));
+    if (log.route.includes("execute") || log.debugApiKey || _.random(100) <= 50) {
+      logger.info("metrics", JSON.stringify(log));
+    }
 
     // Add request params to Datadog trace
     try {
