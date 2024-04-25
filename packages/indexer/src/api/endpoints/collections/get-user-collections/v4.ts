@@ -229,13 +229,37 @@ export const getUserCollectionsV4Options: RouteOptions = {
       selectOnSaleCount = "nb.owner_on_sale_count,";
       onSaleCount = `
         LEFT JOIN LATERAL (
-          SELECT COUNT(*) AS "owner_on_sale_count"
+          SELECT (
+            CASE WHEN ot.value IS NOT NULL
+            THEN 1
+            ELSE 0
+            END
+           ) AS "owner_on_sale_count"
           FROM nft_balances
           JOIN tokens ON nft_balances.contract = tokens.contract AND nft_balances.token_id = tokens.token_id
-          WHERE "owner" = $/user/
+          JOIN contracts con ON tokens.contract = con.address
+          JOIN orders ot ON ot.id = CASE WHEN con.kind = 'erc1155' THEN (
+            SELECT
+              id
+            FROM
+              orders
+              JOIN token_sets_tokens ON orders.token_set_id = token_sets_tokens.token_set_id
+            WHERE
+              con.kind = 'erc1155'
+              AND token_sets_tokens.contract = tokens.contract
+              AND token_sets_tokens.token_id = tokens.token_id
+              AND orders.side = 'sell'
+              AND orders.fillability_status = 'fillable'
+              AND orders.approval_status = 'approved'
+              AND orders.maker = $/user/
+            ORDER BY
+              orders.value ASC
+            LIMIT
+              1
+          ) ELSE tokens.floor_sell_id END
+          WHERE nft_balances."owner" = $/user/
           AND nft_balances.contract = uc.contract
           AND amount > 0
-          AND tokens.floor_sell_value IS NOT NULL
         ) nb ON TRUE
       `;
     }
@@ -461,7 +485,9 @@ export const getUserCollectionsV4Options: RouteOptions = {
           ),
           ownership: {
             tokenCount: String(r.owner_token_count),
-            onSaleCount: query.includeOnSaleCount ? String(r.owner_on_sale_count) : undefined,
+            onSaleCount: query.includeOnSaleCount
+              ? String(Number(r.owner_on_sale_count))
+              : undefined,
             liquidCount: query.includeLiquidCount
               ? String(Number(r.owner_liquid_count))
               : undefined,
