@@ -396,10 +396,12 @@ export class ApiKeyManager {
         } else if (_.isObject(value)) {
           Object.keys(value).forEach((key) => {
             if (_.isNull((value as any)[key])) {
+              // If null remove the field
               updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
                 fieldName
               )}, '{}') - '${key}',`;
             } else {
+              // Otherwise update teh field value
               updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
                 fieldName
               )}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
@@ -427,7 +429,10 @@ export class ApiKeyManager {
      SET ${updateString}
      WHERE key = $/key/
      RETURNING ${updatedFields
-       .map((fieldName) => `(SELECT ${fieldName} FROM old_values) AS "old_${fieldName}"`)
+       .map(
+         (fieldName) =>
+           `(SELECT ${_.snakeCase(fieldName)} FROM old_values) AS "old_${_.snakeCase(fieldName)}"`
+       )
        .join(",")}`;
 
     const oldValues = await idb.manyOrNone(query, replacementValues);
