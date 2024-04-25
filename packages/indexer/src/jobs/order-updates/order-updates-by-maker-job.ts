@@ -154,7 +154,10 @@ export default class OrderUpdatesByMakerJob extends AbstractRabbitMqJobHandler {
                 orders.raw_data->>'zone' as seaport_zone,
                 orders.raw_data->>'cosigner' as pp_cosigner,
                 orders.quantity_remaining,
-                floor(ft_balances.amount / orders.currency_price) AS quantity_available,
+                (CASE
+                  WHEN orders.currency_price > 0 THEN floor(ft_balances.amount / orders.currency_price)
+                  ELSE orders.quantity_remaining
+                END)::NUMERIC(78, 0) AS quantity_available,
                 nullif(upper(orders.valid_between), 'infinity')::TIMESTAMPTZ AS expiration_if_fillable,
                 (CASE
                   WHEN ft_balances.amount >= (orders.currency_price * orders.quantity_remaining) THEN 'fillable'
