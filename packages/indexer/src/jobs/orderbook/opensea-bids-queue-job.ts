@@ -131,7 +131,7 @@ export default class OpenseaBidsQueueJob extends AbstractRabbitMqJobHandler {
       throw error;
     }
 
-    if (_.random(100) <= 75) {
+    if (_.random(100) <= 50) {
       logger.info(
         this.queueName,
         JSON.stringify({
