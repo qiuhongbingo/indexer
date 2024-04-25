@@ -108,6 +108,16 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
       );
     }
 
+    logger.debug(
+      this.queueName,
+      JSON.stringify({
+        topic: "tokenMetadataIndexingDebug",
+        message: `Start. collection=${collection}, tokenId=${tokenId}, metadataMethod=${metadataMethod}`,
+        payload,
+        metadataMethod,
+      })
+    );
+
     if (metadataMethod === "simplehash") {
       try {
         const fallbackError = await redis.hget(
