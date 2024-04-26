@@ -1261,7 +1261,7 @@ export const getNetworkSettings = (): NetworkSettings => {
               metadata: {
                 image:
                   "https://bafkreidcljrhz7hq4h5rarxgxd63tail24mqawllwhxfrvr3esfv2nvyiy.ipfs.nftstorage.link/",
-                  coingeckoCurrencyId: "zed-run"
+                coingeckoCurrencyId: "zed-run",
               },
             },
           ],
@@ -1274,13 +1274,12 @@ export const getNetworkSettings = (): NetworkSettings => {
               symbol: "WETH",
               decimals: 18,
               metadata: {
-                image:
-                  "https://assets.coingecko.com/coins/images/2518/large/weth.png?1628852295",
-                coingeckoCurrencyId: "ethereum"
+                image: "https://assets.coingecko.com/coins/images/2518/large/weth.png?1628852295",
+                coingeckoCurrencyId: "ethereum",
               },
             },
           ],
-        ])
+        ]),
       };
     }
     // Arbitrum Nova

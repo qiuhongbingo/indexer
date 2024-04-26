@@ -221,6 +221,9 @@ export abstract class AbstractBaseMetadataProvider {
     if (url.endsWith(".mp4")) {
       return "video/mp4";
     }
+    if (url.endsWith(".mp3")) {
+      return "audio/mpeg";
+    }
     if (url.startsWith("data:image/svg+xml")) {
       return "image/svg+xml";
     }
