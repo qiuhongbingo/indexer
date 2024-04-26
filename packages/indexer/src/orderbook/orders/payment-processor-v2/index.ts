@@ -350,7 +350,7 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       }
 
       // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("payment-processor-v2", feeBreakdown);
+      await validateOrderbookFee("payment-processor-v2", feeBreakdown, true);
 
       const feeBps = feeBreakdown.map(({ bps }) => bps).reduce((a, b) => Number(a) + Number(b), 0);
 

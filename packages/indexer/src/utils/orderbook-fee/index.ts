@@ -89,8 +89,14 @@ export const validateOrderbookFee = async (
     kind: string;
     recipient: string;
     bps: number;
-  }[]
+  }[],
+  isReservoir?: boolean
 ) => {
+  // Only native orders
+  if (!isReservoir) {
+    return;
+  }
+
   // This is not the best place to add this check, but it does the job for now
   const totalBps = feeBreakdown.reduce((t, b) => t + b.bps, 0);
   if (totalBps > 10000) {
