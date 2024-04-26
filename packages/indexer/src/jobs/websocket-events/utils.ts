@@ -89,7 +89,7 @@ export const publishKafkaEvent = async (event: KafkaEvent): Promise<void> => {
 };
 
 const mapEventToKafkaTopic = (event: KafkaEvent): string => {
-  return `${getNetworkName()}.${event.event.split(".")[0]}s`;
+  return `ks.${getNetworkName()}.${event.event.split(".")[0]}s`;
 };
 
 const mapEventToKafkaPartitionKey = (event: KafkaEvent): string => {

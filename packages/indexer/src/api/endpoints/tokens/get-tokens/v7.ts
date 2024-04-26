@@ -224,6 +224,9 @@ export const getTokensV7Options: RouteOptions = {
       excludeNsfw: Joi.boolean()
         .default(false)
         .description("If true, will filter any tokens marked as nsfw."),
+      excludeBurnt: Joi.boolean()
+        .default(false)
+        .description("If true, will filter any burnt tokens."),
       includeAttributes: Joi.boolean()
         .default(false)
         .description("If true, attributes will be returned in the response."),
@@ -721,11 +724,13 @@ export const getTokensV7Options: RouteOptions = {
           }
         )`;
     } else {
-      collectionFloorAskQuery = ", o.currency AS c_floor_sell_currency";
+      collectionFloorAskQuery =
+        ", o.currency AS c_floor_sell_currency, o.currency_value AS c_floor_sell_currency_value";
       selectCollectionFloorAsk = `
           LEFT JOIN LATERAL (
             SELECT
-              orders.currency
+              orders.currency,
+              orders.currency_value
             FROM orders
             WHERE orders.id = c.${
               query.normalizeRoyalties ? "normalized_floor_sell_id" : "floor_sell_id"
@@ -944,6 +949,10 @@ export const getTokensV7Options: RouteOptions = {
 
       if (query.maxRarityRank) {
         conditions.push(`t.rarity_rank <= $/maxRarityRank/`);
+      }
+
+      if (query.excludeBurnt) {
+        conditions.push(`t.remaining_supply > 0`);
       }
 
       if (query.minFloorAskPrice !== undefined) {

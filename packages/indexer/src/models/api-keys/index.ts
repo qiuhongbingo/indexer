@@ -5,7 +5,7 @@ import Hapi, { Request } from "@hapi/hapi";
 
 import { idb, pgp, redb } from "@/common/db";
 import { logger } from "@/common/logger";
-import { allChainsSyncRedis, redis } from "@/common/redis";
+import { redis } from "@/common/redis";
 import {
   ApiKeyEntity,
   ApiKeyPermission,
@@ -21,6 +21,9 @@ import tracer from "@/common/tracer";
 import flat from "flat";
 import { fromBuffer, regex } from "@/common/utils";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
+import { AllChainsPubSub, PubSub } from "@/pubsub/index";
+import { OrderKind } from "@/orderbook/orders";
+import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
 
 export type ApiKeyRecord = {
   appName: string;
@@ -41,6 +44,7 @@ export type NewApiKeyResponse = {
 
 export class ApiKeyManager {
   public static defaultRevShareBps = 3000;
+  public static defaultOrderbookFeeBps = 50;
 
   private static apiKeys: Map<string, ApiKeyEntity> = new Map();
 
@@ -84,7 +88,7 @@ export class ApiKeyManager {
     // Sync to other chains only if created on mainnet
     if (created && config.chainId === 1) {
       await ApiKeyManager.notifyApiKeyCreated(values);
-      await allChainsSyncRedis.publish(AllChainsChannel.ApiKeyCreated, JSON.stringify({ values }));
+      await AllChainsPubSub.publish(AllChainsChannel.ApiKeyCreated, JSON.stringify({ values }));
 
       // Trigger delayed jobs to make sure all chains have the new api key
       await syncApiKeysJob.addToQueue({ apiKey: values.key }, 30 * 1000);
@@ -134,6 +138,8 @@ export class ApiKeyManager {
         ips: [],
         origins: [],
         rev_share_bps: ApiKeyManager.defaultRevShareBps,
+        orderbook_fees: {},
+        disable_orderbook_fees: false,
       });
     }
 
@@ -339,7 +345,9 @@ export class ApiKeyManager {
   public static async logRequest(request: Request) {
     const log: any = await ApiKeyManager.getBaseLog(request);
 
-    logger.info("metrics", JSON.stringify(log));
+    if (log.route.includes("execute") || log.debugApiKey || _.random(100) <= 50) {
+      logger.info("metrics", JSON.stringify(log));
+    }
 
     // Add request params to Datadog trace
     try {
@@ -386,9 +394,20 @@ export class ApiKeyManager {
           updateString += `${_.snakeCase(fieldName)} = '$/${fieldName}:raw/'::jsonb,`;
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else if (_.isObject(value)) {
-          updateString += `${_.snakeCase(
-            fieldName
-          )} = COALESCE(${fieldName}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
+          Object.keys(value).forEach((key) => {
+            if (_.isNull((value as any)[key])) {
+              // If null remove the field
+              updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
+                fieldName
+              )}, '{}') - '${key}',`;
+            } else {
+              // Otherwise update teh field value
+              updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
+                fieldName
+              )}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
+            }
+          });
+
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else {
           updateString += `${_.snakeCase(fieldName)} = $/${fieldName}/,`;
@@ -410,17 +429,20 @@ export class ApiKeyManager {
      SET ${updateString}
      WHERE key = $/key/
      RETURNING ${updatedFields
-       .map((fieldName) => `(SELECT ${fieldName} FROM old_values) AS "old_${fieldName}"`)
+       .map(
+         (fieldName) =>
+           `(SELECT ${_.snakeCase(fieldName)} FROM old_values) AS "old_${_.snakeCase(fieldName)}"`
+       )
        .join(",")}`;
 
     const oldValues = await idb.manyOrNone(query, replacementValues);
 
     await ApiKeyManager.deleteCachedApiKey(key); // reload the cache
-    await redis.publish(Channel.ApiKeyUpdated, JSON.stringify({ key }));
+    await PubSub.publish(Channel.ApiKeyUpdated, JSON.stringify({ key }));
 
     // Sync to other chains only if created on mainnet
     if (config.chainId === 1) {
-      await allChainsSyncRedis.publish(
+      await AllChainsPubSub.publish(
         AllChainsChannel.ApiKeyUpdated,
         JSON.stringify({ key, fields })
       );
@@ -430,6 +452,20 @@ export class ApiKeyManager {
       "api-key",
       `Update key ${key} with ${JSON.stringify(fields)}, oldValues=${JSON.stringify(oldValues)}`
     );
+  }
+
+  public static async getOrderbookFee(key: string, orderbook: OrderKind) {
+    // Fees are enforced only for specific orderbooks
+    if (!ORDERBOOK_FEE_ORDER_KINDS.includes(orderbook)) {
+      return 0;
+    }
+
+    const apiKey = await ApiKeyManager.getApiKey(key);
+    if (apiKey?.disableOrderbookFees) {
+      return 0;
+    }
+
+    return apiKey?.orderbookFees[orderbook]?.feeBps ?? ApiKeyManager.defaultOrderbookFeeBps;
   }
 
   static async notifyApiKeyCreated(values: ApiKeyRecord) {

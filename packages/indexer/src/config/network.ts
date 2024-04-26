@@ -146,6 +146,8 @@ export const getOpenseaNetworkName = () => {
       return "zora";
     case 84532:
       return "base_sepolia";
+    case 168587773:
+      return "blast_sepolia";
     case 81457:
       return "blast";
     default:

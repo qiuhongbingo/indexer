@@ -77,17 +77,8 @@ const getNetworkConfig = (chainId?: number) => {
         url = "https://blast.blockpi.network/v1/rpc/public";
         break;
       // Testnets
-      case 5:
-        url = "https://goerli.blockpi.network/v1/rpc/public";
-        break;
       case 5001:
         url = "https://rpc.testnet.mantle.xyz";
-        break;
-      case 59140:
-        url = "https://rpc.goerli.linea.build/";
-        break;
-      case 80001:
-        url = "https://polygon-mumbai-bor-rpc.publicnode.com";
         break;
       case 80002:
         url = "https://rpc-amoy.polygon.technology";
@@ -194,10 +185,7 @@ const config: HardhatUserConfig = {
     apex: getNetworkConfig(70700),
     blast: getNetworkConfig(81457),
     // Testnets
-    goerli: getNetworkConfig(5),
     mantleTestnet: getNetworkConfig(5001),
-    lineaTestnet: getNetworkConfig(59140),
-    mumbai: getNetworkConfig(80001),
     sepolia: getNetworkConfig(11155111),
     ancient8Testnet: getNetworkConfig(28122024),
     baseSepolia: getNetworkConfig(84532),
@@ -230,13 +218,11 @@ const config: HardhatUserConfig = {
       apex: "0x",
       blast: process.env.ETHERSCAN_API_KEY_BLAST ?? "",
       // Testnets
-      goerli: process.env.ETHERSCAN_API_KEY_GOERLI ?? "",
       mantleTestnet: "0x",
       lineaTestnet: process.env.ETHERSCAN_API_KEY_LINEA_TESTNET ?? "",
-      mumbai: process.env.ETHERSCAN_API_KEY_MUMBAI ?? "",
       sepolia: process.env.ETHERSCAN_API_KEY_SEPOLIA ?? "",
       ancient8Testnet: "0x",
-      baseSepolia: "0x",
+      baseSepolia: process.env.ETHERSCAN_API_KEY_BASE ?? "",
       blastSepolia: process.env.ETHERSCAN_API_KEY_BLAST ?? "",
       apexTestnet: "0x",
       berachainTestnet: "0x",
@@ -357,22 +343,6 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://explorer.testnet.mantle.xyz/api",
           browserURL: "https://explorer.testnet.mantle.xyz",
-        },
-      },
-      {
-        network: "lineaTestnet",
-        chainId: 59140,
-        urls: {
-          apiURL: "https://api-testnet.lineascan.build/api",
-          browserURL: "https://testnet.lineascan.build",
-        },
-      },
-      {
-        network: "mumbai",
-        chainId: 80001,
-        urls: {
-          apiURL: "https://api-mumbai.polygonscan.com/api",
-          browserURL: "https://mumbai.polygonscan.com",
         },
       },
       {

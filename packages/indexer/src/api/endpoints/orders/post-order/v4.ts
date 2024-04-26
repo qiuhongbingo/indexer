@@ -586,9 +586,10 @@ export const postOrderV4Options: RouteOptions = {
 
             case "payment-processor": {
               if (orderbook !== "reservoir") {
-                logger.debug(
+                logger.info(
                   `post-order-${version}-handler`,
                   JSON.stringify({
+                    topic: "orderbook-metrics",
                     message: `[${order.kind}] Order save result.`,
                     orderKind: order.kind,
                     resultStatus: "unsupported-orderbook",
@@ -608,9 +609,10 @@ export const postOrderV4Options: RouteOptions = {
 
               const [result] = await orders.paymentProcessor.save([orderInfo]);
 
-              logger.debug(
+              logger.info(
                 `post-order-${version}-handler`,
                 JSON.stringify({
+                  topic: "orderbook-metrics",
                   message: `[${order.kind}] Order save result: ${JSON.stringify(result)}`,
                   orderKind: order.kind,
                   resultStatus: result.status,
@@ -626,9 +628,10 @@ export const postOrderV4Options: RouteOptions = {
 
             case "payment-processor-v2": {
               if (orderbook !== "reservoir") {
-                logger.debug(
+                logger.info(
                   `post-order-${version}-handler`,
                   JSON.stringify({
+                    topic: "orderbook-metrics",
                     message: `[${order.kind}] Order save result.`,
                     orderKind: order.kind,
                     resultStatus: "unsupported-orderbook",
@@ -648,9 +651,10 @@ export const postOrderV4Options: RouteOptions = {
 
               const [result] = await orders.paymentProcessorV2.save([orderInfo]);
 
-              logger.debug(
+              logger.info(
                 `post-order-${version}-handler`,
                 JSON.stringify({
+                  topic: "orderbook-metrics",
                   message: `[${order.kind}] Order save result: ${JSON.stringify(result)}`,
                   orderKind: order.kind,
                   resultStatus: result.status,
@@ -672,17 +676,19 @@ export const postOrderV4Options: RouteOptions = {
                       id: result.id,
                     },
                   });
-                  logger.info(
-                    "validate-order-on-creation",
-                    JSON.stringify({
-                      id: result.id,
-                      response: response.payload,
-                      contract: orderInfo.orderParams.tokenAddress,
-                      side,
-                    })
-                  );
 
                   simulationResult = JSON.parse(response.payload).message;
+                  if (simulationResult === "Order is not fillable") {
+                    logger.info(
+                      "validate-order-on-creation",
+                      JSON.stringify({
+                        id: result.id,
+                        response: response.payload,
+                        contract: orderInfo.orderParams.tokenAddress,
+                        side,
+                      })
+                    );
+                  }
                 } catch {
                   // Skip errors
                 }

@@ -103,7 +103,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
             );
 
             return;
-          } else {
+          } else if (![690, 17069].includes(config.chainId)) {
             metadata[0].imageUrl = null;
           }
         }
@@ -200,6 +200,15 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           );
         }
 
+        logger.debug(
+          this.queueName,
+          JSON.stringify({
+            topic: "tokenMetadataIndexingDebug",
+            message: `metadataIndexWriteJob. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+            metadata: JSON.stringify(metadata),
+          })
+        );
+
         await metadataIndexWriteJob.addToQueue(metadata);
         return;
       } else {
@@ -292,6 +301,14 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
     }
 
     if (!config.fallbackMetadataIndexingMethod) {
+      logger.debug(
+        this.queueName,
+        JSON.stringify({
+          message: `No Fallback. contract=${contract}, tokenId=${tokenId}, uri=${uri}, error=${fallbackError}`,
+          payload,
+        })
+      );
+
       return;
     }
 

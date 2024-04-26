@@ -17,6 +17,7 @@ import { Channel } from "@/pubsub/channels";
 
 import { default as sourcesFromJson } from "./sources.json";
 import { fetchSourceInfoJob } from "@/jobs/sources/fetch-source-info-job";
+import { PubSub } from "@/pubsub/index";
 
 export class Sources {
   private static instance: Sources;
@@ -213,7 +214,7 @@ export class Sources {
     // Fetch domain info
     await fetchSourceInfoJob.addToQueue({ sourceDomain: domain });
 
-    await redis.publish(Channel.SourcesUpdated, `New source ${domain}`);
+    await PubSub.publish(Channel.SourcesUpdated, `New source ${domain}`);
     logger.info("sources", `New source '${domain}' was added`);
 
     return new SourcesEntity(source);
@@ -270,7 +271,7 @@ export class Sources {
 
     // Reload the cache
     await Sources.instance.loadData(true);
-    await redis.publish(Channel.SourcesUpdated, `Updated source ${domain}`);
+    await PubSub.publish(Channel.SourcesUpdated, `Updated source ${domain}`);
   }
 
   public get(
