@@ -676,17 +676,19 @@ export const postOrderV4Options: RouteOptions = {
                       id: result.id,
                     },
                   });
-                  logger.info(
-                    "validate-order-on-creation",
-                    JSON.stringify({
-                      id: result.id,
-                      response: response.payload,
-                      contract: orderInfo.orderParams.tokenAddress,
-                      side,
-                    })
-                  );
 
                   simulationResult = JSON.parse(response.payload).message;
+                  if (simulationResult === "Order is not fillable") {
+                    logger.info(
+                      "validate-order-on-creation",
+                      JSON.stringify({
+                        id: result.id,
+                        response: response.payload,
+                        contract: orderInfo.orderParams.tokenAddress,
+                        side,
+                      })
+                    );
+                  }
                 } catch {
                   // Skip errors
                 }
