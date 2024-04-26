@@ -171,7 +171,7 @@ if (config.doBackgroundWork) {
     "0 1 * * *",
     async () =>
       await redlock
-        .acquire([`distribute-fee-cron-lock`], (5 * 60 - 5) * 1000)
+        .acquire([`distribute-fees-cron-lock`], (5 * 60 - 5) * 1000)
         .then(async () => {
           getPaymentSplits()
             .then(async (splits) =>
