@@ -89,7 +89,7 @@ export abstract class AbstractBaseMetadataProvider {
           })
         );
 
-        if (hasExtendHandler(metadata.contract)) {
+        if (!["soundxyz"].includes(this.method) && hasExtendHandler(metadata.contract)) {
           return extendMetadata(metadata);
         }
 
@@ -172,6 +172,7 @@ export abstract class AbstractBaseMetadataProvider {
 
           // if the imageMimeType is not an "image" mime type, we want to set imageUrl to null and mediaUrl to imageUrl
           if (
+            !["soundxyz"].includes(this.method) &&
             metadata.imageUrl &&
             metadata.imageMimeType &&
             !imageMimeTypesPrefixes.some((imageMimeTypesPrefix) =>
