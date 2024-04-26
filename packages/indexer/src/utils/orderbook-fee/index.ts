@@ -5,7 +5,9 @@ import { OrderKind } from "@/orderbook/orders";
 import {
   getPaymentSplitFromDb,
   generatePaymentSplit,
+  getPaymentSplitBalance,
   supportsPaymentSplits,
+  updatePaymentSplitBalance,
 } from "@/utils/payment-splits";
 
 export const FEE_BPS = config.environment !== "prod" && config.chainId === 11155111 ? 50 : 0;
@@ -28,6 +30,7 @@ export const attachOrderbookFee = async (
     feeRecipient?: string[];
     orderKind: OrderKind;
     orderbook: string;
+    currency: string;
   },
   apiKey: string
 ) => {
@@ -67,6 +70,12 @@ export const attachOrderbookFee = async (
         throw new Error("Could not generate payment split");
       }
 
+      // Keep track of the currency
+      const balance = await getPaymentSplitBalance(paymentSplit.address, params.currency);
+      if (!balance) {
+        await updatePaymentSplitBalance(paymentSplit.address, params.currency, "0");
+      }
+
       // Override
       params.feeRecipient = [paymentSplit.address];
       params.fee = [String(params.fee.map(Number).reduce((a, b) => a + b) + FEE_BPS)];
@@ -83,8 +92,14 @@ export const validateOrderbookFee = async (
     kind: string;
     recipient: string;
     bps: number;
-  }[]
+  }[],
+  isReservoir?: boolean
 ) => {
+  // Only native orders
+  if (!isReservoir) {
+    return;
+  }
+
   // This is not the best place to add this check, but it does the job for now
   const totalBps = feeBreakdown.reduce((t, b) => t + b.bps, 0);
   if (totalBps > 10000) {

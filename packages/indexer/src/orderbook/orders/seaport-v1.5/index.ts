@@ -597,7 +597,7 @@ export const save = async (
       }
 
       // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("seaport-v1.5", feeBreakdown);
+      await validateOrderbookFee("seaport-v1.5", feeBreakdown, isReservoir);
 
       // Handle: royalties on top
       const defaultRoyalties =

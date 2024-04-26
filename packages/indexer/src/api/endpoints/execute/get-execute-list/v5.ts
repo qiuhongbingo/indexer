@@ -306,7 +306,7 @@ export const getExecuteListV5Options: RouteOptions = {
       expirationTime?: number;
       salt?: string;
       nonce?: string;
-      currency?: string;
+      currency: string;
       taker?: string;
     }[];
 

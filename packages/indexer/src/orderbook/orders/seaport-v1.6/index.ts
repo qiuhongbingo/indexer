@@ -581,7 +581,7 @@ export const save = async (
 
       // Validate the potential inclusion of an orderbook fee
       try {
-        await validateOrderbookFee("seaport-v1.6", feeBreakdown);
+        await validateOrderbookFee("seaport-v1.6", feeBreakdown, isReservoir);
       } catch (error: any) {
         return results.push({
           id,
