@@ -465,7 +465,7 @@ export class ApiKeyManager {
       return 0;
     }
 
-    return apiKey?.orderbookFees[orderbook]?.feeBps ?? ApiKeyManager.defaultOrderbookFeeBps;
+    return apiKey?.orderbookFees?.[orderbook]?.feeBps ?? ApiKeyManager.defaultOrderbookFeeBps;
   }
 
   static async notifyApiKeyCreated(values: ApiKeyRecord) {
