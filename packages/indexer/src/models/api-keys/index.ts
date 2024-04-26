@@ -22,6 +22,8 @@ import flat from "flat";
 import { fromBuffer, regex } from "@/common/utils";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { AllChainsPubSub, PubSub } from "@/pubsub/index";
+import { OrderKind } from "@/orderbook/orders";
+import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
 
 export type ApiKeyRecord = {
   appName: string;
@@ -42,6 +44,7 @@ export type NewApiKeyResponse = {
 
 export class ApiKeyManager {
   public static defaultRevShareBps = 3000;
+  public static defaultOrderbookFeeBps = 50;
 
   private static apiKeys: Map<string, ApiKeyEntity> = new Map();
 
@@ -135,6 +138,8 @@ export class ApiKeyManager {
         ips: [],
         origins: [],
         rev_share_bps: ApiKeyManager.defaultRevShareBps,
+        orderbook_fees: {},
+        disable_orderbook_fees: false,
       });
     }
 
@@ -389,9 +394,20 @@ export class ApiKeyManager {
           updateString += `${_.snakeCase(fieldName)} = '$/${fieldName}:raw/'::jsonb,`;
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else if (_.isObject(value)) {
-          updateString += `${_.snakeCase(
-            fieldName
-          )} = COALESCE(${fieldName}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
+          Object.keys(value).forEach((key) => {
+            if (_.isNull((value as any)[key])) {
+              // If null remove the field
+              updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
+                fieldName
+              )}, '{}') - '${key}',`;
+            } else {
+              // Otherwise update teh field value
+              updateString += `${_.snakeCase(fieldName)} = COALESCE(${_.snakeCase(
+                fieldName
+              )}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
+            }
+          });
+
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else {
           updateString += `${_.snakeCase(fieldName)} = $/${fieldName}/,`;
@@ -413,7 +429,10 @@ export class ApiKeyManager {
      SET ${updateString}
      WHERE key = $/key/
      RETURNING ${updatedFields
-       .map((fieldName) => `(SELECT ${fieldName} FROM old_values) AS "old_${fieldName}"`)
+       .map(
+         (fieldName) =>
+           `(SELECT ${_.snakeCase(fieldName)} FROM old_values) AS "old_${_.snakeCase(fieldName)}"`
+       )
        .join(",")}`;
 
     const oldValues = await idb.manyOrNone(query, replacementValues);
@@ -433,6 +452,20 @@ export class ApiKeyManager {
       "api-key",
       `Update key ${key} with ${JSON.stringify(fields)}, oldValues=${JSON.stringify(oldValues)}`
     );
+  }
+
+  public static async getOrderbookFee(key: string, orderbook: OrderKind) {
+    // Fees are enforced only for specific orderbooks
+    if (!ORDERBOOK_FEE_ORDER_KINDS.includes(orderbook)) {
+      return 0;
+    }
+
+    const apiKey = await ApiKeyManager.getApiKey(key);
+    if (apiKey?.disableOrderbookFees) {
+      return 0;
+    }
+
+    return apiKey?.orderbookFees[orderbook]?.feeBps ?? ApiKeyManager.defaultOrderbookFeeBps;
   }
 
   static async notifyApiKeyCreated(values: ApiKeyRecord) {
