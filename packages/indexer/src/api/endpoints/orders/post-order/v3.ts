@@ -95,6 +95,8 @@ export const postOrderV3Options: RouteOptions = {
       const orderbookApiKey = payload.orderbookApiKey;
       const source = payload.source;
 
+      const apiKey: string | undefined = request.headers["x-api-key"];
+
       // We'll always have only one of the below cases:
       // Only relevant/present for attribute bids
       const attribute = payload.attribute;
@@ -271,6 +273,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);
@@ -287,6 +290,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);
@@ -305,6 +309,7 @@ export const postOrderV3Options: RouteOptions = {
                     source,
                     permitId,
                     permitIndex,
+                    apiKey,
                   },
                 },
               ]);
@@ -323,6 +328,7 @@ export const postOrderV3Options: RouteOptions = {
                     source,
                     permitId,
                     permitIndex,
+                    apiKey,
                   },
                 },
               ]);
@@ -338,6 +344,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);

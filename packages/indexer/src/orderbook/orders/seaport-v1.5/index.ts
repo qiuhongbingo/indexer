@@ -597,7 +597,15 @@ export const save = async (
       }
 
       // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("seaport-v1.5", feeBreakdown, isReservoir);
+      try {
+        await validateOrderbookFee("seaport-v1.5", feeBreakdown, isReservoir, metadata.apiKey);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
+      }
 
       // Handle: royalties on top
       const defaultRoyalties =

@@ -20,6 +20,7 @@ import { DbOrder, OrderMetadata, generateSchemaHash } from "@/orderbook/orders/u
 import * as tokenSet from "@/orderbook/token-sets";
 import * as erc721c from "@/utils/erc721c";
 import { checkMarketplaceIsFiltered } from "@/utils/marketplace-blacklists";
+import { validateOrderbookFee } from "@/utils/orderbook-fee";
 import * as paymentProcessor from "@/utils/payment-processor";
 import { getUSDAndNativePrices } from "@/utils/prices";
 import * as royalties from "@/utils/royalties";
@@ -337,6 +338,17 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       let source = await sources.getOrInsert("limitbreak.com");
       if (metadata.source) {
         source = await sources.getOrInsert(metadata.source);
+      }
+
+      // Validate the potential inclusion of an orderbook fee
+      try {
+        await validateOrderbookFee("payment-processor", feeBreakdown, true, metadata.apiKey);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
       }
 
       // Price conversion

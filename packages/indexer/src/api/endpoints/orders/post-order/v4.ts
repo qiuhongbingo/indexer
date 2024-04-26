@@ -114,6 +114,8 @@ export const postOrderV4Options: RouteOptions = {
     const payload = request.payload as any;
     const query = request.query as any;
 
+    const apiKey: string | undefined = request.headers["x-api-key"];
+
     try {
       const items = payload.items as {
         order: { kind: string; data: any };
@@ -389,6 +391,7 @@ export const postOrderV4Options: RouteOptions = {
                         source,
                         permitId,
                         permitIndex,
+                        apiKey,
                       },
                     },
                   ]);
@@ -405,6 +408,7 @@ export const postOrderV4Options: RouteOptions = {
                         source,
                         permitId,
                         permitIndex,
+                        apiKey,
                       },
                     },
                   ]);
@@ -418,6 +422,7 @@ export const postOrderV4Options: RouteOptions = {
                       metadata: {
                         schema,
                         source,
+                        apiKey,
                       },
                     },
                   ]);
@@ -604,6 +609,7 @@ export const postOrderV4Options: RouteOptions = {
                 metadata: {
                   schema,
                   source,
+                  apiKey,
                 },
               };
 
@@ -646,6 +652,7 @@ export const postOrderV4Options: RouteOptions = {
                 metadata: {
                   schema,
                   source,
+                  apiKey,
                 },
               };
 

@@ -22,8 +22,8 @@ describe("OrderBookFee - Test", () => {
 
     let erc721: Contract;
 
-    const ORDERBOOK_FEE_RECIPIENT = '0xeF37d6e83cE06503EC58b201ABa60232bFa0fd69';
-    const DEFAULT_ORDERBOOK_FEE_BPS = 30;
+    const ORDERBOOK_FEE_RECIPIENT = '0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e';
+    const DEFAULT_ORDERBOOK_FEE_BPS = 50;
 
     beforeEach(async () => {
         // Reset Indexer
