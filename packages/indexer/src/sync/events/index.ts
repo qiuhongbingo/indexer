@@ -393,7 +393,7 @@ export const syncTraces = async (block: number) => {
 
   const endSyncTime = Date.now();
 
-  logger.info(
+  logger.debug(
     "sync-traces-timing",
     JSON.stringify({
       message: `Traces realtime syncing block ${block}`,
