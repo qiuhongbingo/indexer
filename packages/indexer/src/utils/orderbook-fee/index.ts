@@ -7,10 +7,12 @@ import {
   generatePaymentSplit,
   supportsPaymentSplits,
 } from "@/utils/payment-splits";
+import { ApiKeyManager } from "@/models/api-keys";
 
-export const FEE_BPS = config.environment !== "prod" && config.chainId === 11155111 ? 50 : 0;
-export const FEE_RECIPIENT =
-  config.chainId === 11155111 ? "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e" : AddressZero;
+export const FEE_BPS = config.enableOrderbookFee ? 50 : 0;
+export const FEE_RECIPIENT = config.enableOrderbookFee
+  ? "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e"
+  : AddressZero;
 export const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
   "alienswap",
   "payment-processor",
@@ -29,8 +31,15 @@ export const attachOrderbookFee = async (
     orderKind: OrderKind;
     orderbook: string;
   },
-  apiKey: string
+  apiKeyRaw?: string
 ) => {
+  const apiKey = apiKeyRaw ?? "unknown";
+
+  // Ensure orderbook fee enabled
+  if (!config.enableOrderbookFee) {
+    return;
+  }
+
   // Only native orders
   if (params.orderbook != "reservoir") {
     return;
@@ -41,6 +50,7 @@ export const attachOrderbookFee = async (
     return;
   }
 
+  const FEE_BPS = await ApiKeyManager.getOrderbookFee(apiKey, params.orderKind);
   if (FEE_BPS > 0) {
     params.fee = params.fee ?? [];
     params.feeRecipient = params.feeRecipient ?? [];
@@ -83,8 +93,19 @@ export const validateOrderbookFee = async (
     kind: string;
     recipient: string;
     bps: number;
-  }[]
+  }[],
+  isReservoir?: boolean
 ) => {
+  // Ensure orderbook fee enabled
+  if (!config.enableOrderbookFee) {
+    return;
+  }
+
+  // Only native orders
+  if (!isReservoir) {
+    return;
+  }
+
   // This is not the best place to add this check, but it does the job for now
   const totalBps = feeBreakdown.reduce((t, b) => t + b.bps, 0);
   if (totalBps > 10000) {
@@ -96,6 +117,7 @@ export const validateOrderbookFee = async (
     return;
   }
 
+  // TODO: should get the actual fee by API key
   if (FEE_BPS > 0) {
     let foundOrderbookFee = false;
 
