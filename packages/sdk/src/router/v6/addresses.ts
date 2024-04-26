@@ -83,6 +83,7 @@ export const PermitProxy: ChainIdToAddress = {
   [Network.Polygon]: "0x30b3de99ab1de0c9700181f7a2597150e9416aa6",
   [Network.Mumbai]: "0x30b3de99ab1de0c9700181f7a2597150e9416aa6",
   [Network.AstarZkevm]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.BaseSepolia]: "0x71ddd095d246e4ce4033a5ceb0bb61b0542acdc8",
 };
 
 // Utility modules
@@ -200,7 +201,7 @@ export const SeaportV15Module: ChainIdToAddress = {
   [Network.FrameTestnet]: "0x4e9aaa72727a2f5aa5d2bef80ab5642661e29ef6",
   [Network.Opbnb]: "0x00ca04c45da318d5b7e7b14d5381ca59f09c73f0",
   [Network.Ancient8]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
-  [Network.BaseSepolia]: "0x4e9aaa72727a2f5aa5d2bef80ab5642661e29ef6",
+  [Network.BaseSepolia]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.BlastSepolia]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Apex]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Blast]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",

@@ -9,7 +9,6 @@ import { AddressZero } from "@ethersproject/constants";
 import { metadataIndexProcessJob } from "@/jobs/metadata-index/metadata-process-job";
 import { onchainMetadataFetchTokenUriJob } from "@/jobs/metadata-index/onchain-metadata-fetch-token-uri-job";
 import { isOpenseaSlugSharedContract } from "@/metadata/extend";
-import { redis } from "@/common/redis";
 
 export type MetadataIndexFetchJobPayload =
   | {
@@ -50,23 +49,16 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
       return;
     }
 
-    const tokenMetadataIndexingDebug = await redis.sismember(
-      "metadata-indexing-debug-contracts",
-      payload.data.collection
+    logger.debug(
+      this.queueName,
+      JSON.stringify({
+        topic: "tokenMetadataIndexing",
+        message: `Start. collection=${payload.data.collection}, tokenId=${
+          payload.kind === "single-token" ? payload.data.tokenId : ""
+        }`,
+        payload,
+      })
     );
-
-    if (tokenMetadataIndexingDebug) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexingDebug",
-          message: `Start. collection=${payload.data.collection}, tokenId=${
-            payload.kind === "single-token" ? payload.data.tokenId : ""
-          }`,
-          payload,
-        })
-      );
-    }
 
     const { kind, data } = payload;
     const prioritized = !_.isUndefined(this.rabbitMqMessage?.prioritized);

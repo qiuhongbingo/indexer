@@ -36,21 +36,14 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
     const { contract, tokenId, uri } = payload;
     const retryCount = Number(this.rabbitMqMessage?.retryCount);
 
-    const tokenMetadataIndexingDebug = await redis.sismember(
-      "metadata-indexing-debug-contracts",
-      contract
+    logger.debug(
+      this.queueName,
+      JSON.stringify({
+        topic: "tokenMetadataIndexing",
+        message: `Start. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+        payload,
+      })
     );
-
-    if (tokenMetadataIndexingDebug) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexingDebug",
-          message: `Start. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
-          payload,
-        })
-      );
-    }
 
     let fallbackError;
 
@@ -60,26 +53,22 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
       ]);
 
       if (metadata.length) {
-        if (tokenMetadataIndexingDebug) {
-          logger.info(
-            this.queueName,
-            JSON.stringify({
-              topic: "debugMissingTokenImages",
-              message: `getTokensMetadata. contract=${contract}, tokenId=${tokenId}, uri=${uri}`,
-              payload,
-              metadata: JSON.stringify(metadata),
-            })
-          );
-        }
+        logger.debug(
+          this.queueName,
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `getTokensMetadata. contract=${contract}, tokenId=${tokenId}, uri=${uri}`,
+            payload,
+            metadata: JSON.stringify(metadata),
+          })
+        );
 
         if (metadata[0].imageUrl?.startsWith("data:")) {
           if (config.fallbackMetadataIndexingMethod) {
             logger.warn(
               this.queueName,
               JSON.stringify({
-                topic: tokenMetadataIndexingDebug
-                  ? "debugMissingTokenImages"
-                  : "simpleHashFallbackDebug",
+                topic: "tokenMetadataIndexing",
                 message: `Fallback - Image Encoding. contract=${contract}, tokenId=${tokenId}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
               })
             );
@@ -117,9 +106,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
             logger.warn(
               this.queueName,
               JSON.stringify({
-                topic: tokenMetadataIndexingDebug
-                  ? "tokenMetadataIndexingDebug"
-                  : "simpleHashFallbackDebug",
+                topic: "tokenMetadataIndexing",
                 message: `Fallback - Missing Mime Type. contract=${contract}, tokenId=${tokenId}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
                 contract,
                 metadata: JSON.stringify(metadata[0]),
@@ -158,9 +145,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
             logger.warn(
               this.queueName,
               JSON.stringify({
-                topic: tokenMetadataIndexingDebug
-                  ? "tokenMetadataIndexingDebug"
-                  : "simpleHashFallbackDebug",
+                topic: "tokenMetadataIndexing",
                 message: `Fallback - GIF. contract=${contract}, tokenId=${tokenId}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
                 contract,
                 reason: "GIF",
@@ -189,21 +174,10 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           }
         }
 
-        if (tokenMetadataIndexingDebug) {
-          logger.info(
-            this.queueName,
-            JSON.stringify({
-              topic: "tokenMetadataIndexingDebug",
-              message: `metadataIndexWriteJob. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
-              metadata: JSON.stringify(metadata),
-            })
-          );
-        }
-
         logger.debug(
           this.queueName,
           JSON.stringify({
-            topic: "tokenMetadataIndexingDebug",
+            topic: "tokenMetadataIndexing",
             message: `metadataIndexWriteJob. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
             metadata: JSON.stringify(metadata),
           })
@@ -252,7 +226,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           logger.error(
             this.queueName,
             JSON.stringify({
-              topic: "simpleHashFallbackDebug",
+              topic: "tokenMetadataIndexing",
               message: `Not found Error - Error Parsing TokenId. contract=${contract}, tokenId=${tokenId}, uri=${uri}`,
               payload,
               error,
@@ -277,7 +251,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
         logger.error(
           this.queueName,
           JSON.stringify({
-            topic: "simpleHashFallbackDebug",
+            topic: "tokenMetadataIndexing",
             message: `Skip Fallback Error. contract=${contract}, tokenId=${tokenId}, uri=${uri}, error=${error}`,
             contract,
             tokenId,
@@ -289,9 +263,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
       logger.warn(
         this.queueName,
         JSON.stringify({
-          topic: tokenMetadataIndexingDebug
-            ? "tokenMetadataIndexingDebug"
-            : "simpleHashFallbackDebug",
+          topic: "tokenMetadataIndexing",
           message: `Error. contract=${contract}, tokenId=${tokenId}, uri=${uri}, retryCount=${retryCount}, error=${error}`,
           contract,
           tokenId,
@@ -304,6 +276,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
       logger.debug(
         this.queueName,
         JSON.stringify({
+          topic: "tokenMetadataIndexing",
           message: `No Fallback. contract=${contract}, tokenId=${tokenId}, uri=${uri}, error=${fallbackError}`,
           payload,
         })
@@ -316,7 +289,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
       logger.info(
         this.queueName,
         JSON.stringify({
-          topic: "simpleHashFallbackDebug",
+          topic: "tokenMetadataIndexing",
           message: `Skip Fallback. contract=${contract}, tokenId=${tokenId}, uri=${uri}`,
           payload,
         })
@@ -328,7 +301,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
     logger.info(
       this.queueName,
       JSON.stringify({
-        topic: "simpleHashFallbackDebug",
+        topic: "tokenMetadataIndexing",
         message: `Fallback - Get Metadata Error. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
         payload,
         reason: "Get Metadata Error",

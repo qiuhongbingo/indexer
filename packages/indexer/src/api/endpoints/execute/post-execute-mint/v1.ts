@@ -217,6 +217,9 @@ export const postExecuteMintV1Options: RouteOptions = {
     // Needed for cross-chain solving which works off the original request
     const originalPayload = _.cloneDeep(payload);
 
+    // When the mint is unlimited we use this value as a cap
+    const UNLIMITED_MINT_CAP = 30000;
+
     try {
       type ExecuteFee = {
         kind?: string;
@@ -508,6 +511,12 @@ export const postExecuteMintV1Options: RouteOptions = {
                     price: mint.price,
                   });
 
+                  const maxQuantity = mint.tokenId
+                    ? quantityToMint.toString()
+                    : amountMintable
+                    ? amountMintable.toString()
+                    : null;
+
                   await addToPath(
                     {
                       id: orderId,
@@ -521,7 +530,8 @@ export const postExecuteMintV1Options: RouteOptions = {
                     {
                       kind: collectionData.token_kind,
                       contract: mint.contract,
-                      quantity: quantityToMint,
+                      quantity:
+                        preview && maxQuantity === null ? UNLIMITED_MINT_CAP : quantityToMint,
                     }
                   );
 
@@ -529,11 +539,7 @@ export const postExecuteMintV1Options: RouteOptions = {
                     // The max quantity is the amount mintable on the collection
                     maxQuantities.push({
                       itemIndex,
-                      maxQuantity: mint.tokenId
-                        ? quantityToMint.toString()
-                        : amountMintable
-                        ? amountMintable.toString()
-                        : null,
+                      maxQuantity,
                     });
 
                     // Solver filling is restricted to a single path item for now
@@ -635,6 +641,8 @@ export const postExecuteMintV1Options: RouteOptions = {
                     price: mint.price,
                   });
 
+                  const maxQuantity = amountMintable ? amountMintable.toString() : null;
+
                   await addToPath(
                     {
                       id: orderId,
@@ -649,7 +657,8 @@ export const postExecuteMintV1Options: RouteOptions = {
                       kind: collectionData.token_kind,
                       contract: mint.contract,
                       tokenId,
-                      quantity: quantityToMint,
+                      quantity:
+                        preview && maxQuantity === null ? UNLIMITED_MINT_CAP : quantityToMint,
                     }
                   );
 
@@ -657,7 +666,7 @@ export const postExecuteMintV1Options: RouteOptions = {
                     // The max quantity is the amount mintable on the collection
                     maxQuantities.push({
                       itemIndex,
-                      maxQuantity: amountMintable ? amountMintable.toString() : null,
+                      maxQuantity,
                     });
 
                     // Solver filling is restricted to a single path item for now

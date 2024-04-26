@@ -128,7 +128,20 @@ export const getTokensV7Options: RouteOptions = {
         .unknown()
         .description(
           "Filter to a particular attribute. Attributes are case sensitive. Note: Our docs do not support this parameter correctly. To test, you can use the following URL in your browser. Example: `https://api.reservoir.tools/tokens/v6?collection=0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63&attributes[Type]=Original` or `https://api.reservoir.tools/tokens/v6?collection=0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63&attributes[Type]=Original&attributes[Type]=Sibling`"
-        ),
+        )
+        .when("collection", {
+          is: Joi.exist(),
+          then: Joi.allow(),
+          otherwise: Joi.when("contract", {
+            is: Joi.exist(),
+            then: Joi.allow(),
+            otherwise: Joi.when("collectionsSetId", {
+              is: Joi.exist(),
+              then: Joi.allow(),
+              otherwise: Joi.forbidden(),
+            }),
+          }),
+        }),
       source: Joi.string().description(
         "Domain of the order source. Example `opensea.io` (Only listed tokens are returned when filtering by source)"
       ),
@@ -269,8 +282,7 @@ export const getTokensV7Options: RouteOptions = {
         ),
       })
       .oxor("collection", "contract", "tokens", "tokenSetId", "community", "collectionsSetId")
-      .oxor("source", "nativeSource")
-      .with("attributes", "collection"),
+      .oxor("source", "nativeSource"),
   },
   response: {
     schema: Joi.object({
@@ -591,6 +603,12 @@ export const getTokensV7Options: RouteOptions = {
 
       if (_.isEmpty(collections)) {
         throw Boom.badRequest(`No collections for collection set ${query.collectionsSetId}`);
+      }
+
+      if (query.attributes && collections.length > 2) {
+        throw Boom.badRequest(
+          `CollectionsSets with more than two collections are not allowed when filtering by attributes`
+        );
       }
     }
 
@@ -925,6 +943,12 @@ export const getTokensV7Options: RouteOptions = {
       }
 
       if (query.contract) {
+        if (query.attributes && _.isArray(query.contract) && query.contract.length > 2) {
+          throw Boom.badRequest(
+            `No more than 2 contracts are allowed when filtering by attributes`
+          );
+        }
+
         if (!Array.isArray(query.contract)) {
           query.contract = [query.contract];
         }
@@ -1265,7 +1289,7 @@ export const getTokensV7Options: RouteOptions = {
       // Only allow sorting on floorSell when we filter by collection / attributes / tokenSetId / rarity
       if (
         query.collection ||
-        query.attributes ||
+        (query.attributes && !(query.collectionsSetId || query.contract)) ||
         query.tokenSetId ||
         query.rarity ||
         (query.tokens && query.tokens.length > 1) ||

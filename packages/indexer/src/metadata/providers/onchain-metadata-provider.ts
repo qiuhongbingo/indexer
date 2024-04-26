@@ -60,23 +60,16 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
 
           const getTokenMetadataFromURILatency = Date.now() - getTokenMetadataFromURIStart;
 
-          const tokenMetadataIndexingDebug = await redis.sismember(
-            "metadata-indexing-debug-contracts",
-            token.contract
+          logger.debug(
+            "_getTokensMetadata",
+            JSON.stringify({
+              topic: "tokenMetadataIndexing",
+              message: `getTokenMetadataFromURI. contract=${token.contract}, tokenId=${token.tokenId}, uri=${token.uri}`,
+              metadata: JSON.stringify(metadata),
+              getTokenMetadataFromURILatency,
+              error,
+            })
           );
-
-          if (tokenMetadataIndexingDebug) {
-            logger.info(
-              "_getTokensMetadata",
-              JSON.stringify({
-                topic: "tokenMetadataIndexingDebug",
-                message: `getTokenMetadataFromURI. contract=${token.contract}, tokenId=${token.tokenId}, uri=${token.uri}`,
-                metadata: JSON.stringify(metadata),
-                getTokenMetadataFromURILatency,
-                error,
-              })
-            );
-          }
 
           if (!metadata) {
             if (error === 429) {
