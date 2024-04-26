@@ -91,27 +91,10 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
       decimals,
     } = payload;
 
-    const tokenMetadataIndexingDebug = await redis.sismember(
-      "metadata-indexing-debug-contracts",
-      contract
-    );
-
-    if (tokenMetadataIndexingDebug) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexingDebug",
-          message: `Start. collection=${collection}, tokenId=${tokenId}, metadataMethod=${metadataMethod}`,
-          payload,
-          metadataMethod,
-        })
-      );
-    }
-
     logger.debug(
       this.queueName,
       JSON.stringify({
-        topic: "tokenMetadataIndexingDebug",
+        topic: "tokenMetadataIndexing",
         message: `Start. collection=${collection}, tokenId=${tokenId}, metadataMethod=${metadataMethod}`,
         payload,
         metadataMethod,
@@ -131,7 +114,7 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
           logger.info(
             this.queueName,
             JSON.stringify({
-              topic: "simpleHashFallbackDebug",
+              topic: "tokenMetadataIndexing",
               message: `Fallback. collection=${collection}, tokenId=${tokenId}`,
               payload,
               fallbackSuccess,
@@ -152,7 +135,7 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
         logger.error(
           this.queueName,
           JSON.stringify({
-            topic: "simpleHashFallbackDebug",
+            topic: "tokenMetadataIndexing",
             message: `Fallback check error. collection=${collection}, tokenId=${tokenId}`,
             payload,
           })

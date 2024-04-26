@@ -298,7 +298,7 @@ export function handleTokenUriErrorResponse(contract: string, tokenId: string, e
   // logger.warn(
   //   "onchain-fetcher",
   //   JSON.stringify({
-  //     topic: "tokenMetadataIndexingDebug",
+  //     topic: "tokenMetadataIndexing",
   //     message: `handleTokenUriErrorResponse. contract=${contract}, tokenId=${tokenId}`,
   //     contract,
   //     tokenId,

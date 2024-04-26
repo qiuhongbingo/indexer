@@ -7,7 +7,6 @@ import {
 } from "@/jobs/websocket-events/websocket-event-router";
 import { refreshAsksTokenJob } from "@/jobs/elasticsearch/asks/refresh-asks-token-job";
 import { logger } from "@/common/logger";
-import { redis } from "@/common/redis";
 
 import { refreshActivitiesTokenJob } from "@/jobs/elasticsearch/activities/refresh-activities-token-job";
 import _ from "lodash";
@@ -197,10 +196,6 @@ export class IndexerTokensHandler extends KafkaEventHandler {
         payload.after.image === null &&
         payload.after.media === null
       ) {
-        if (config.chainId === 1) {
-          redis.sadd("metadata-indexing-debug-contracts", payload.after.contract);
-        }
-
         logger.warn(
           "IndexerTokensHandler",
           JSON.stringify({
