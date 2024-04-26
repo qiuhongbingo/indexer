@@ -47,6 +47,7 @@ export const ReservoirConduitKey: ChainIdToAddress = {
   [Network.Garnet]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
   [Network.Redstone]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
   [Network.Amoy]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
+  [Network.BaseSepolia]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
 };
 
 export const ConduitController: ChainIdToAddress = {
