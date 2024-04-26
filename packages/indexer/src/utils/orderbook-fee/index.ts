@@ -5,8 +5,8 @@ import { OrderKind } from "@/orderbook/orders";
 import {
   getPaymentSplitFromDb,
   generatePaymentSplit,
-  supportsPaymentSplits,
   getPaymentSplitBalance,
+  supportsPaymentSplits,
   updatePaymentSplitBalance,
 } from "@/utils/payment-splits";
 
@@ -67,9 +67,9 @@ export const attachOrderbookFee = async (
         throw new Error("Could not generate payment split");
       }
 
+      // Keep track of the currency
       const balance = await getPaymentSplitBalance(paymentSplit.address, params.currency);
-      if (balance === undefined) {
-        // Record the currency has used
+      if (!balance) {
         await updatePaymentSplitBalance(paymentSplit.address, params.currency, "0");
       }
 
