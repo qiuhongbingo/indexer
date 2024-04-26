@@ -33,6 +33,7 @@ export const attachOrderbookFee = async (
   },
   apiKeyRaw?: string
 ) => {
+  // Empty will cause the `generatePaymentSplit` to throw an error
   const apiKey = apiKeyRaw ?? "unknown";
 
   // Ensure orderbook fee enabled
