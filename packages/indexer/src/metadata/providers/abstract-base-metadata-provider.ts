@@ -103,8 +103,7 @@ export abstract class AbstractBaseMetadataProvider {
         try {
           if (
             metadata.imageUrl &&
-            !metadata.imageUrl.startsWith("data:") &&
-            ![690, 17069].includes(config.chainId) &&
+            (!metadata.imageUrl.startsWith("data:") || [690, 17069].includes(config.chainId)) &&
             !metadata.imageMimeType
           ) {
             const _getImageMimeTypeStart = Date.now();
@@ -144,8 +143,7 @@ export abstract class AbstractBaseMetadataProvider {
 
           if (
             metadata.mediaUrl &&
-            !metadata.mediaUrl.startsWith("data:") &&
-            ![690, 17069].includes(config.chainId) &&
+            (!metadata.mediaUrl.startsWith("data:") || [690, 17069].includes(config.chainId)) &&
             !metadata.mediaMimeType
           ) {
             const _getImageMimeTypeStart = Date.now();
