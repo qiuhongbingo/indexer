@@ -1252,19 +1252,35 @@ export const getNetworkSettings = (): NetworkSettings => {
         },
         whitelistedCurrencies: new Map([
           [
-            "0x8ef069e433022cf3625a086096c3d9ec96da0160",
+            "0xab509da7810b38317fe9710c57ffcea9c5877a36",
             {
-              contract: "0x8ef069e433022cf3625a086096c3d9ec96da0160",
+              contract: "0xab509da7810b38317fe9710c57ffcea9c5877a36",
               name: "ZED Token",
               symbol: "ZED",
               decimals: 18,
               metadata: {
                 image:
                   "https://bafkreidcljrhz7hq4h5rarxgxd63tail24mqawllwhxfrvr3esfv2nvyiy.ipfs.nftstorage.link/",
+                  coingeckoCurrencyId: "zed-run"
               },
             },
           ],
-        ]),
+          // ZED Run's Custom WETH
+          [
+            "0xeb5667fb4b6dfebeb16874b9f26dea002fcefc3f",
+            {
+              contract: "0xeb5667fb4b6dfebeb16874b9f26dea002fcefc3f",
+              name: "Wrapped Ether",
+              symbol: "WETH",
+              decimals: 18,
+              metadata: {
+                image:
+                  "https://assets.coingecko.com/coins/images/2518/large/weth.png?1628852295",
+                coingeckoCurrencyId: "ethereum"
+              },
+            },
+          ],
+        ])
       };
     }
     // Arbitrum Nova
