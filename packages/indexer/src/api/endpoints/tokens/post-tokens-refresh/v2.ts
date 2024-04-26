@@ -10,7 +10,6 @@ import { config } from "@/config/index";
 import { tokenRefreshCacheJob } from "@/jobs/token-updates/token-refresh-cache-job";
 import { resyncTokenAttributesCacheJob } from "@/jobs/update-attribute/resync-token-attributes-cache-job";
 import { ApiKeyManager } from "@/models/api-keys";
-import { Collections } from "@/models/collections";
 import { PendingFlagStatusSyncTokens } from "@/models/pending-flag-status-sync-tokens";
 import { Tokens } from "@/models/tokens";
 import { metadataIndexFetchJob } from "@/jobs/metadata-index/metadata-fetch-job";
@@ -171,7 +170,7 @@ export const postTokensRefreshV2Options: RouteOptions = {
         }
 
         // Refresh metadata
-        const collection = await Collections.getByContractAndTokenId(contract, Number(tokenId));
+        const collection = await Tokens.getCollection(contract, tokenId);
 
         if (!collection) {
           logger.warn(
