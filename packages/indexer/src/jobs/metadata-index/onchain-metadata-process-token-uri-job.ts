@@ -65,12 +65,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
 
         if (metadata[0].imageUrl?.startsWith("data:")) {
           logger.debug(
-            this.queueName,
-            JSON.stringify({
-              topic: "tokenMetadataIndexing",
-              message: `Encoded Image. contract=${contract}, tokenId=${tokenId}, uri=${uri}, imageUrl=${metadata[0].imageUrl}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
-              payload,
-            })
+            "encodedImageDebug",
+            `Encoded Image. contract=${contract}, tokenId=${tokenId}, uri=${uri}, imageUrl=${metadata[0].imageUrl}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`
           );
 
           if (config.fallbackMetadataIndexingMethod) {
