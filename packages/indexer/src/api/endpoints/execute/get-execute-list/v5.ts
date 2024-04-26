@@ -497,22 +497,6 @@ export const getExecuteListV5Options: RouteOptions = {
             return errors.push({ message: (error as any).message, orderIndex: i });
           }
 
-          // PPv2 restrictions
-          try {
-            if (params.orderKind === "payment-processor-v2" && process.env.PP_V2_ALLOWED_KEYS) {
-              const ppv2AllowedKeys = JSON.parse(process.env.PP_V2_ALLOWED_KEYS) as string[];
-              if (!apiKey || !ppv2AllowedKeys.includes(apiKey.key)) {
-                return errors.push({
-                  message:
-                    "Unable to create Payment Processor order. Please change orderKind or contact Reservoir team for access.",
-                  orderIndex: i,
-                });
-              }
-            }
-          } catch {
-            // Skip errors
-          }
-
           // Handle fees
           // TODO: Refactor the builders to get rid of the separate fee/feeRecipient arrays
           // TODO: Refactor the builders to get rid of the API params naming dependency
