@@ -2,7 +2,7 @@ import { getCreate2Address } from "@ethersproject/address";
 import { keccak256 } from "@ethersproject/solidity";
 import * as Sdk from "@reservoir0x/sdk";
 
-import { idb, pgp } from "@/common/db";
+import { idb, pgp, redb } from "@/common/db";
 import { fromBuffer, toBuffer, bn } from "@/common/utils";
 import { config } from "@/config/index";
 
@@ -24,7 +24,7 @@ type OptionalPaymentSplitData = {
   updatedAt?: number;
 };
 
-type PaymentSplit = RequiredPaymentSplitData & OptionalPaymentSplitData;
+export type PaymentSplit = RequiredPaymentSplitData & OptionalPaymentSplitData;
 
 const MAX_BPS = 1e6;
 
@@ -70,7 +70,7 @@ export const generatePaymentSplit = async (
       Sdk.ZeroExSplits.Addresses.SplitMain[config.chainId],
       splitHash,
       keccak256(["bytes"], [Sdk.ZeroExSplits.Addresses.SplitWalletInitCode[config.chainId]])
-    );
+    ).toLowerCase();
 
     let existingSplit = await getPaymentSplitFromDb(splitAddress);
     if (!existingSplit) {
@@ -158,4 +158,91 @@ export const savePaymentSplit = async (paymentSplit: RequiredPaymentSplitData) =
       apiKey: paymentSplit.apiKey,
     }
   );
+};
+
+export const updatePaymentSplitBalance = async (
+  splitAddress: string,
+  currency: string,
+  balance: string
+) => {
+  await idb.none(
+    `
+      INSERT INTO payment_splits_balances(
+        payment_split_address,
+        currency,
+        balance
+      ) VALUES (
+        $/splitAddress/,
+        $/currency/,
+        $/balance/
+      )
+      ON CONFLICT (payment_split_address, currency) DO UPDATE SET
+        balance = $/balance/,
+        updated_at = now()
+    `,
+    {
+      splitAddress: toBuffer(splitAddress),
+      currency: toBuffer(currency),
+      balance,
+    }
+  );
+};
+
+export const getPaymentSplitBalance = async (
+  splitAddress: string,
+  currency: string
+): Promise<string | undefined> => {
+  const result = await idb.oneOrNone(
+    `
+      SELECT
+        payment_splits_balances.balance
+      FROM payment_splits_balances
+      WHERE payment_split_address = $/splitAddress/
+        AND currency = $/currency/
+    `,
+    {
+      splitAddress: toBuffer(splitAddress),
+      currency: toBuffer(currency),
+    }
+  );
+  return result?.balance;
+};
+
+export const getPaymentSplitCurrencies = async (splitAddress: string): Promise<string[]> => {
+  const results = await idb.manyOrNone(
+    `
+      SELECT
+        DISTINCT(payment_splits_balances.currency) AS currency
+      FROM payment_splits_balances
+      WHERE payment_split_address = $/splitAddress/
+    `,
+    {
+      splitAddress: toBuffer(splitAddress),
+    }
+  );
+  return results.map((c) => fromBuffer(c.currency));
+};
+
+export const setPaymentSplitIsDeployed = async (address: string) => {
+  await idb.none(
+    `
+      UPDATE payment_splits
+        SET is_deployed = $/isDeployed/
+      WHERE payment_splits.address = $/address/
+        AND NOT payment_splits.is_deployed
+    `,
+    {
+      address: toBuffer(address),
+      isDeployed: true,
+    }
+  );
+};
+
+export const getPaymentSplits = async (): Promise<{ address: string }[]> => {
+  const splits = await redb.manyOrNone("SELECT payment_splits.address FROM payment_splits");
+  return splits.map((c) => {
+    return {
+      address: fromBuffer(c.address),
+    };
+  });
 };

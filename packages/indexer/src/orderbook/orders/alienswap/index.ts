@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { AddressZero, HashZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
 import _ from "lodash";
@@ -395,6 +393,7 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       // Validate the potential inclusion of an orderbook fee
       try {
         await validateOrderbookFee("alienswap", feeBreakdown, true, metadata.apiKey);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         return results.push({
           id,

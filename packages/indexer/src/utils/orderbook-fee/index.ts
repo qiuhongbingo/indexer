@@ -1,20 +1,17 @@
-import { AddressZero } from "@ethersproject/constants";
-
 import { config } from "@/config/index";
+import { ApiKeyManager } from "@/models/api-keys";
 import { OrderKind } from "@/orderbook/orders";
 import {
   getPaymentSplitFromDb,
   generatePaymentSplit,
+  getPaymentSplitBalance,
   supportsPaymentSplits,
+  updatePaymentSplitBalance,
 } from "@/utils/payment-splits";
-import { ApiKeyManager } from "@/models/api-keys";
 
-const orderbookFeeEnabled =
-  config.enableOrderbookFee || (config.environment !== "prod" && config.chainId === 11155111);
+const orderbookFeeEnabled = config.chainId === 11155111;
 
-export const FEE_RECIPIENT = orderbookFeeEnabled
-  ? "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e"
-  : AddressZero;
+export const FEE_RECIPIENT = "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e";
 
 export const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
   "alienswap",
@@ -25,7 +22,7 @@ export const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
   "seaport-v1.6",
 ];
 
-const SINGLE_FEE_ORDER_KINDS: OrderKind[] = ["payment-processor-v2"];
+const SINGLE_FEE_ORDER_KINDS: OrderKind[] = ["payment-processor", "payment-processor-v2"];
 
 export const attachOrderbookFee = async (
   params: {
@@ -33,10 +30,11 @@ export const attachOrderbookFee = async (
     feeRecipient?: string[];
     orderKind: OrderKind;
     orderbook: string;
+    currency: string;
   },
   apiKey?: string
 ) => {
-  // Ensure orderbook fee enabled
+  // Only if enabled
   if (!orderbookFeeEnabled) {
     return;
   }
@@ -51,10 +49,10 @@ export const attachOrderbookFee = async (
     return;
   }
 
-  const FEE_BPS = apiKey
+  const feeBps = apiKey
     ? await ApiKeyManager.getOrderbookFee(apiKey, params.orderKind)
     : ApiKeyManager.defaultOrderbookFeeBps;
-  if (FEE_BPS > 0) {
+  if (feeBps > 0) {
     params.fee = params.fee ?? [];
     params.feeRecipient = params.feeRecipient ?? [];
 
@@ -72,7 +70,7 @@ export const attachOrderbookFee = async (
         },
         {
           recipient: FEE_RECIPIENT,
-          bps: FEE_BPS,
+          bps: feeBps,
         },
         apiKey
       );
@@ -80,11 +78,17 @@ export const attachOrderbookFee = async (
         throw new Error("Could not generate payment split");
       }
 
+      // Keep track of the currency
+      const balance = await getPaymentSplitBalance(paymentSplit.address, params.currency);
+      if (!balance) {
+        await updatePaymentSplitBalance(paymentSplit.address, params.currency, "0");
+      }
+
       // Override
       params.feeRecipient = [paymentSplit.address];
-      params.fee = [String(params.fee.map(Number).reduce((a, b) => a + b) + FEE_BPS)];
+      params.fee = [String(params.fee.map(Number).reduce((a, b) => a + b) + feeBps)];
     } else {
-      params.fee.push(String(FEE_BPS));
+      params.fee.push(String(feeBps));
       params.feeRecipient.push(FEE_RECIPIENT);
     }
   }
@@ -100,7 +104,7 @@ export const validateOrderbookFee = async (
   isReservoir?: boolean,
   apiKey?: string
 ) => {
-  // Ensure orderbook fee enabled
+  // Only if enabled
   if (!orderbookFeeEnabled) {
     return;
   }
@@ -121,14 +125,14 @@ export const validateOrderbookFee = async (
     return;
   }
 
-  const FEE_BPS = !apiKey
-    ? ApiKeyManager.defaultOrderbookFeeBps
-    : await ApiKeyManager.getOrderbookFee(apiKey, orderKind);
-  if (FEE_BPS > 0) {
+  const feeBps = apiKey
+    ? await ApiKeyManager.getOrderbookFee(apiKey, orderKind)
+    : ApiKeyManager.defaultOrderbookFeeBps;
+  if (feeBps > 0) {
     let foundOrderbookFee = false;
 
     for (const fee of feeBreakdown) {
-      if (fee.recipient.toLowerCase() === FEE_RECIPIENT.toLowerCase() && fee.bps === FEE_BPS) {
+      if (fee.recipient.toLowerCase() === FEE_RECIPIENT.toLowerCase() && fee.bps === feeBps) {
         foundOrderbookFee = true;
       }
 

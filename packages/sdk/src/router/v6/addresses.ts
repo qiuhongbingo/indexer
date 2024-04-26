@@ -83,6 +83,7 @@ export const PermitProxy: ChainIdToAddress = {
   [Network.Polygon]: "0x30b3de99ab1de0c9700181f7a2597150e9416aa6",
   [Network.Mumbai]: "0x30b3de99ab1de0c9700181f7a2597150e9416aa6",
   [Network.AstarZkevm]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.BaseSepolia]: "0x71ddd095d246e4ce4033a5ceb0bb61b0542acdc8",
 };
 
 // Utility modules

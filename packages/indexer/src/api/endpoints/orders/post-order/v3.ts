@@ -93,8 +93,9 @@ export const postOrderV3Options: RouteOptions = {
       const order = payload.order;
       const orderbook = payload.orderbook;
       const orderbookApiKey = payload.orderbookApiKey;
-      const apiKey: string | undefined = request.headers["x-api-key"];
       const source = payload.source;
+
+      const apiKey: string | undefined = request.headers["x-api-key"];
 
       // We'll always have only one of the below cases:
       // Only relevant/present for attribute bids

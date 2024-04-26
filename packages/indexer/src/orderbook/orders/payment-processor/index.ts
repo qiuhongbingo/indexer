@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { BigNumber } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/solidity";
@@ -7,7 +5,6 @@ import * as Sdk from "@reservoir0x/sdk";
 import _ from "lodash";
 import pLimit from "p-limit";
 
-import { validateOrderbookFee } from "@/utils/orderbook-fee";
 import { idb, pgp } from "@/common/db";
 import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
@@ -23,6 +20,7 @@ import { DbOrder, OrderMetadata, generateSchemaHash } from "@/orderbook/orders/u
 import * as tokenSet from "@/orderbook/token-sets";
 import * as erc721c from "@/utils/erc721c";
 import { checkMarketplaceIsFiltered } from "@/utils/marketplace-blacklists";
+import { validateOrderbookFee } from "@/utils/orderbook-fee";
 import * as paymentProcessor from "@/utils/payment-processor";
 import { getUSDAndNativePrices } from "@/utils/prices";
 import * as royalties from "@/utils/royalties";
@@ -345,6 +343,7 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       // Validate the potential inclusion of an orderbook fee
       try {
         await validateOrderbookFee("payment-processor", feeBreakdown, true, metadata.apiKey);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         return results.push({
           id,
