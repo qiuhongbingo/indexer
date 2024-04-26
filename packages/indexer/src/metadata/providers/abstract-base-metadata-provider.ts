@@ -206,30 +206,43 @@ export abstract class AbstractBaseMetadataProvider {
     if (url.endsWith(".png")) {
       return "image/png";
     }
+
     if (url.endsWith(".jpg") || url.endsWith(".jpeg")) {
       return "image/jpeg";
     }
+
     if (url.endsWith(".gif")) {
       return "image/gif";
     }
+
     if (url.endsWith(".svg")) {
       return "image/svg+xml";
     }
+
     if (url.endsWith(".webp")) {
       return "image/webp";
     }
+
     if (url.endsWith(".mp4")) {
       return "video/mp4";
     }
+
     if (url.endsWith(".mp3")) {
       return "audio/mp3";
     }
+
     if (url.endsWith(".wav")) {
       return "audio/wav";
     }
+
+    if (url.endsWith(".m4a")) {
+      return "audio/m4a";
+    }
+
     if (url.startsWith("data:image/svg+xml")) {
       return "image/svg+xml";
     }
+
     if (!url.startsWith("http")) {
       return "";
     }
