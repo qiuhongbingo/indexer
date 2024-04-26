@@ -9,8 +9,11 @@ import {
 } from "@/utils/payment-splits";
 import { ApiKeyManager } from "@/models/api-keys";
 
-export const FEE_BPS = config.enableOrderbookFee ? 50 : 0;
-export const FEE_RECIPIENT = config.enableOrderbookFee
+const orderbookFeeEnabled =
+  config.enableOrderbookFee || (config.environment !== "prod" && config.chainId === 11155111);
+
+export const FEE_BPS = orderbookFeeEnabled ? 50 : 0;
+export const FEE_RECIPIENT = orderbookFeeEnabled
   ? "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e"
   : AddressZero;
 export const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
@@ -37,7 +40,7 @@ export const attachOrderbookFee = async (
   const apiKey = apiKeyRaw ?? "unknown";
 
   // Ensure orderbook fee enabled
-  if (!config.enableOrderbookFee) {
+  if (!orderbookFeeEnabled) {
     return;
   }
 
@@ -98,7 +101,7 @@ export const validateOrderbookFee = async (
   isReservoir?: boolean
 ) => {
   // Ensure orderbook fee enabled
-  if (!config.enableOrderbookFee) {
+  if (!orderbookFeeEnabled) {
     return;
   }
 
