@@ -1204,7 +1204,7 @@ export const checkBlacklistAndFallback = async (
 
       // Fallback to PaymentProcessor when Seaport v1.6 is blocked
       if (params.orderKind === "seaport-v1.6" && seaportV16IsBlocked) {
-        params.orderKind = "payment-processor";
+        params.orderKind = "payment-processor-v2";
       }
 
       // Fallback to PaymentProcessor v2 when PaymentProcessor is blocked
