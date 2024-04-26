@@ -222,7 +222,7 @@ export abstract class AbstractBaseMetadataProvider {
       return "video/mp4";
     }
     if (url.endsWith(".mp3")) {
-      return "audio/mpeg";
+      return "audio/mp3";
     }
     if (url.startsWith("data:image/svg+xml")) {
       return "image/svg+xml";
