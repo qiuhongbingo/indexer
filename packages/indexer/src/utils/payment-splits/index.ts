@@ -13,7 +13,7 @@ type Fee = {
 
 type RequiredPaymentSplitData = {
   address: string;
-  apiKey: string;
+  apiKey?: string;
   fees: Fee[];
 };
 
@@ -31,7 +31,11 @@ const MAX_BPS = 1e6;
 export const supportsPaymentSplits = () =>
   Boolean(Sdk.ZeroExSplits.Addresses.SplitMain[config.chainId]);
 
-export const generatePaymentSplit = async (apiKey: string, originalFee: Fee, reservoirFee: Fee) => {
+export const generatePaymentSplit = async (
+  originalFee: Fee,
+  reservoirFee: Fee,
+  apiKey?: string
+) => {
   try {
     const totalBps = originalFee.bps + reservoirFee.bps;
 

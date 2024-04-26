@@ -93,6 +93,7 @@ export const postOrderV3Options: RouteOptions = {
       const order = payload.order;
       const orderbook = payload.orderbook;
       const orderbookApiKey = payload.orderbookApiKey;
+      const apiKey: string | undefined = request.headers["x-api-key"];
       const source = payload.source;
 
       // We'll always have only one of the below cases:
@@ -271,6 +272,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);
@@ -287,6 +289,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);
@@ -305,6 +308,7 @@ export const postOrderV3Options: RouteOptions = {
                     source,
                     permitId,
                     permitIndex,
+                    apiKey,
                   },
                 },
               ]);
@@ -323,6 +327,7 @@ export const postOrderV3Options: RouteOptions = {
                     source,
                     permitId,
                     permitIndex,
+                    apiKey,
                   },
                 },
               ]);
@@ -338,6 +343,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);

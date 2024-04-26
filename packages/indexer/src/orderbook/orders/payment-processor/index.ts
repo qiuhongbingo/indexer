@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { BigNumber } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/solidity";
@@ -5,6 +7,7 @@ import * as Sdk from "@reservoir0x/sdk";
 import _ from "lodash";
 import pLimit from "p-limit";
 
+import { validateOrderbookFee } from "@/utils/orderbook-fee";
 import { idb, pgp } from "@/common/db";
 import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
@@ -337,6 +340,16 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       let source = await sources.getOrInsert("limitbreak.com");
       if (metadata.source) {
         source = await sources.getOrInsert(metadata.source);
+      }
+
+      // Validate the potential inclusion of an orderbook fee
+      try {
+        await validateOrderbookFee("payment-processor", feeBreakdown, true, metadata.apiKey);
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
       }
 
       // Price conversion

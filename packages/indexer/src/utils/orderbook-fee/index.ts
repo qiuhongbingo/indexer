@@ -12,10 +12,10 @@ import { ApiKeyManager } from "@/models/api-keys";
 const orderbookFeeEnabled =
   config.enableOrderbookFee || (config.environment !== "prod" && config.chainId === 11155111);
 
-export const FEE_BPS = orderbookFeeEnabled ? 50 : 0;
 export const FEE_RECIPIENT = orderbookFeeEnabled
   ? "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e"
   : AddressZero;
+
 export const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
   "alienswap",
   "payment-processor",
@@ -34,11 +34,8 @@ export const attachOrderbookFee = async (
     orderKind: OrderKind;
     orderbook: string;
   },
-  apiKeyRaw?: string
+  apiKey?: string
 ) => {
-  // Empty will cause the `generatePaymentSplit` to throw an error
-  const apiKey = apiKeyRaw ?? "unknown";
-
   // Ensure orderbook fee enabled
   if (!orderbookFeeEnabled) {
     return;
@@ -54,7 +51,9 @@ export const attachOrderbookFee = async (
     return;
   }
 
-  const FEE_BPS = await ApiKeyManager.getOrderbookFee(apiKey, params.orderKind);
+  const FEE_BPS = apiKey
+    ? await ApiKeyManager.getOrderbookFee(apiKey, params.orderKind)
+    : ApiKeyManager.defaultOrderbookFeeBps;
   if (FEE_BPS > 0) {
     params.fee = params.fee ?? [];
     params.feeRecipient = params.feeRecipient ?? [];
@@ -67,7 +66,6 @@ export const attachOrderbookFee = async (
       }
 
       const paymentSplit = await generatePaymentSplit(
-        apiKey,
         {
           recipient: params.feeRecipient[0],
           bps: Number(params.fee),
@@ -75,7 +73,8 @@ export const attachOrderbookFee = async (
         {
           recipient: FEE_RECIPIENT,
           bps: FEE_BPS,
-        }
+        },
+        apiKey
       );
       if (!paymentSplit) {
         throw new Error("Could not generate payment split");
@@ -98,7 +97,8 @@ export const validateOrderbookFee = async (
     recipient: string;
     bps: number;
   }[],
-  isReservoir?: boolean
+  isReservoir?: boolean,
+  apiKey?: string
 ) => {
   // Ensure orderbook fee enabled
   if (!orderbookFeeEnabled) {
@@ -121,7 +121,9 @@ export const validateOrderbookFee = async (
     return;
   }
 
-  // TODO: should get the actual fee by API key
+  const FEE_BPS = !apiKey
+    ? ApiKeyManager.defaultOrderbookFeeBps
+    : await ApiKeyManager.getOrderbookFee(apiKey, orderKind);
   if (FEE_BPS > 0) {
     let foundOrderbookFee = false;
 

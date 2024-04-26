@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { AddressZero, HashZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
 import _ from "lodash";
@@ -22,6 +24,7 @@ import {
   OrderUpdatesByIdJobPayload,
 } from "@/jobs/order-updates/order-updates-by-id-job";
 import * as offchainCancel from "@/utils/offchain-cancel";
+import { validateOrderbookFee } from "@/utils/orderbook-fee";
 
 export type OrderInfo = {
   orderParams: Sdk.SeaportBase.Types.OrderComponents;
@@ -387,6 +390,16 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       const matchedSource = sources.getByDomainHash(sourceHash);
       if (matchedSource) {
         source = matchedSource;
+      }
+
+      // Validate the potential inclusion of an orderbook fee
+      try {
+        await validateOrderbookFee("alienswap", feeBreakdown, true, metadata.apiKey);
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
       }
 
       // Handle: price conversion

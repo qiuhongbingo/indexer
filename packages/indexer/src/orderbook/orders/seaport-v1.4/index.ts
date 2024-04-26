@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { AddressZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
 import { generateMerkleTree } from "@reservoir0x/sdk/dist/common/helpers/merkle";
@@ -33,6 +35,7 @@ import {
 } from "@/jobs/order-updates/order-updates-by-id-job";
 import { orderbookOrdersJob } from "@/jobs/orderbook/orderbook-orders-job";
 import { isSharedContract } from "@/metadata/extend";
+import { validateOrderbookFee } from "@/utils/orderbook-fee";
 
 export type OrderInfo = {
   orderParams: Sdk.SeaportBase.Types.OrderComponents;
@@ -564,6 +567,15 @@ export const save = async (
 
       if (isOpenSea) {
         source = await sources.getOrInsert("opensea.io");
+      }
+
+      try {
+        await validateOrderbookFee("seaport-v1.4", feeBreakdown, isReservoir, metadata.apiKey);
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
       }
 
       // If the order is native, override any default source

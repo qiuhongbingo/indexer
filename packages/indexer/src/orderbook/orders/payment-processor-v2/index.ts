@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { AddressZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
 import pLimit from "p-limit";
@@ -384,7 +386,14 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       }
 
       // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("payment-processor-v2", feeBreakdown, true);
+      try {
+        await validateOrderbookFee("payment-processor-v2", feeBreakdown, true, metadata.apiKey);
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
+      }
 
       // Price conversion
       let price = currencyPrice;
