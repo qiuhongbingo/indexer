@@ -116,7 +116,8 @@ export const getMaxSupply = async (contract: string): Promise<string | undefined
 
 export const getAmountMinted = async (
   collectionMint: CollectionMint,
-  user: string
+  user: string,
+  id?: string
 ): Promise<BigNumber> => {
   const perfTime1 = performance.now();
 
@@ -169,6 +170,7 @@ export const getAmountMinted = async (
     logger.info(
       "mint-performance-debug",
       JSON.stringify({
+        id,
         method: "get-amount-minted",
         totalTime: (perfTime2 - perfTime1) / 1000,
         user,

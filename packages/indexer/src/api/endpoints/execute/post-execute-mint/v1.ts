@@ -356,6 +356,8 @@ export const postExecuteMintV1Options: RouteOptions = {
 
       let allMintsHaveExplicitRecipient = true;
 
+      const id = randomUUID();
+
       let lastError: string | undefined;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -476,7 +478,7 @@ export const postExecuteMintV1Options: RouteOptions = {
             });
 
             for (const mint of openMints) {
-              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker);
+              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker, id);
               let quantityToMint = bn(
                 amountMintable
                   ? amountMintable.lt(item.quantity)
@@ -614,7 +616,7 @@ export const postExecuteMintV1Options: RouteOptions = {
             });
 
             for (const mint of openMints) {
-              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker);
+              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker, id);
 
               const quantityToMint = bn(
                 amountMintable
@@ -711,6 +713,7 @@ export const postExecuteMintV1Options: RouteOptions = {
           logger.info(
             "mint-performance-debug",
             JSON.stringify({
+              id,
               method: "get-data",
               totalTimeA: (perfTimeA2 - perfTimeA1) / 1000,
               totalTimeB: (perfTimeB2 - perfTimeB1) / 1000,
@@ -1092,6 +1095,7 @@ export const postExecuteMintV1Options: RouteOptions = {
         logger.info(
           "mint-performance-debug",
           JSON.stringify({
+            id,
             method: "get-nft-transfer-events",
             totalTime: (perfTime2 - perfTime1) / 1000,
             mintsResult,
