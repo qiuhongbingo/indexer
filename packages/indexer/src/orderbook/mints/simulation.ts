@@ -4,7 +4,7 @@ import * as Sdk from "@reservoir0x/sdk";
 import { Network, TxData } from "@reservoir0x/sdk/dist/utils";
 
 import { idb } from "@/common/db";
-import { baseProvider } from "@/common/provider";
+import { baseProvider, baseProviderWithTimeout } from "@/common/provider";
 import { bn, fromBuffer } from "@/common/utils";
 import { config } from "@/config/index";
 import { CollectionMint, PricePerQuantity } from "@/orderbook/mints";
@@ -297,7 +297,7 @@ const getEmittedEvents = async (txData: TxData, chainId: number) => {
         [txData.from]: value,
       },
     },
-    baseProvider,
+    baseProviderWithTimeout(5000),
     {
       method: [Network.Polygon, Network.Arbitrum].includes(chainId) ? "opcodeTrace" : "withLog",
     }
