@@ -5,8 +5,10 @@ import { Contract } from "@ethersproject/contracts";
 import axios from "axios";
 
 import { idb } from "@/common/db";
+import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 import { bn, now, toBuffer } from "@/common/utils";
+import { config } from "@/config/index";
 import {
   CollectionMint,
   CollectionMintStatus,
@@ -114,8 +116,11 @@ export const getMaxSupply = async (contract: string): Promise<string | undefined
 
 export const getAmountMinted = async (
   collectionMint: CollectionMint,
-  user: string
+  user: string,
+  id?: string
 ): Promise<BigNumber> => {
+  const perfTime1 = performance.now();
+
   let amountMinted: string;
   if (collectionMint.tokenId) {
     amountMinted = await idb
@@ -157,6 +162,21 @@ export const getAmountMinted = async (
         }
       )
       .then((r) => r.amount_minted);
+  }
+
+  const perfTime2 = performance.now();
+
+  if (config.chainId === 8453) {
+    logger.info(
+      "mint-performance-debug",
+      JSON.stringify({
+        id,
+        method: "get-amount-minted",
+        totalTime: (perfTime2 - perfTime1) / 1000,
+        user,
+        collectionMint,
+      })
+    );
   }
 
   return bn(amountMinted);

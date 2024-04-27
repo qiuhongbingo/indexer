@@ -461,7 +461,8 @@ export const simulateAndUpsertCollectionMint = async (collectionMint: Collection
 
 export const getAmountMintableByWallet = async (
   collectionMint: CollectionMint,
-  user: string
+  user: string,
+  id?: string
 ): Promise<BigNumber | undefined> => {
   let amountMintable: BigNumber | undefined;
 
@@ -476,7 +477,7 @@ export const getAmountMintableByWallet = async (
 
   // Handle maximum amount mintable per wallet
   if (collectionMint.maxMintsPerWallet) {
-    const mintedAmount = await getAmountMinted(collectionMint, user);
+    const mintedAmount = await getAmountMinted(collectionMint, user, id);
     const remainingAmount = bn(collectionMint.maxMintsPerWallet).sub(mintedAmount);
     if (!amountMintable) {
       amountMintable = remainingAmount;

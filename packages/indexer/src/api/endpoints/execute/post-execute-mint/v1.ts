@@ -356,6 +356,8 @@ export const postExecuteMintV1Options: RouteOptions = {
 
       let allMintsHaveExplicitRecipient = true;
 
+      const id = randomUUID();
+
       let lastError: string | undefined;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -371,6 +373,7 @@ export const postExecuteMintV1Options: RouteOptions = {
         }
 
         // Scenario 1: fill via `custom`
+        const perfTimeA1 = performance.now();
         if (item.custom) {
           const rawMint = {
             ...item.custom,
@@ -446,8 +449,10 @@ export const postExecuteMintV1Options: RouteOptions = {
             }
           }
         }
+        const perfTimeA2 = performance.now();
 
         // Scenario 2: fill via `collection`
+        const perfTimeB1 = performance.now();
         if (item.collection) {
           let hasActiveMints = false;
           const collectionData = await idb.oneOrNone(
@@ -473,7 +478,7 @@ export const postExecuteMintV1Options: RouteOptions = {
             });
 
             for (const mint of openMints) {
-              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker);
+              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker, id);
               let quantityToMint = bn(
                 amountMintable
                   ? amountMintable.lt(item.quantity)
@@ -575,8 +580,10 @@ export const postExecuteMintV1Options: RouteOptions = {
             }
           }
         }
+        const perfTimeB2 = performance.now();
 
         // Scenario 3: fill via `token`
+        const perfTimeC1 = performance.now();
         if (item.token) {
           const [contract, tokenId] = item.token.split(":");
 
@@ -609,7 +616,7 @@ export const postExecuteMintV1Options: RouteOptions = {
             });
 
             for (const mint of openMints) {
-              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker);
+              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker, id);
 
               const quantityToMint = bn(
                 amountMintable
@@ -699,6 +706,21 @@ export const postExecuteMintV1Options: RouteOptions = {
               throw getExecuteError(lastError);
             }
           }
+        }
+        const perfTimeC2 = performance.now();
+
+        if (config.chainId === 8453) {
+          logger.info(
+            "mint-performance-debug",
+            JSON.stringify({
+              id,
+              method: "get-data",
+              totalTimeA: (perfTimeA2 - perfTimeA1) / 1000,
+              totalTimeB: (perfTimeB2 - perfTimeB1) / 1000,
+              totalTimeC: (perfTimeC2 - perfTimeC1) / 1000,
+              item,
+            })
+          );
         }
       }
 
@@ -1035,6 +1057,8 @@ export const postExecuteMintV1Options: RouteOptions = {
       // - there is at least one successful mint
       // - all minted tokens have the taker as the final owner (eg. nothing gets stuck in the router / module)
 
+      const perfTime1 = performance.now();
+
       let safeToUse = true;
       for (const { txData, approvals } of mintsResult.txs) {
         // ERC20 mints (which will have a corresponding approval) need to be minted directly
@@ -1063,6 +1087,20 @@ export const postExecuteMintV1Options: RouteOptions = {
             }
           }
         }
+      }
+
+      const perfTime2 = performance.now();
+
+      if (config.chainId === 8453) {
+        logger.info(
+          "mint-performance-debug",
+          JSON.stringify({
+            id,
+            method: "get-nft-transfer-events",
+            totalTime: (perfTime2 - perfTime1) / 1000,
+            mintsResult,
+          })
+        );
       }
 
       if (!safeToUse) {
