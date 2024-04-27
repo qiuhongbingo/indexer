@@ -42,6 +42,9 @@ export const postRefreshCollectionOptions: RouteOptions = {
       cacheOnly: Joi.boolean()
         .default(false)
         .description("If true, will only refresh the collection cache."),
+      onlyTokensWithMissingImages: Joi.boolean()
+        .default(false)
+        .description("If true, will only refresh the collection cache."),
     }),
   },
   handler: async (request: Request) => {
@@ -157,6 +160,7 @@ export const postRefreshCollectionOptions: RouteOptions = {
           data: {
             method,
             collection: collection.id,
+            onlyTokensWithMissingImages: payload.onlyTokensWithMissingImages,
           },
           context: "post-refresh-collection",
         };
