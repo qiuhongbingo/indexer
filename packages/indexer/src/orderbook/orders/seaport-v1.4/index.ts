@@ -568,7 +568,7 @@ export const save = async (
       }
 
       try {
-        await validateOrderbookFee("seaport-v1.4", feeBreakdown, isReservoir, metadata.apiKey);
+        await validateOrderbookFee("seaport-v1.4", feeBreakdown, metadata.apiKey, isReservoir);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         return results.push({

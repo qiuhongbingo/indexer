@@ -342,7 +342,7 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
 
       // Validate the potential inclusion of an orderbook fee
       try {
-        await validateOrderbookFee("payment-processor", feeBreakdown, true, metadata.apiKey);
+        await validateOrderbookFee("payment-processor", feeBreakdown, metadata.apiKey, true);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         return results.push({
