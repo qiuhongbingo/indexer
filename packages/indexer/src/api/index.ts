@@ -361,6 +361,11 @@ export const start = async (): Promise<void> => {
       if (request.pre.metrics && statusCode >= 100 && statusCode < 500) {
         request.pre.metrics.statusCode = statusCode;
 
+        // If this is a marketplace api
+        if (request.route.settings.tags && request.route.settings.tags.includes("marketplace")) {
+          request.pre.metrics.points = 0;
+        }
+
         try {
           countApiUsageJob.addToQueue(request.pre.metrics).catch();
         } catch {

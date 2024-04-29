@@ -412,12 +412,7 @@ export class RateLimitRules {
       }
 
       const rateLimitObject = this.rules.get(rule.id);
-      let pointsToConsume = rule.options.pointsToConsume || 1;
-
-      // If this is a marketplace api
-      if (request.route.settings.tags && request.route.settings.tags.includes("marketplace")) {
-        pointsToConsume = 0;
-      }
+      const pointsToConsume = rule.options.pointsToConsume || 1;
 
       if (rateLimitObject) {
         rateLimitObject.keyPrefix = `${config.chainId}:${rule.id}:${route}`;
