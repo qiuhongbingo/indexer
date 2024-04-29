@@ -6,17 +6,11 @@ export const handleEvents = async (events: EnhancedEvent[]) => {
   for (const { subKind, baseEventParams, log } of events) {
     const eventData = getEventData([subKind])[0];
     switch (subKind) {
-      case "erc721c-v2-applied-list-to-collection":
-      case "erc721c-v2-set-transfer-security-level": {
+      case "erc721c-v2-applied-list-to-collection": {
         const parsedLog = eventData.abi.parseLog(log);
         const collection = parsedLog.args["collection"].toLowerCase();
 
-        await erc721c.v2.refreshConfig(collection);
-        break;
-      }
-
-      case "erc721c-v2-transfer-validator-updated": {
-        await erc721c.v2.refreshConfig(baseEventParams.address);
+        await erc721c.refreshConfig(collection);
         break;
       }
 

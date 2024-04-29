@@ -360,8 +360,6 @@ export type EventSubKind =
   | "erc721c-v2-removed-account-from-list"
   | "erc721c-v2-removed-code-hash-from-list"
   | "erc721c-v2-applied-list-to-collection"
-  | "erc721c-v2-set-transfer-security-level"
-  | "erc721c-v2-transfer-validator-updated"
   | "ditto-pool-initialized"
   | "mooar-order-filled"
   | "highlightxyz-edition-vector-created"
@@ -622,8 +620,6 @@ const allEventData = [
   erc721cV2.removedAccountFromList,
   erc721cV2.removedCodeHashFromList,
   erc721cV2.appliedListToCollection,
-  erc721cV2.setTransferSecurityLevel,
-  erc721cV2.transferValidatorUpdated,
   highlightxyz.editonVectorCreated,
   highlightxyz.seriesVectorCreated,
   highlightxyz.vectorUpdated,

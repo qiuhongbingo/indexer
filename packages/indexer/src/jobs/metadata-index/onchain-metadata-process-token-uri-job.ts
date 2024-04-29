@@ -24,7 +24,7 @@ export type OnchainMetadataProcessTokenUriJobPayload = {
 export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJobHandler {
   queueName = "onchain-metadata-index-process-token-uri-queue";
   maxRetries = 5;
-  concurrency = 30;
+  concurrency = 50;
   timeout = 5 * 60 * 1000;
   backoff = {
     type: "exponential",

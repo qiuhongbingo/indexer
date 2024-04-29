@@ -17,6 +17,7 @@ export type MetadataIndexFetchJobPayload =
         method: string;
         collection: string;
         continuation?: string;
+        onlyTokensWithMissingImages?: boolean;
       };
       context?: string;
     }
@@ -79,7 +80,13 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
       const [contract, tokenId] = data.continuation
         ? data.continuation.split(":")
         : [AddressZero, "0"];
-      refreshTokens = await this.getTokensForCollection(data.collection, contract, tokenId, limit);
+      refreshTokens = await this.getTokensForCollection(
+        data.collection,
+        contract,
+        tokenId,
+        limit,
+        data.onlyTokensWithMissingImages
+      );
 
       // If no more tokens found
       if (_.isEmpty(refreshTokens)) {
@@ -143,12 +150,14 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
     collection: string,
     contract: string,
     tokenId: string,
-    limit: number
+    limit: number,
+    onlyTokensWithMissingImages = false
   ) {
     const tokens = await redb.manyOrNone(
       `SELECT tokens.contract, tokens.token_id
             FROM tokens
             WHERE tokens.collection_id = $/collection/
+            ${onlyTokensWithMissingImages ? "AND tokens.image IS NULL" : ""}
             AND (tokens.contract, tokens.token_id) > ($/contract/, $/tokenId/)
             LIMIT ${limit}`,
       {
