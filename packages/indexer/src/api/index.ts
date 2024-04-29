@@ -199,8 +199,7 @@ export const start = async (): Promise<void> => {
 
       try {
         rateLimitRule = rateLimitRules.getRateLimitObject(
-          request.route.path,
-          request.route.method,
+          request,
           tier,
           apiKey?.key,
           new Map(Object.entries(_.merge(request.payload, request.query, request.params)))

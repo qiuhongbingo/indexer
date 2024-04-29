@@ -17,6 +17,7 @@ import { RateLimiterRedis } from "rate-limiter-flexible";
 import { BlockedKeyError, BlockedRouteError } from "@/models/rate-limit-rules/errors";
 import { config } from "@/config/index";
 import { AllChainsPubSub, PubSub } from "@/pubsub/index";
+import Hapi from "@hapi/hapi";
 
 export class RateLimitRules {
   private static instance: RateLimitRules;
@@ -390,12 +391,14 @@ export class RateLimitRules {
   }
 
   public getRateLimitObject(
-    route: string,
-    method: string,
+    request: Hapi.Request<Hapi.ReqRefDefaults>,
     tier: number,
     apiKey = "",
     payload: Map<string, string> = new Map()
   ): { ruleParams: RateLimitRuleEntity; rule: RateLimiterRedis; pointsToConsume: number } | null {
+    const route = request.route.path;
+    const method = request.route.method;
+
     if (tier < 0) {
       throw new BlockedKeyError(RateLimitRuleEntity.getRateLimitMessage(apiKey, tier));
     }
@@ -409,7 +412,12 @@ export class RateLimitRules {
       }
 
       const rateLimitObject = this.rules.get(rule.id);
-      const pointsToConsume = rule.options.pointsToConsume || 1;
+      let pointsToConsume = rule.options.pointsToConsume || 1;
+
+      // If this is a marketplace api
+      if (request.route.settings.tags && request.route.settings.tags.includes("marketplace")) {
+        pointsToConsume = 0;
+      }
 
       if (rateLimitObject) {
         rateLimitObject.keyPrefix = `${config.chainId}:${rule.id}:${route}`;
