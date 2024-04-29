@@ -68,7 +68,10 @@ if (config.catchup) {
 
         try {
           await redis.set("latest-block-websocket-received", blockEventTimeReceived);
-          await eventsSyncRealtimeJob.addToQueue({ block, blockEventTimeReceived });
+          await eventsSyncRealtimeJob.addToQueue(
+            { block, blockEventTimeReceived },
+            config.chainId === 8453 ? 5 * 1000 : 0
+          );
 
           if (![56, 137, 204, 80001, 80002, 80085, 7777777].includes(config.chainId)) {
             await checkForMissingBlocks(block);
