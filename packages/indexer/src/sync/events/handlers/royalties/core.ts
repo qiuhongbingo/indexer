@@ -168,6 +168,7 @@ export async function extractRoyalties(
 
   // The (sub)call where the current fill occured
   let subcallToAnalyze = txTrace.calls;
+
   const globalState = getStateChange(txTrace.calls);
   const routerCall = searchForCall(
     txTrace.calls,
@@ -536,7 +537,9 @@ export async function extractRoyalties(
       };
 
       const feeRecipientPlatform = feeRecipient.getByAddress(address, "marketplace");
-      if (feeRecipientPlatform) {
+      const orderBreakdown = (orderInfo?.feeBreakdown ?? []).find((c) => c.recipient === address);
+
+      if (feeRecipientPlatform && orderBreakdown?.kind != "royalty") {
         // Make sure current fee address in every order
         let protocolFeeSum = sameProtocolTotalPrice;
         if (linkedOrder) {
@@ -646,7 +649,7 @@ export async function extractRoyalties(
 
         // Match with the order's fee breakdown
         if (!isInRange) {
-          isInRange = Boolean((orderInfo?.feeBreakdown ?? []).find((c) => c.recipient === address));
+          isInRange = Boolean(orderBreakdown);
         }
 
         // For now we exclude AMMs which don't pay royalties
