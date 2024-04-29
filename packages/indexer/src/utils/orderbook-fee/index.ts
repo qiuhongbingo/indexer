@@ -32,7 +32,7 @@ export const attachOrderbookFee = async (
     orderbook: string;
     currency: string;
   },
-  apiKey?: string
+  apiKey = ""
 ) => {
   // Only if enabled
   if (!orderbookFeeEnabled) {
@@ -44,14 +44,8 @@ export const attachOrderbookFee = async (
     return;
   }
 
-  // Only certain order kinds
-  if (!ORDERBOOK_FEE_ORDER_KINDS.includes(params.orderKind)) {
-    return;
-  }
+  const feeBps = await ApiKeyManager.getOrderbookFee(apiKey, params.orderKind);
 
-  const feeBps = apiKey
-    ? await ApiKeyManager.getOrderbookFee(apiKey, params.orderKind)
-    : ApiKeyManager.defaultOrderbookFeeBps;
   if (feeBps > 0) {
     params.fee = params.fee ?? [];
     params.feeRecipient = params.feeRecipient ?? [];
@@ -101,8 +95,8 @@ export const validateOrderbookFee = async (
     recipient: string;
     bps: number;
   }[],
-  isReservoir?: boolean,
-  apiKey?: string
+  apiKey = "",
+  isReservoir?: boolean
 ) => {
   // Only if enabled
   if (!orderbookFeeEnabled) {
@@ -120,14 +114,8 @@ export const validateOrderbookFee = async (
     throw new Error("invalid-fee");
   }
 
-  // Only certain order kinds
-  if (!ORDERBOOK_FEE_ORDER_KINDS.includes(orderKind)) {
-    return;
-  }
+  const feeBps = await ApiKeyManager.getOrderbookFee(apiKey, orderKind);
 
-  const feeBps = apiKey
-    ? await ApiKeyManager.getOrderbookFee(apiKey, orderKind)
-    : ApiKeyManager.defaultOrderbookFeeBps;
   if (feeBps > 0) {
     let foundOrderbookFee = false;
 
