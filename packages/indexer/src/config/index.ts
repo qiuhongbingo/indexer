@@ -207,4 +207,8 @@ export const config = {
   disabledDatadogPluginsTracing: process.env.DISABLED_DATADOG_PLUGINS_TRACING
     ? String(process.env.DISABLED_DATADOG_PLUGINS_TRACING).split(",")
     : "ioredis,amqplib,pg,fetch".split(","),
+
+  debugMetadataIndexingCollections: process.env.DEBUG_METADATA_INDEXING_COLLECTIONS
+    ? String(process.env.DEBUG_METADATA_INDEXING_COLLECTIONS).split(",")
+    : [],
 };

@@ -50,7 +50,8 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
       return;
     }
 
-    logger.debug(
+    logger.log(
+      config.debugMetadataIndexingCollections.includes(payload.data.collection) ? "info" : "debug",
       this.queueName,
       JSON.stringify({
         topic: "tokenMetadataIndexing",

@@ -102,18 +102,7 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
           headers,
         })
         .then((response) => response.data)
-        .catch((error) => {
-          logger.error(
-            "opensea-fetcher",
-            `fetchTokens error. url:${url}, message:${error.message},  status:${
-              error.response?.status
-            }, data:${JSON.stringify(error.response?.data)}, url:${JSON.stringify(
-              error.config?.url
-            )}, headers:${JSON.stringify(error.config?.headers?.url)}`
-          );
-
-          this.handleError(error);
-        });
+        .catch((error) => this.handleError(error));
 
       tokensMetadata.push(data.nft);
     }
@@ -307,6 +296,14 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
 
       throw new RequestWasThrottledError(error.response.statusText, delay);
     }
+
+    logger.error(
+      "opensea-fetcher",
+      JSON.stringify({
+        message: `handleError. message=${error.message}, status=${error.response?.status}, url=${error.config?.url}`,
+        error,
+      })
+    );
 
     throw error;
   }

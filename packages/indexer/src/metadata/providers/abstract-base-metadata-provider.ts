@@ -80,7 +80,8 @@ export abstract class AbstractBaseMetadataProvider {
     // extend metadata
     const extendedMetadata = await Promise.all(
       allMetadata.map(async (metadata) => {
-        logger.debug(
+        logger.log(
+          config.debugMetadataIndexingCollections.includes(metadata.contract) ? "info" : "debug",
           "getTokensMetadata",
           JSON.stringify({
             topic: "tokenMetadataIndexing",
@@ -114,7 +115,10 @@ export abstract class AbstractBaseMetadataProvider {
               metadata.tokenId
             );
 
-            logger.debug(
+            logger.log(
+              config.debugMetadataIndexingCollections.includes(metadata.contract)
+                ? "info"
+                : "debug",
               "getTokensMetadata",
               JSON.stringify({
                 topic: "tokenMetadataIndexing",

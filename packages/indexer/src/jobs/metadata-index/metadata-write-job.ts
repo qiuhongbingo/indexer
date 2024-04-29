@@ -91,7 +91,8 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
       decimals,
     } = payload;
 
-    logger.debug(
+    logger.log(
+      config.debugMetadataIndexingCollections.includes(collection) ? "info" : "debug",
       this.queueName,
       JSON.stringify({
         topic: "tokenMetadataIndexing",

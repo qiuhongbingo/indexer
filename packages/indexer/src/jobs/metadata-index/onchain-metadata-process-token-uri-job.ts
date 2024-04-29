@@ -36,7 +36,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
     const { contract, tokenId, uri } = payload;
     const retryCount = Number(this.rabbitMqMessage?.retryCount);
 
-    logger.debug(
+    logger.log(
+      config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
       this.queueName,
       JSON.stringify({
         topic: "tokenMetadataIndexing",
@@ -53,7 +54,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
       ]);
 
       if (metadata.length) {
-        logger.debug(
+        logger.log(
+          config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
           this.queueName,
           JSON.stringify({
             topic: "tokenMetadataIndexing",
@@ -174,7 +176,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           }
         }
 
-        logger.debug(
+        logger.log(
+          config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
           this.queueName,
           JSON.stringify({
             topic: "tokenMetadataIndexing",
@@ -273,7 +276,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
     }
 
     if (!config.fallbackMetadataIndexingMethod) {
-      logger.debug(
+      logger.log(
+        config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
         this.queueName,
         JSON.stringify({
           topic: "tokenMetadataIndexing",
