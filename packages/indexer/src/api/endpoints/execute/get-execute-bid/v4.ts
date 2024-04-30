@@ -38,7 +38,7 @@ export const getExecuteBidV4Options: RouteOptions = {
   description: "Create bid (offer)",
   notes: "Generate a bid and submit it to multiple marketplaces",
   timeout: { server: 60000 },
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,
