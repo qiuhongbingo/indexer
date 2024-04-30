@@ -16,7 +16,7 @@ const version = "v1";
 
 export const postFlagTokenV1Options: RouteOptions = {
   description: "Update token flag status",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,

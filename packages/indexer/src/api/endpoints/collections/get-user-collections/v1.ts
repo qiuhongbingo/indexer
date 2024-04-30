@@ -14,7 +14,7 @@ export const getUserCollectionsV1Options: RouteOptions = {
   description: "Get aggregate stats for a user, grouped by collection",
   notes:
     "Get aggregate stats for a user, grouped by collection. Useful for showing total portfolio information.",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 31,

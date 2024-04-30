@@ -10,7 +10,7 @@ import { ApiKeyManager } from "@/models/api-keys";
 
 export const postInvalidateOrdersOptions: RouteOptions = {
   description: "Invalidate stale orders",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   validate: {
     headers: Joi.object({
       "x-api-key": Joi.string().required(),

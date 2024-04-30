@@ -12,7 +12,7 @@ const version = "v1";
 
 export const postExecuteSolveV1Options: RouteOptions = {
   description: "Indirectly fill an order via a solver",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

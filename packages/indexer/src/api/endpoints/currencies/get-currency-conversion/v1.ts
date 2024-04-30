@@ -15,7 +15,7 @@ const version = "v1";
 export const getCurrencyConversionV1Options: RouteOptions = {
   description: "Currency Conversions",
   notes: "Convert an amount in one currency to another",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

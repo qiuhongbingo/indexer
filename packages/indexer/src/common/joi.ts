@@ -20,6 +20,7 @@ import {
   getUSDAndNativePrices,
   isWhitelistedCurrency,
 } from "@/utils/prices";
+import { Assets } from "@/utils/assets";
 
 // --- Prices ---
 
@@ -576,7 +577,7 @@ export const getJoiOrderObject = async (
     validUntil: string;
     quantityFilled: string;
     quantityRemaining: string;
-    criteria: string | null;
+    criteria: any | null;
     sourceIdInt: number;
     feeBps: number;
     feeBreakdown: any;
@@ -599,6 +600,7 @@ export const getJoiOrderObject = async (
     includeDynamicPricing?: boolean;
     includeDepth?: boolean;
     displayCurrency?: string;
+    resizeImageUrl?: boolean;
   }
 ) => {
   const sources = await Sources.getInstance();
@@ -647,6 +649,26 @@ export const getJoiOrderObject = async (
     ? Sdk.Common.Addresses.Native[config.chainId]
     : Sdk.Common.Addresses.WNative[config.chainId];
 
+  const criteria = order.criteria;
+
+  if (opts?.resizeImageUrl) {
+    if (criteria?.data.token?.image) {
+      try {
+        criteria.data.token.image = Assets.getResizedImageUrl(
+          criteria.data.token.image,
+          undefined,
+          criteria.data.token.image_version,
+          criteria.data.token.image_mime_type
+        );
+      } catch {
+        // Do nothing
+      }
+    }
+
+    delete criteria.data.token?.image_version;
+    delete criteria.data.token?.image_mime_type;
+  }
+
   return {
     id: order.id,
     kind: order.kind,
@@ -690,7 +712,7 @@ export const getJoiOrderObject = async (
       : order.dynamic !== undefined
       ? null
       : undefined,
-    criteria: order.criteria,
+    criteria,
     source: getJoiSourceObject(source),
     feeBps: Number(feeBps.toString()),
     feeBreakdown,

@@ -23,7 +23,7 @@ export const getTokensBootstrapV1Options: RouteOptions = {
   description: "Token Events Bootstrap",
   notes:
     "Get the latest price event per token in a collection, so that you can listen to future events and keep track of prices",
-  tags: ["api", "Tokens"],
+  tags: ["api", "Tokens", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 10,

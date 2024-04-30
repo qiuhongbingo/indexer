@@ -271,15 +271,16 @@ export class Router {
     const approvals: FTApproval[] = [];
 
     const sender = options?.relayer ?? taker;
-    const hasNoneNativeMint = details.some(
+    const hasERC20Mint = details.some(
       (c) => !isNative(this.chainId, c.currency ?? Sdk.Common.Addresses.Native[this.chainId])
     );
 
+    let viaRouter = false;
     if (
       !Addresses.MintModule[this.chainId] ||
       options?.forceDirectFilling ||
       // ERC20 mints
-      hasNoneNativeMint ||
+      hasERC20Mint ||
       // Single mints with no fees, no comment and no `relayer` field (only if the mint doesn't have an explicit recipient)
       (details.length === 1 &&
         !details[0].fees?.length &&
@@ -322,6 +323,7 @@ export class Router {
       }
     } else {
       // Otherwise, we wrap the mint transactions within a router execution
+      viaRouter = true;
 
       const proxyCalldata = new Interface(MintProxyAbi).encodeFunctionData("mintMultiple", [
         details.map((d) => ({
@@ -379,7 +381,7 @@ export class Router {
       }
     }
 
-    return { txs, success };
+    return { txs, success, viaRouter };
   }
 
   public async fillListingsTx(

@@ -33,7 +33,7 @@ const version = "v1";
 
 export const postCollectionsRefreshV1Options: RouteOptions = {
   description: "Refresh Collection",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

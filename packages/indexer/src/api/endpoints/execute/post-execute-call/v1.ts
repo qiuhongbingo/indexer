@@ -15,7 +15,7 @@ const version = "v1";
 
 export const postExecuteCallV1Options: RouteOptions = {
   description: "Make arbitrary same-chain and cross-chain calls via solver",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

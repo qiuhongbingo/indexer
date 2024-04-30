@@ -16,7 +16,7 @@ export const getRedirectTokenImageV1Options: RouteOptions = {
     expiresIn: 60000,
   },
   description: "Redirect response to the given token image",
-  tags: ["api", "Redirects"],
+  tags: ["api", "Redirects", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 53,

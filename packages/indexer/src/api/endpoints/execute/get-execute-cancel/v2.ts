@@ -14,7 +14,7 @@ const version = "v2";
 export const getExecuteCancelV2Options: RouteOptions = {
   description: "Cancel order",
   notes: "Cancel an existing order on any marketplace",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

@@ -14,7 +14,7 @@ const version = "v1";
 export const getSourcesV1Options: RouteOptions = {
   description: "Sources List",
   notes: "This API returns a list of sources",
-  tags: ["api", "Sources"],
+  tags: ["api", "Sources", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 1,

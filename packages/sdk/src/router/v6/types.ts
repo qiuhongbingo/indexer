@@ -293,6 +293,8 @@ export type FillMintsResult = {
     approvals: FTApproval[];
   }[];
   success: { [orderId: string]: boolean };
+  // Whether the mints are executed via the router
+  viaRouter?: boolean;
 };
 
 // Transfers

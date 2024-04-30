@@ -28,7 +28,7 @@ const version = "v6";
 
 export const getExecuteSellV6Options: RouteOptions = {
   description: "Sell tokens (accept bids)",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   timeout: {
     server: 40 * 1000,
   },

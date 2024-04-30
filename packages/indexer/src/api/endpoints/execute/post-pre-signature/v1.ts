@@ -10,7 +10,7 @@ const version = "v1";
 
 export const postPreSignatureV1Options: RouteOptions = {
   description: "Attach a signature to an existing pre-signature",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

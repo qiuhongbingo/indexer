@@ -13,10 +13,10 @@ import { Orders } from "@/utils/orders";
 
 const version = "v1";
 
-export const getCollectionBidsV1Options: RouteOptions = {
-  description: "Collection Bids (offers)",
-  notes: "Get a list of bids (offers), filtered by collection.",
-  tags: ["api", "Collections", "marketplace"],
+export const getTokenBidsV1Options: RouteOptions = {
+  description: "Token Bids (offers)",
+  notes: "Get a list of bids (offers), filtered by token.",
+  tags: ["api", "Tokens"],
   plugins: {
     "hapi-swagger": {
       order: 5,
@@ -24,11 +24,13 @@ export const getCollectionBidsV1Options: RouteOptions = {
   },
   validate: {
     params: Joi.object({
-      collectionId: Joi.string()
+      token: Joi.string()
         .lowercase()
+        .pattern(/^0x[a-fA-F0-9]{40}:[0-9]+$/)
         .description(
-          "Filter to a particular collection. Example: `0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63`"
-        ),
+          "The token to get bids for. Example: `0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63:123`"
+        )
+        .required(),
     }),
     query: Joi.object({
       type: Joi.string()
@@ -67,16 +69,19 @@ export const getCollectionBidsV1Options: RouteOptions = {
     schema: Joi.object({
       orders: Joi.array().items(JoiOrder),
       continuation: Joi.string().pattern(regex.base64).allow(null),
-    }).label(`getCollectionBids${version.toUpperCase()}Response`),
+    }).label(`getTokenBids${version.toUpperCase()}Response`),
     failAction: (_request, _h, error) => {
-      logger.error(`get-collection-bids-${version}-handler`, `Wrong response schema: ${error}`);
+      logger.error(`get-token-bids-${version}-handler`, `Wrong response schema: ${error}`);
       throw error;
     },
   },
   handler: async (request: Request) => {
     const query = request.query as any;
 
-    (query as any).collectionId = request.params.collectionId;
+    const [contract, tokenId] = request.params.token.split(":");
+
+    (query as any).contract = toBuffer(contract);
+    (query as any).tokenId = tokenId;
 
     try {
       const criteriaBuildQuery = Orders.buildCriteriaQueryV2(
@@ -152,31 +157,23 @@ export const getCollectionBidsV1Options: RouteOptions = {
       // Filters
       const conditions: string[] = [
         `orders.side = 'buy'`,
+        `orders.contract = $/contract/`,
         `orders.fillability_status = 'fillable' AND orders.approval_status = 'approved'`,
         `orders.taker = '\\x0000000000000000000000000000000000000000' OR orders.taker IS NULL`,
       ];
 
-      const [contract] = query.collectionId.split(":");
-
-      (query as any).contract = toBuffer(contract);
-      conditions.push(`orders.contract = $/contract/`);
-
-      if (!query.collectionId.match(regex.address)) {
-        baseQuery += `
+      baseQuery += `
             JOIN LATERAL (
               SELECT
                 contract,
                 token_id
               FROM
                 token_sets_tokens
-              WHERE
-                token_sets_tokens.token_set_id = orders.token_set_id LIMIT 1) tst ON TRUE
-            JOIN tokens ON tokens.contract = tst.contract
-              AND tokens.token_id = tst.token_id
+              WHERE token_sets_tokens.token_set_id = orders.token_set_id
+              AND token_sets_tokens.contract = $/contract/
+              AND token_sets_tokens.token_id = $/tokenId/
+              LIMIT 1) tst ON TRUE
           `;
-
-        conditions.push(`tokens.collection_id = $/collectionId/`);
-      }
 
       switch (query.type) {
         case "token": {
@@ -235,9 +232,9 @@ export const getCollectionBidsV1Options: RouteOptions = {
       let continuation = null;
 
       if (rawResult.length === query.limit) {
-        continuation = buildContinuation(
-          rawResult[rawResult.length - 1].value + "_" + rawResult[rawResult.length - 1].id
-        );
+        const lastResult = rawResult[rawResult.length - 1];
+
+        continuation = buildContinuation(lastResult.value + "_" + lastResult.id);
       }
 
       const result = rawResult.map(async (r) =>
@@ -297,7 +294,7 @@ export const getCollectionBidsV1Options: RouteOptions = {
         continuation,
       };
     } catch (error) {
-      logger.error(`get-collection-bids-${version}-handler`, `Handler failure: ${error}`);
+      logger.error(`get-token-bids-${version}-handler`, `Handler failure: ${error}`);
       throw error;
     }
   },

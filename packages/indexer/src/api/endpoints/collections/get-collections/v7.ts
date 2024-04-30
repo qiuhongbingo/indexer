@@ -35,7 +35,7 @@ export const getCollectionsV7Options: RouteOptions = {
   },
   description: "Collections",
   notes: "Use this API to explore a collection's metadata and statistics (sales, volume, etc).",
-  tags: ["api", "Collections"],
+  tags: ["api", "Collections", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 3,

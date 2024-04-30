@@ -19,7 +19,7 @@ export const getCollectionsV3Options: RouteOptions = {
   description: "Get a filtered list of collections",
   notes:
     "Useful for getting multiple collections to show in a marketplace, or search for particular collections.",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

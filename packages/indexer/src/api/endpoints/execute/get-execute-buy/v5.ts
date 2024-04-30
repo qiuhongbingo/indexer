@@ -21,7 +21,7 @@ const version = "v5";
 
 export const getExecuteBuyV5Options: RouteOptions = {
   description: "Buy tokens",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 10,

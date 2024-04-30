@@ -19,7 +19,7 @@ const version = "v1";
 export const postNsfwStatusTokenV1Options: RouteOptions = {
   description: "Update the tokens nsfw status",
   notes: "This API can be used by allowed API keys to update the nsfw status of a token.",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,
