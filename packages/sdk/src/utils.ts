@@ -143,6 +143,7 @@ export enum Network {
   Apex = 70700,
   Blast = 81457,
   AstarZkevm = 3776,
+  Degen = 666666666,
   // Testnets
   EthereumGoerli = 5,
   MantleTestnet = 5001,
