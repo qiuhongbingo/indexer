@@ -215,6 +215,7 @@ export const ReservoirCancellationZone: ChainIdToAddress = {
   [Network.Garnet]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
   [Network.Redstone]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
   [Network.Amoy]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
+  [Network.BaseSepolia]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
 };
 
 export const ReservoirV16CancellationZone: ChainIdToAddress = {
