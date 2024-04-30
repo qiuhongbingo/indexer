@@ -15,7 +15,7 @@ const version = "v1";
 
 export const postTokenSetsV1Options: RouteOptions = {
   description: "Create Token Set",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,
