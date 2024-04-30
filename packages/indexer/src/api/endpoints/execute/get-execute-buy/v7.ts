@@ -2278,36 +2278,39 @@ export const getExecuteBuyV7Options: RouteOptions = {
         // - all minted tokens have the taker as the final owner (eg. nothing gets stuck in the router / module)
 
         let safeToUse = true;
-        for (const { txData, approvals } of mintsResult.txs) {
-          // ERC20 mints (which will have a corresponding approval) need to be minted directly
-          if (approvals.length) {
-            safeToUse = false;
-            continue;
-          }
+        if (mintsResult.viaRouter) {
+          for (const { txData, approvals } of mintsResult.txs) {
+            // ERC20 mints (which will have a corresponding approval) need to be minted directly
+            if (approvals.length) {
+              safeToUse = false;
+              continue;
+            }
 
-          const events = await getNFTTransferEvents(txData);
-          if (!events.length) {
-            // At least one successful mint
-            safeToUse = false;
-          } else {
-            // Every token landed in the taker's wallet
-            const uniqueTokens = [
-              ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
-            ].map((t) => t.split(":"));
-            for (const [contract, tokenId] of uniqueTokens) {
-              if (
-                !events.find(
-                  (e) => e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
-                )
-              ) {
-                safeToUse = false;
-                break;
+            const events = await getNFTTransferEvents(txData);
+            if (!events.length) {
+              // At least one successful mint
+              safeToUse = false;
+            } else {
+              // Every token landed in the taker's wallet
+              const uniqueTokens = [
+                ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
+              ].map((t) => t.split(":"));
+              for (const [contract, tokenId] of uniqueTokens) {
+                if (
+                  !events.find(
+                    (e) =>
+                      e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
+                  )
+                ) {
+                  safeToUse = false;
+                  break;
+                }
               }
             }
           }
         }
 
-        if (!safeToUse) {
+        if (mintsResult.viaRouter && !safeToUse) {
           if (payload.relayer) {
             throw Boom.badRequest("Relayer not supported for requested mints");
           }
