@@ -683,7 +683,6 @@ export const syncEvents = async (
         getLogsTime,
         processLogs: endProcessLogs - startProcessLogs,
       },
-
       blocks: {
         count: 1,
         getBlockTime: endGetBlockTime - startGetBlockTime,
