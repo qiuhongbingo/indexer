@@ -15,7 +15,7 @@ const version = "v2";
 export const getCollectionV2Options: RouteOptions = {
   description: "Single Collection",
   notes: "Get detailed information about a single collection, including real-time stats.",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

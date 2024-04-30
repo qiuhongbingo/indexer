@@ -16,7 +16,7 @@ export const getRedirectCurrencyIconV1Options: RouteOptions = {
     expiresIn: 60000,
   },
   description: "Redirect response to the given currency address icon",
-  tags: ["api", "Redirects"],
+  tags: ["api", "Redirects", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 53,

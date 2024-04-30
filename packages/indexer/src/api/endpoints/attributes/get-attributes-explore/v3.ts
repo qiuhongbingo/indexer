@@ -19,7 +19,7 @@ export const getAttributesExploreV3Options: RouteOptions = {
   },
   description: "Explore attributes",
   notes: "Get detailed aggregate about attributes in a collection, attribute floors",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 15,

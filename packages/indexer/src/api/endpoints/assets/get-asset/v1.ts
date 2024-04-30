@@ -17,7 +17,7 @@ export const getAssetV1Options: RouteOptions = {
     expiresIn: 1000 * 60 * 60 * 24 * 30,
   },
   description: "Return the asset based on the given param",
-  tags: ["api", "x-admin"],
+  tags: ["api", "x-admin", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 3,

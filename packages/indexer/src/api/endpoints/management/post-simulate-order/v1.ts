@@ -28,7 +28,7 @@ const version = "v1";
 
 export const postSimulateOrderV1Options: RouteOptions = {
   description: "Simulate any given order",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,
