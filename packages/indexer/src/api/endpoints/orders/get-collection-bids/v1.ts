@@ -16,7 +16,7 @@ const version = "v1";
 export const getCollectionBidsV1Options: RouteOptions = {
   description: "Collection Bids (offers)",
   notes: "Get a list of bids (offers), filtered by collection.",
-  tags: ["api", "Collections"],
+  tags: ["api", "Collections", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 5,

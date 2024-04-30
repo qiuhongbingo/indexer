@@ -18,7 +18,7 @@ export const getCollectionSearchV1Options: RouteOptions = {
     expiresIn: 10000,
   },
   description: "Search Collections (Cross Chain)",
-  tags: ["api", "Collections"],
+  tags: ["api", "Collections", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 3,

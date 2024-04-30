@@ -16,7 +16,7 @@ const version = "v2";
 export const getTokenActivityV2Options: RouteOptions = {
   description: "Token activity",
   notes: "This API can be used to build a feed for a token",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 1,

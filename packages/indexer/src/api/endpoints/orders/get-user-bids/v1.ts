@@ -16,7 +16,7 @@ const version = "v1";
 export const getUserBidsV1Options: RouteOptions = {
   description: "User Bids (offers)",
   notes: "Get a list of bids (offers), filtered by maker.",
-  tags: ["api", "Accounts"],
+  tags: ["api", "Accounts", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 5,

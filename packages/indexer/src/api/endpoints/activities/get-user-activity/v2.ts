@@ -18,7 +18,7 @@ const version = "v2";
 export const getUserActivityV2Options: RouteOptions = {
   description: "Users activity",
   notes: "This API can be used to build a feed for a user",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 1,
