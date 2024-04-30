@@ -672,7 +672,7 @@ export const syncEvents = async (
     "sync-events-timing-v2",
     JSON.stringify({
       message: `Events realtime syncing blocks ${blocks.fromBlock} to ${blocks.toBlock}`,
-      rawResponse: config.chainId === 8453 ? JSON.stringify(blockData) : undefined,
+      eventFilter: config.chainId === 8453 ? JSON.stringify(eventFilter) : undefined,
       blockRange: [blocks.fromBlock, blocks.toBlock],
       syncTime: endSyncTime - startSyncTime,
       // find the longest block sync time - the start sync time
