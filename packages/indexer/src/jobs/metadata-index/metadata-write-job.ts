@@ -91,13 +91,16 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
       decimals,
     } = payload;
 
-    logger.debug(
+    logger.log(
+      config.debugMetadataIndexingCollections.includes(collection) ? "info" : "debug",
       this.queueName,
       JSON.stringify({
         topic: "tokenMetadataIndexing",
         message: `Start. collection=${collection}, tokenId=${tokenId}, metadataMethod=${metadataMethod}`,
         payload,
         metadataMethod,
+        debugMetadataIndexingCollection:
+          config.debugMetadataIndexingCollections.includes(collection),
       })
     );
 
@@ -119,6 +122,8 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
               payload,
               fallbackSuccess,
               fallbackError,
+              debugMetadataIndexingCollection:
+                config.debugMetadataIndexingCollections.includes(collection),
             })
           );
 
@@ -138,6 +143,8 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
             topic: "tokenMetadataIndexing",
             message: `Fallback check error. collection=${collection}, tokenId=${tokenId}`,
             payload,
+            debugMetadataIndexingCollection:
+              config.debugMetadataIndexingCollections.includes(collection),
           })
         );
       }
