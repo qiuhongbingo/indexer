@@ -77,7 +77,7 @@ const getNetworkConfig = (chainId?: number) => {
         url = "https://blast.blockpi.network/v1/rpc/public";
         break;
       case 666666666:
-        url = "https://rpc.degen.tips/BfdGLDDCKam8CAtMPGYDcfoUD3studpYS";
+        url = "https://rpc.degen.tips/";
         break;
       // Testnets
       case 5001:
