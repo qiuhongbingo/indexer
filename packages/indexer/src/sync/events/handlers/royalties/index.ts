@@ -140,7 +140,7 @@ export const getOrderInfos = async (orderIds: string[]): Promise<OrderInfo[]> =>
 };
 
 const checkFeeIsValid = (result: RoyaltyResult) =>
-  result.marketplaceFeeBps + result.royaltyFeeBps < 10000;
+  result.marketplaceFeeBps + result.royaltyFeeBps <= 10000;
 
 const subFeeWithBps = (amount: BigNumberish, totalFeeBps: number) => {
   return bn(amount).sub(bn(amount).mul(totalFeeBps).div(10000)).toString();

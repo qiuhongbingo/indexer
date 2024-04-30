@@ -320,6 +320,7 @@ export async function extractRoyalties(
     (total, item) => total.add(bn(item.currencyPrice ?? item.price).mul(bn(item.amount))),
     bn(0)
   );
+
   // Extract any fill events that have the same order kind and currency
   const sameProtocolFills = fillEvents
     .filter((e) => {
@@ -537,9 +538,9 @@ export async function extractRoyalties(
       };
 
       const feeRecipientPlatform = feeRecipient.getByAddress(address, "marketplace");
-      const orderBreakdown = (orderInfo?.feeBreakdown ?? []).find((c) => c.recipient === address);
+      const inFeeBreakdown = (orderInfo?.feeBreakdown ?? []).find((c) => c.recipient === address);
 
-      if (feeRecipientPlatform && orderBreakdown?.kind != "royalty") {
+      if (feeRecipientPlatform) {
         // Make sure current fee address in every order
         let protocolFeeSum = sameProtocolTotalPrice;
         if (linkedOrder) {
@@ -572,7 +573,8 @@ export async function extractRoyalties(
             .toNumber();
         }
 
-        marketplaceFeeBreakdown.push(royalty);
+        const recipientIsEligible = !notRoyaltyRecipients.has(address);
+        if (recipientIsEligible) marketplaceFeeBreakdown.push(royalty);
       } else {
         // For different collection with same fee recipient
         const sameRecipientDetails = sameProtocolDetails.filter((d) => d.recipient === address);
@@ -631,9 +633,15 @@ export async function extractRoyalties(
 
         const inRoyaltyRecipient = royalties.find((c) => c.find((d) => d.recipient === address));
 
+        let outOfLimit = bps > BPS_LIMIT;
+
+        if (inFeeBreakdown && outOfLimit) {
+          outOfLimit = false;
+        }
+
         const recipientIsEligible =
           bps > 0 &&
-          bps < BPS_LIMIT &&
+          !outOfLimit &&
           !matchFee &&
           excludeOtherRecipients &&
           (!notRoyaltyRecipients.has(address) || inRoyaltyRecipient);
@@ -649,7 +657,7 @@ export async function extractRoyalties(
 
         // Match with the order's fee breakdown
         if (!isInRange) {
-          isInRange = Boolean(orderBreakdown);
+          isInRange = Boolean(inFeeBreakdown);
         }
 
         // For now we exclude AMMs which don't pay royalties
