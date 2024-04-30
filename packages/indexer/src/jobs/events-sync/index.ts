@@ -68,16 +68,20 @@ if (config.catchup) {
 
         try {
           await redis.set("latest-block-websocket-received", blockEventTimeReceived);
+          await eventsSyncRealtimeJob.addToQueue({ block, blockEventTimeReceived });
 
           if ([8453, 81457].includes(config.chainId)) {
-            await eventsSyncRealtimeJob.addToQueue({ block, blockEventTimeReceived }, 5 * 1000);
+            await eventsSyncRealtimeJob.addToQueue(
+              { block, blockEventTimeReceived },
+              5 * 1000,
+              true
+            );
+
             await eventsSyncRealtimeJob.addToQueue(
               { block, blockEventTimeReceived },
               30 * 1000,
               true
             );
-          } else {
-            await eventsSyncRealtimeJob.addToQueue({ block, blockEventTimeReceived });
           }
 
           if (![56, 137, 204, 80001, 80002, 80085, 7777777].includes(config.chainId)) {
