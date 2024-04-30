@@ -82,8 +82,8 @@ export class EventsSyncRealtimeJob extends AbstractRabbitMqJobHandler {
     }
   }
 
-  public async addToQueue(params: EventsSyncRealtimeJobPayload, delay = 0) {
-    await this.send({ payload: params, jobId: `${params.block}` }, delay);
+  public async addToQueue(params: EventsSyncRealtimeJobPayload, delay = 0, force = false) {
+    await this.send({ payload: params, jobId: force ? undefined : `${params.block}` }, delay);
   }
 }
 

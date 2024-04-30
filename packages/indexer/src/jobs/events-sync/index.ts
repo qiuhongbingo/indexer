@@ -71,7 +71,11 @@ if (config.catchup) {
 
           if ([8453, 81457].includes(config.chainId)) {
             await eventsSyncRealtimeJob.addToQueue({ block, blockEventTimeReceived }, 5 * 1000);
-            await eventsSyncRealtimeJob.addToQueue({ block, blockEventTimeReceived }, 30 * 1000);
+            await eventsSyncRealtimeJob.addToQueue(
+              { block, blockEventTimeReceived },
+              30 * 1000,
+              true
+            );
           } else {
             await eventsSyncRealtimeJob.addToQueue({ block, blockEventTimeReceived });
           }
