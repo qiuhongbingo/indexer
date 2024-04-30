@@ -50,6 +50,7 @@ export type SourcesMetadata = {
   tokenUrlGarnet?: string;
   tokenUrlRedstone?: string;
   tokenUrlAmoy?: string;
+  tokenUrlDegen?: string;
 };
 
 export class SourcesEntity {
