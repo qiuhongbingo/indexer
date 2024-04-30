@@ -166,6 +166,9 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
             JSON.stringify({
               topic: "tokenMetadataIndexing",
               message: `onchainMetadataProcessTokenUriJob. contract=${tokenToProcess.contract}, tokenId=${tokenToProcess.tokenId}, uri=${tokenToProcess.uri}, error=${tokenToProcess.error}`,
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                tokenToProcess.contract
+              ),
             })
           );
         }

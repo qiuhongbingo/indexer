@@ -59,6 +59,9 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
           payload.kind === "single-token" ? payload.data.tokenId : ""
         }`,
         payload,
+        debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+          payload.data.collection
+        ),
       })
     );
 

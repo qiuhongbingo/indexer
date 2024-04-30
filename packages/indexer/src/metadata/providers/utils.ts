@@ -307,6 +307,7 @@ export function handleTokenUriErrorResponse(contract: string, tokenId: string, e
         error,
         errorResponseStatus: error.response?.status,
         errorResponseData: error.response?.data,
+        debugMetadataIndexingCollection: true,
       })
     );
   }

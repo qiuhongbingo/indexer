@@ -69,6 +69,9 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
               getTokenMetadataFromURILatency,
               error,
               isSuccess: !!metadata,
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                token.contract
+              ),
             })
           );
 
@@ -202,6 +205,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
             topic: "tokenMetadataIndexing",
             message: `fetchTokens sendBatch error. errorStatus=${error.status}`,
             error,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -263,6 +267,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
                 contract: idToToken[token.id].contract,
                 tokenId: idToToken[token.id].tokenId,
                 error,
+                debugMetadataIndexingCollection: true,
               })
             );
           }
@@ -321,6 +326,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
             message: `_getCollectionMetadata. Could not fetch collection.  contract=${contract}, error=${error}`,
             contract,
             error,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -467,6 +473,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `detectTokenStandard error. contractAddress=${contractAddress}, error=${error}`,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -503,6 +510,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `encodeTokenERC721 error. contractAddress=${token.contract}, tokenId=${token.tokenId}, error=${error}`,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -539,6 +547,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `encodeTokenERC1155 error. contractAddress=${token.contract}, tokenId=${token.tokenId}, error=${error}`,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -567,6 +576,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `getContractName error. contractAddress=${contractAddress}, error=${e}`,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -610,6 +620,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `getContractURI error. contractAddress:${contractAddress}, error:${e}`,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -768,6 +779,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
             tokenId,
             uri,
             error,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
