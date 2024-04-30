@@ -15,7 +15,7 @@ const version = "v1";
 export const postExecuteTransferV1Options: RouteOptions = {
   description: "Transfer Tokens",
   notes: "Use this endpoint to bulk transfer an array of NFTs.",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

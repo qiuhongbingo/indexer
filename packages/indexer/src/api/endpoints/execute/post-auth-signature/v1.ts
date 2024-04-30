@@ -15,7 +15,7 @@ const version = "v1";
 
 export const postAuthSignatureV1Options: RouteOptions = {
   description: "Attach a signature to an existing auth challenge",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

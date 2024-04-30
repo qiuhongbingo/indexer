@@ -12,7 +12,7 @@ const version = "v1";
 
 export const postPermitSignatureV1Options: RouteOptions = {
   description: "Attach a signature to an existing permit",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

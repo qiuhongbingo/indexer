@@ -11,7 +11,7 @@ const version = "v1";
 
 export const postExecuteResultsV1: RouteOptions = {
   description: "Send the success status of an execution",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,
