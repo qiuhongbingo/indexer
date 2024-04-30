@@ -76,6 +76,9 @@ const getNetworkConfig = (chainId?: number) => {
       case 81457:
         url = "https://blast.blockpi.network/v1/rpc/public";
         break;
+      case 666666666:
+        url = "https://rpc.degen.tips/BfdGLDDCKam8CAtMPGYDcfoUD3studpYS";
+        break;
       // Testnets
       case 5001:
         url = "https://rpc.testnet.mantle.xyz";
@@ -184,6 +187,7 @@ const config: HardhatUserConfig = {
     ancient8: getNetworkConfig(888888888),
     apex: getNetworkConfig(70700),
     blast: getNetworkConfig(81457),
+    degen: getNetworkConfig(666666666),
     // Testnets
     mantleTestnet: getNetworkConfig(5001),
     sepolia: getNetworkConfig(11155111),
@@ -217,6 +221,7 @@ const config: HardhatUserConfig = {
       opBnb: "0x",
       apex: "0x",
       blast: process.env.ETHERSCAN_API_KEY_BLAST ?? "",
+      degen: "0x",
       // Testnets
       mantleTestnet: "0x",
       lineaTestnet: process.env.ETHERSCAN_API_KEY_LINEA_TESTNET ?? "",
@@ -334,6 +339,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.blastscan.io/api",
           browserURL: "https://blastscan.io/",
+        },
+      },
+      {
+        network: "degen",
+        chainId: 666666666,
+        urls: {
+          apiURL: "https://explorer.degen.tips/api",
+          browserURL: "https://explorer.degen.tips/",
         },
       },
       // Testnets
