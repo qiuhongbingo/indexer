@@ -228,19 +228,20 @@ const simulateMintTxData = async (
     try {
       logs = await getEmittedEvents(txData, config.chainId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error) {
-      logger.info(
-        "mints-simulation",
-        JSON.stringify({
-          contract,
-          contractKind,
-          quantity,
-          txData,
-          error,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          stack: (error as any).stack,
-        })
-      );
+    } catch (error: any) {
+      if (error.message !== "execution-reverted") {
+        logger.info(
+          "mints-simulation",
+          JSON.stringify({
+            contract,
+            contractKind,
+            quantity,
+            txData,
+            error,
+            stack: error.stack,
+          })
+        );
+      }
       return false;
     }
 
@@ -287,19 +288,22 @@ const simulateMintTxData = async (
 
     try {
       await triggerCall(txData);
-    } catch (error) {
-      logger.info(
-        "mints-simulation",
-        JSON.stringify({
-          contract,
-          contractKind,
-          quantity,
-          txData,
-          error,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          stack: (error as any).stack,
-        })
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error.message !== "execution-reverted") {
+        logger.info(
+          "mints-simulation",
+          JSON.stringify({
+            contract,
+            contractKind,
+            quantity,
+            txData,
+            error,
+            stack: error.stack,
+          })
+        );
+      }
+      return false;
     }
 
     return true;
