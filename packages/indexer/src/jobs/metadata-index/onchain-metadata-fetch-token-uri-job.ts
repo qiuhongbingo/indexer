@@ -107,6 +107,9 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
               contract: result.contract,
               error: result.error,
               reason: "No uri found",
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                result.contract
+              ),
             })
           );
 
@@ -134,6 +137,8 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
                     message: `Skip Fallback Error. contract=${result.contract}, tokenId=${result.tokenId}, uri=${result.uri}, error=${error}`,
                     result,
                     error,
+                    debugMetadataIndexingCollection:
+                      config.debugMetadataIndexingCollections.includes(result.contract),
                   })
                 );
               }
