@@ -4,6 +4,7 @@ import * as Sdk from "@reservoir0x/sdk";
 import { Network, TxData } from "@reservoir0x/sdk/dist/utils";
 
 import { idb } from "@/common/db";
+import { logger } from "@/common/logger";
 import { baseProvider, baseProviderWithTimeout } from "@/common/provider";
 import { bn, fromBuffer } from "@/common/utils";
 import { config } from "@/config/index";
@@ -227,7 +228,19 @@ const simulateMintTxData = async (
     try {
       logs = await getEmittedEvents(txData, config.chainId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch {
+    } catch (error) {
+      logger.info(
+        "mints-simulation",
+        JSON.stringify({
+          contract,
+          contractKind,
+          quantity,
+          txData,
+          error,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          stack: (error as any).stack,
+        })
+      );
       return false;
     }
 
@@ -274,8 +287,19 @@ const simulateMintTxData = async (
 
     try {
       await triggerCall(txData);
-    } catch {
-      return false;
+    } catch (error) {
+      logger.info(
+        "mints-simulation",
+        JSON.stringify({
+          contract,
+          contractKind,
+          quantity,
+          txData,
+          error,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          stack: (error as any).stack,
+        })
+      );
     }
 
     return true;

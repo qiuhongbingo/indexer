@@ -40,6 +40,9 @@ const getNetworkConfig = (chainId?: number) => {
       case 324:
         url = "https://mainnet.era.zksync.io";
         break;
+      case 690:
+        url = "https://rpc.redstonechain.com";
+        break;
       case 1101:
         url = "https://zkevm-rpc.com";
         break;
@@ -48,6 +51,9 @@ const getNetworkConfig = (chainId?: number) => {
         break;
       case 8453:
         url = "https://developer-access-mainnet.base.org";
+        break;
+      case 17069:
+        url = "https://rpc.garnet.qry.live";
         break;
       case 42161:
         url = "https://arb1.arbitrum.io/rpc";
@@ -61,30 +67,39 @@ const getNetworkConfig = (chainId?: number) => {
       case 59144:
         url = "https://rpc.linea.build";
         break;
-      case 534352:
-        url = "https://rpc.scroll.io";
-        break;
-      case 7777777:
-        url = "https://rpc.zora.co";
-        break;
-      case 888888888:
-        url = "https://rpc.ancient8.gg/";
-        break;
       case 70700:
         url = "https://rpc.apex.proofofplay.com";
         break;
       case 81457:
         url = "https://blast.blockpi.network/v1/rpc/public";
         break;
+      case 534352:
+        url = "https://rpc.scroll.io";
+        break;
+      case 7777777:
+        url = "https://rpc.zora.co";
+        break;
       case 666666666:
-        url = "https://rpc.degen.tips/";
+        url = "https://rpc.degen.tips";
+        break;
+      case 888888888:
+        url = "https://rpc.ancient8.gg/";
         break;
       // Testnets
       case 5001:
         url = "https://rpc.testnet.mantle.xyz";
         break;
+      case 70800:
+        url = "https://rpc-pop-testnet-barret-oxaolmcfss.t.conduit.xyz";
+        break;
       case 80002:
         url = "https://rpc-amoy.polygon.technology";
+        break;
+      case 80085:
+        url = "https://artio.rpc.berachain.com";
+        break;
+      case 84532:
+        url = "https://sepolia.base.org";
         break;
       case 11155111:
         url = "https://1rpc.io/sepolia";
@@ -92,23 +107,8 @@ const getNetworkConfig = (chainId?: number) => {
       case 28122024:
         url = "https://rpcv2-testnet.ancient8.gg/";
         break;
-      case 84532:
-        url = "https://sepolia.base.org";
-        break;
       case 168587773:
         url = "https://sepolia.blast.io";
-        break;
-      case 70800:
-        url = "https://rpc-pop-testnet-barret-oxaolmcfss.t.conduit.xyz";
-        break;
-      case 80085:
-        url = "https://artio.rpc.berachain.com";
-        break;
-      case 17069:
-        url = "https://rpc.garnet.qry.live";
-        break;
-      case 690:
-        url = "https://rpc.redstonechain.com";
         break;
       default:
         throw new Error("Unsupported chain id");
@@ -173,32 +173,32 @@ const config: HardhatUserConfig = {
     optimism: getNetworkConfig(10),
     bsc: getNetworkConfig(56),
     polygon: getNetworkConfig(137),
+    opBnb: getNetworkConfig(204),
     zkSync: getNetworkConfig(324),
-    astarZkevm: getNetworkConfig(3776),
+    redstone: getNetworkConfig(690),
     polygonZkevm: getNetworkConfig(1101),
+    astarZkevm: getNetworkConfig(3776),
     base: getNetworkConfig(8453),
+    garnet: getNetworkConfig(17069),
     arbitrum: getNetworkConfig(42161),
     arbitrumNova: getNetworkConfig(42170),
     avalanche: getNetworkConfig(43114),
     linea: getNetworkConfig(59144),
-    scroll: getNetworkConfig(534352),
-    zora: getNetworkConfig(7777777),
-    opBnb: getNetworkConfig(204),
-    ancient8: getNetworkConfig(888888888),
     apex: getNetworkConfig(70700),
     blast: getNetworkConfig(81457),
+    scroll: getNetworkConfig(534352),
+    zora: getNetworkConfig(7777777),
     degen: getNetworkConfig(666666666),
+    ancient8: getNetworkConfig(888888888),
     // Testnets
     mantleTestnet: getNetworkConfig(5001),
+    apexTestnet: getNetworkConfig(70800),
+    amoy: getNetworkConfig(80002),
+    berachainTestnet: getNetworkConfig(80085),
+    baseSepolia: getNetworkConfig(84532),
     sepolia: getNetworkConfig(11155111),
     ancient8Testnet: getNetworkConfig(28122024),
-    baseSepolia: getNetworkConfig(84532),
     blastSepolia: getNetworkConfig(168587773),
-    apexTestnet: getNetworkConfig(70800),
-    berachainTestnet: getNetworkConfig(80085),
-    garnet: getNetworkConfig(17069),
-    redstone: getNetworkConfig(690),
-    amoy: getNetworkConfig(80002),
   },
   etherscan: {
     apiKey: {
@@ -222,6 +222,8 @@ const config: HardhatUserConfig = {
       apex: "0x",
       blast: process.env.ETHERSCAN_API_KEY_BLAST ?? "",
       degen: "0x",
+      garnet: "0x",
+      redstone: "0x",
       // Testnets
       mantleTestnet: "0x",
       lineaTestnet: process.env.ETHERSCAN_API_KEY_LINEA_TESTNET ?? "",
@@ -231,18 +233,32 @@ const config: HardhatUserConfig = {
       blastSepolia: process.env.ETHERSCAN_API_KEY_BLAST ?? "",
       apexTestnet: "0x",
       berachainTestnet: "0x",
-      garnet: "0x",
-      redstone: "0x",
       amoy: "0x",
     },
     customChains: [
       // Mainnets
+      {
+        network: "opBnb",
+        chainId: 204,
+        urls: {
+          apiURL: "https://api-opbnb.bscscan.com/api",
+          browserURL: "https://opbnb.bscscan.com/",
+        },
+      },
       {
         network: "zkSync",
         chainId: 324,
         urls: {
           apiURL: "https://block-explorer-api.mainnet.zksync.io/api",
           browserURL: "https://explorer.zksync.io",
+        },
+      },
+      {
+        network: "redstone",
+        chainId: 690,
+        urls: {
+          apiURL: "https://api.explorer.redstonechain.com",
+          browserURL: "https://explorer.redstone.xyz",
         },
       },
       {
@@ -270,6 +286,14 @@ const config: HardhatUserConfig = {
         },
       },
       {
+        network: "garnet",
+        chainId: 17069,
+        urls: {
+          apiURL: "https://api.explorer.garnet.qry.live",
+          browserURL: "https://explorer.garnet.qry.live/",
+        },
+      },
+      {
         network: "arbitrumNova",
         chainId: 42170,
         urls: {
@@ -294,6 +318,22 @@ const config: HardhatUserConfig = {
         },
       },
       {
+        network: "apex",
+        chainId: 70700,
+        urls: {
+          apiURL: "https://explorer.apex.proofofplay.com/api",
+          browserURL: "https://explorer.apex.proofofplay.com/",
+        },
+      },
+      {
+        network: "blast",
+        chainId: 81457,
+        urls: {
+          apiURL: "https://api.blastscan.io/api",
+          browserURL: "https://blastscan.io/",
+        },
+      },
+      {
         network: "scroll",
         chainId: 534352,
         urls: {
@@ -310,35 +350,19 @@ const config: HardhatUserConfig = {
         },
       },
       {
+        network: "degen",
+        chainId: 666666666,
+        urls: {
+          apiURL: "https://explorer.degen.tips/api",
+          browserURL: "https://explorer.degen.tips",
+        },
+      },
+      {
         network: "ancient8",
         chainId: 888888888,
         urls: {
           apiURL: "https://scan.ancient8.gg/api",
           browserURL: "https://scan.ancient8.gg",
-        },
-      },
-      {
-        network: "opBnb",
-        chainId: 204,
-        urls: {
-          apiURL: "https://api-opbnb.bscscan.com/api",
-          browserURL: "https://opbnb.bscscan.com/",
-        },
-      },
-      {
-        network: "apex",
-        chainId: 70700,
-        urls: {
-          apiURL: "https://explorer.apex.proofofplay.com/api",
-          browserURL: "https://explorer.apex.proofofplay.com/",
-        },
-      },
-      {
-        network: "blast",
-        chainId: 81457,
-        urls: {
-          apiURL: "https://api.blastscan.io/api",
-          browserURL: "https://blastscan.io/",
         },
       },
       {
@@ -359,35 +383,19 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        network: "ancient8Testnet",
-        chainId: 28122024,
-        urls: {
-          apiURL: "https://scanv2-testnet.ancient8.gg/api",
-          browserURL: "https://scanv2-testnet.ancient8.gg/",
-        },
-      },
-      {
-        network: "baseSepolia",
-        chainId: 84532,
-        urls: {
-          apiURL: "https://api-sepolia.basescan.org/api",
-          browserURL: "https://sepolia.basescan.org/",
-        },
-      },
-      {
-        network: "blastSepolia",
-        chainId: 168587773,
-        urls: {
-          apiURL: "https://api-sepolia.blastscan.io/api",
-          browserURL: "https://sepolia.blastscan.io/",
-        },
-      },
-      {
         network: "apexTestnet",
         chainId: 70800,
         urls: {
           apiURL: "https://explorerl2new-pop-testnet-barret-oxaolmcfss.t.conduit.xyz/api",
           browserURL: "https://explorerl2new-pop-testnet-barret-oxaolmcfss.t.conduit.xyz/",
+        },
+      },
+      {
+        network: "amoy",
+        chainId: 80002,
+        urls: {
+          apiURL: "https://api-amoy.polygonscan.com/api",
+          browserURL: "https://www.oklink.com/amoy",
         },
       },
       {
@@ -399,35 +407,27 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        network: "garnet",
-        chainId: 17069,
+        network: "baseSepolia",
+        chainId: 84532,
         urls: {
-          apiURL: "https://api.explorer.garnet.qry.live",
-          browserURL: "https://explorer.garnet.qry.live/",
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org/",
         },
       },
       {
-        network: "redstone",
-        chainId: 690,
+        network: "ancient8Testnet",
+        chainId: 28122024,
         urls: {
-          apiURL: "https://api.explorer.redstonechain.com",
-          browserURL: "https://explorer.redstone.xyz",
+          apiURL: "https://scanv2-testnet.ancient8.gg/api",
+          browserURL: "https://scanv2-testnet.ancient8.gg/",
         },
       },
       {
-        network: "amoy",
-        chainId: 80002,
+        network: "blastSepolia",
+        chainId: 168587773,
         urls: {
-          apiURL: "https://api-amoy.polygonscan.com/api",
-          browserURL: "https://www.oklink.com/amoy",
-        },
-      },
-      {
-        network: "amoy",
-        chainId: 80002,
-        urls: {
-          apiURL: "https://api-amoy.polygonscan.com/api",
-          browserURL: "https://www.oklink.com/amoy",
+          apiURL: "https://api-sepolia.blastscan.io/api",
+          browserURL: "https://sepolia.blastscan.io/",
         },
       },
     ],
