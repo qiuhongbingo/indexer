@@ -7,7 +7,6 @@ import { toBuffer } from "@/common/utils";
 import * as es from "@/events-sync/storage";
 import { assignRoyaltiesToFillEvents } from "@/events-sync/handlers/royalties";
 import { assignWashTradingScoreToFillEvents } from "@/events-sync/handlers/utils/fills";
-import { logger } from "@/common/logger";
 
 export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
   queueName = "fill-post-process";
@@ -39,11 +38,6 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
           try {
             if (await acquireLock(lockId, 30)) {
               freeFillEvents.push(fillEvent);
-            } else {
-              logger.info(
-                this.queueName,
-                `lock already acquired ${baseEventParams.txHash}-${baseEventParams.logIndex}-${baseEventParams.batchIndex}`
-              );
             }
           } catch {
             // Skip erros
