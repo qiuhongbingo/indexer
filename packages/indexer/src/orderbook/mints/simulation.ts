@@ -229,6 +229,7 @@ const simulateMintTxData = async (
       logs = await getEmittedEvents(txData, config.chainId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
+      // We want to avoid marking mints as closed due to rpc internal errors
       if (error.message !== "execution-reverted") {
         logger.info(
           "mints-simulation",
@@ -241,7 +242,10 @@ const simulateMintTxData = async (
             stack: error.stack,
           })
         );
+
+        throw error;
       }
+
       return false;
     }
 
@@ -290,6 +294,7 @@ const simulateMintTxData = async (
       await triggerCall(txData);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
+      // We want to avoid marking mints as closed due to rpc internal errors
       if (error.message !== "execution-reverted") {
         logger.info(
           "mints-simulation",
@@ -302,7 +307,10 @@ const simulateMintTxData = async (
             stack: error.stack,
           })
         );
+
+        throw error;
       }
+
       return false;
     }
 
