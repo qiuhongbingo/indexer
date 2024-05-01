@@ -13,6 +13,7 @@ import {
 import * as detector from "@/orderbook/mints/calldata/detector";
 import { getContractKind } from "@/orderbook/mints/calldata/helpers";
 import { acquireLock } from "@/common/redis";
+import { config } from "@/config/index";
 
 export type MintsProcessJobPayload =
   | {
@@ -288,10 +289,13 @@ export default class MintsProcessJob extends AbstractRabbitMqJobHandler {
       }
 
       for (const collectionMint of collectionMints) {
-        const lock = await acquireLock(
-          `mint-simulation:${collectionMint.collection}:${collectionMint.tokenId}`,
-          60 * 5
-        );
+        // For specific chain lock simulation
+        const lock = [7777777].includes(config.chainId)
+          ? await acquireLock(
+              `mint-simulation:${collectionMint.collection}:${collectionMint.tokenId}`,
+              60 * 5
+            )
+          : true;
 
         if (lock) {
           const result = await simulateAndUpsertCollectionMint(collectionMint);
