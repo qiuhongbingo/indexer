@@ -8,7 +8,6 @@ import * as fallback from "@/events-sync/handlers/royalties/core";
 import * as es from "@/events-sync/storage";
 import { OrderKind } from "@/orderbook/orders";
 import { Royalty } from "@/utils/royalties";
-import { config } from "@/config/index";
 
 const registry = new Map<string, RoyaltyAdapter>();
 registry.set("fallback", fallback as RoyaltyAdapter);
@@ -192,24 +191,6 @@ export const assignRoyaltiesToFillEvents = async (
               fillEvent.netAmount = subFeeWithBps(
                 fillEvent.currencyPrice ?? fillEvent.price,
                 result.royaltyFeeBps + result.marketplaceFeeBps
-              );
-            } else {
-              if (config.chainId === 137) {
-                logger.info(
-                  "fill-post-process",
-                  `failed to extract royalties fillEvent=${JSON.stringify(
-                    fillEvent
-                  )}, cache=${JSON.stringify(
-                    cache
-                  )}, enableCache=${enableCache}, forceOnChain=${forceOnChain}`
-                );
-              }
-            }
-          } else {
-            if (config.chainId === 137) {
-              logger.info(
-                "fill-post-process",
-                `no royalty adapter for fillEvent=${JSON.stringify(fillEvent)}`
               );
             }
           }
