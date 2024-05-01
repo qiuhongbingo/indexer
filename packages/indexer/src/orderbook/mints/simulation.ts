@@ -5,7 +5,7 @@ import { Network, TxData } from "@reservoir0x/sdk/dist/utils";
 
 import { idb } from "@/common/db";
 import { logger } from "@/common/logger";
-import { baseProvider, baseProviderWithTimeout } from "@/common/provider";
+import { baseProviderWithTimeout } from "@/common/provider";
 import { bn, fromBuffer } from "@/common/utils";
 import { config } from "@/config/index";
 import { CollectionMint, PricePerQuantity } from "@/orderbook/mints";
@@ -210,7 +210,6 @@ const simulateMintTxData = async (
   if (
     [
       Network.Ethereum,
-      Network.EthereumGoerli,
       Network.EthereumSepolia,
       Network.Optimism,
       // Network.Polygon,
@@ -230,7 +229,7 @@ const simulateMintTxData = async (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // We want to avoid marking mints as closed due to rpc internal errors
-      if (error.message !== "execution-reverted") {
+      if (error.message && !error.message.includes("reverted")) {
         logger.info(
           "mints-simulation",
           JSON.stringify({
@@ -295,7 +294,7 @@ const simulateMintTxData = async (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // We want to avoid marking mints as closed due to rpc internal errors
-      if (error.message !== "execution-reverted") {
+      if (error.message && !error.message.includes("reverted")) {
         logger.info(
           "mints-simulation",
           JSON.stringify({
@@ -356,6 +355,6 @@ const triggerCall = async (txData: TxData) => {
         [txData.from]: value,
       },
     },
-    baseProvider
+    baseProviderWithTimeout(5000)
   );
 };
