@@ -15,7 +15,7 @@ export const postSetTokenDisableMetadataV1Options: RouteOptions = {
   description: "Disable or reenable metadata for a token",
   notes:
     "This API requires an allowed API key for execution. Please contact technical support with more questions.",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,

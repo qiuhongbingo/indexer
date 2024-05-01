@@ -32,7 +32,7 @@ export const getTrendingCollectionsV1Options: RouteOptions = {
   },
   description: "Top Trending Collections",
   notes: "Get trending selling/minting collections",
-  tags: ["api", "Collections"],
+  tags: ["api", "Collections", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 3,

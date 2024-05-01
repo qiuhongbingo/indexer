@@ -14,7 +14,7 @@ export const getTokensIdsV1Options: RouteOptions = {
   description: "Token IDs",
   notes:
     "This API is optimized for quickly fetching a list of tokens ids in by collection, contract, token set id. ",
-  tags: ["api", "Tokens"],
+  tags: ["api", "Tokens", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 9,

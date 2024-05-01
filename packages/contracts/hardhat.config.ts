@@ -365,6 +365,14 @@ const config: HardhatUserConfig = {
           browserURL: "https://scan.ancient8.gg",
         },
       },
+      {
+        network: "degen",
+        chainId: 666666666,
+        urls: {
+          apiURL: "https://explorer.degen.tips/api",
+          browserURL: "https://explorer.degen.tips/",
+        },
+      },
       // Testnets
       {
         network: "mantleTestnet",

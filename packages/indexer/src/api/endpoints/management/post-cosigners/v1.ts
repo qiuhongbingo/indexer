@@ -11,7 +11,7 @@ const version = "v1";
 
 export const postCosignersV1Options: RouteOptions = {
   description: "Create or update an external cosigner",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,

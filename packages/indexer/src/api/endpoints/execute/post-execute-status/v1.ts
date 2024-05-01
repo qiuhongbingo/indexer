@@ -12,7 +12,7 @@ const version = "v1";
 
 export const postExecuteStatusV1Options: RouteOptions = {
   description: "Get the status of an execution",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

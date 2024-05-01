@@ -21,7 +21,7 @@ const version = "v1";
 export const postCollectionsOverrideV1Options: RouteOptions = {
   description: "Override collections",
   notes: "Override collections metadata and royalties",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 31,

@@ -18,7 +18,7 @@ const version = "v1";
 export const postNsfwStatusCollectionV1Options: RouteOptions = {
   description: "Update collections nsfw status",
   notes: "This API can be used by allowed API keys to update the nsfw status of a collection.",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,

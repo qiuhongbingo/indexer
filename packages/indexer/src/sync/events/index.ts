@@ -672,18 +672,17 @@ export const syncEvents = async (
     "sync-events-timing-v2",
     JSON.stringify({
       message: `Events realtime syncing blocks ${blocks.fromBlock} to ${blocks.toBlock}`,
+      eventFilter: config.chainId === 8453 ? JSON.stringify(eventFilter) : undefined,
       blockRange: [blocks.fromBlock, blocks.toBlock],
       syncTime: endSyncTime - startSyncTime,
       // find the longest block sync time - the start sync time
       blockSyncTime: Math.max(...saveDataTimes.map((t) => t[0]?.endSaveBlocksTime)) - startSyncTime,
-
       logs: {
         count: logs.length,
         eventCount: enhancedEvents.length,
         getLogsTime,
         processLogs: endProcessLogs - startProcessLogs,
       },
-
       blocks: {
         count: 1,
         getBlockTime: endGetBlockTime - startGetBlockTime,
