@@ -42,8 +42,7 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
           `max attempts for fill events ${JSON.stringify(promiseAllResults[0])}`
         );
       } else {
-        logger.info(this.queueName, `retry fill events ${JSON.stringify(promiseAllResults[0])}`);
-        await this.addToQueue([promiseAllResults[0]], attempt + 1);
+        await this.addToQueue([promiseAllResults[0]], attempt + 1, 5 * 1000);
       }
     }
 
@@ -109,8 +108,10 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
     }
   }
 
-  public async addToQueue(fillInfos: es.fills.Event[][], attempt = 0) {
-    await this.sendBatch(fillInfos.map((info) => ({ payload: { fillEvents: info, attempt } })));
+  public async addToQueue(fillInfos: es.fills.Event[][], attempt = 0, delay = 0) {
+    await this.sendBatch(
+      fillInfos.map((info) => ({ payload: { fillEvents: info, attempt }, delay }))
+    );
   }
 }
 
