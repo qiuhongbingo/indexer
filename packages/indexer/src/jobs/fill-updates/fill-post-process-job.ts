@@ -10,6 +10,11 @@ import { assignWashTradingScoreToFillEvents } from "@/events-sync/handlers/utils
 import _ from "lodash";
 import { logger } from "@/common/logger";
 
+export type FillPostProcessJobPayload = {
+  fillEvents: es.fills.Event[];
+  attempt: number;
+};
+
 export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
   queueName = "fill-post-process";
   maxRetries = 5;
@@ -20,25 +25,34 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
     delay: 1000,
   } as BackoffStrategy;
 
-  public async process(payload: es.fills.Event[]) {
-    const allFillEvents = payload;
+  public async process(payload: FillPostProcessJobPayload) {
     const minValidPrice = 10; // Minimum amount of sale to be considered valid, any sale under is automatically considered wash trading
+    const maxAttempts = 5;
+    const { fillEvents } = payload;
+    let { attempt } = payload;
 
     const promiseAllResults = await Promise.all([
-      assignRoyaltiesToFillEvents(allFillEvents),
-      assignWashTradingScoreToFillEvents(allFillEvents),
+      assignRoyaltiesToFillEvents(fillEvents),
+      assignWashTradingScoreToFillEvents(fillEvents),
     ]);
 
     if (!_.isEmpty(promiseAllResults[0])) {
-      logger.info(this.queueName, `retry fill events ${JSON.stringify(promiseAllResults[0])}`);
-      await this.addToQueue([promiseAllResults[0]]);
+      if (maxAttempts >= attempt) {
+        logger.info(
+          this.queueName,
+          `max attempts for fill events ${JSON.stringify(promiseAllResults[0])}`
+        );
+      } else {
+        logger.info(this.queueName, `retry fill events ${JSON.stringify(promiseAllResults[0])}`);
+        await this.addToQueue([promiseAllResults[0]], ++attempt);
+      }
     }
 
     const freeFillEvents: es.fills.Event[] = [];
     const limit = pLimit(10);
 
     await Promise.all(
-      allFillEvents.map((fillEvent: es.fills.Event) =>
+      fillEvents.map((fillEvent: es.fills.Event) =>
         limit(async () => {
           const baseEventParams = fillEvent.baseEventParams;
           const lockId = `fill-event-${baseEventParams.txHash}-${baseEventParams.logIndex}-${baseEventParams.batchIndex}`;
@@ -96,8 +110,8 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
     }
   }
 
-  public async addToQueue(fillInfos: es.fills.Event[][]) {
-    await this.sendBatch(fillInfos.map((info) => ({ payload: info })));
+  public async addToQueue(fillInfos: es.fills.Event[][], attempt = 0) {
+    await this.sendBatch(fillInfos.map((info) => ({ payload: { fillEvents: info, attempt } })));
   }
 }
 
