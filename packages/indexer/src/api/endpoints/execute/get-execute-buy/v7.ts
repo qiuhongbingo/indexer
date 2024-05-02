@@ -50,6 +50,7 @@ import * as onChainData from "@/utils/on-chain-data";
 import { getEphemeralPermitId, getEphemeralPermit, saveEphemeralPermit } from "@/utils/permits";
 import { getPreSignatureId, getPreSignature, savePreSignature } from "@/utils/pre-signatures";
 import { getUSDAndCurrencyPrices } from "@/utils/prices";
+import { isOrderNativeOffChainCancellable } from "@/utils/offchain-cancel";
 
 const version = "v7";
 
@@ -285,6 +286,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
           // TODO: Remove, only kept for backwards-compatibility reasons
           fromChainId: Joi.number().description("Chain id buying from"),
           gasCost: Joi.string().pattern(regex.number),
+          isNativeOffChainCancellable: Joi.boolean().allow(null),
         })
       ),
       maxQuantities: Joi.array().items(
@@ -351,6 +353,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
         // TODO: To remove, only kept for backwards-compatibility reasons
         gasCost?: string;
         fromChainId?: number;
+        isNativeOffChainCancellable: boolean | null;
       }[] = [];
 
       const key = request.headers["x-api-key"];
@@ -407,6 +410,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
           rawData: object;
           builtInFees: { kind: string; recipient: string; bps: number }[];
           additionalFees?: Sdk.RouterV6.Types.Fee[];
+          isNativeOffChainCancellable: boolean | null;
         },
         token: {
           kind: "erc721" | "erc1155";
@@ -495,6 +499,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
               rawAmount,
             };
           }),
+          isNativeOffChainCancellable: order.isNativeOffChainCancellable,
           feesOnTop: [
             // For now, the only additional fees are the normalized royalties
             ...additionalFees.map((f) => ({
@@ -685,6 +690,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                   rawData: {},
                   builtInFees: [],
                   additionalFees: [],
+                  isNativeOffChainCancellable: null,
                 },
                 {
                   kind: collectionData.token_kind,
@@ -720,6 +726,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                 currency: Sdk.Common.Addresses.Native[config.chainId],
                 rawData: order.data,
                 builtInFees: [],
+                isNativeOffChainCancellable: isOrderNativeOffChainCancellable(order.data),
               },
               {
                 kind: "erc721",
@@ -866,6 +873,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
               rawData: result.raw_data,
               builtInFees: result.fee_breakdown,
               additionalFees: result.missing_royalties,
+              isNativeOffChainCancellable: isOrderNativeOffChainCancellable(result.raw_data),
             },
             {
               kind: result.token_kind,
@@ -961,6 +969,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                           rawData: {},
                           builtInFees: [],
                           additionalFees: [],
+                          isNativeOffChainCancellable: null,
                         },
                         {
                           kind: collectionData.token_kind,
@@ -1192,6 +1201,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                           rawData: {},
                           builtInFees: [],
                           additionalFees: [],
+                          isNativeOffChainCancellable: null,
                         },
                         {
                           kind: collectionData.token_kind,
@@ -1375,6 +1385,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                   rawData: result.raw_data,
                   builtInFees: result.fee_breakdown,
                   additionalFees: result.missing_royalties,
+                  isNativeOffChainCancellable: isOrderNativeOffChainCancellable(result.raw_data),
                 },
                 {
                   kind: result.token_kind,
