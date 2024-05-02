@@ -8,7 +8,6 @@ import * as fallback from "@/events-sync/handlers/royalties/core";
 import * as es from "@/events-sync/storage";
 import { OrderKind } from "@/orderbook/orders";
 import { Royalty } from "@/utils/royalties";
-import { config } from "@/config/index";
 
 const registry = new Map<string, RoyaltyAdapter>();
 registry.set("fallback", fallback as RoyaltyAdapter);
@@ -152,6 +151,7 @@ export const assignRoyaltiesToFillEvents = async (
   enableCache = true,
   forceOnChain = false
 ) => {
+  const fillsToRetry: es.fills.Event[] = [];
   const cache: StateCache = {
     royalties: new Map(),
     orderInfos: new Map(),
@@ -194,23 +194,7 @@ export const assignRoyaltiesToFillEvents = async (
                 result.royaltyFeeBps + result.marketplaceFeeBps
               );
             } else {
-              if (config.chainId === 137) {
-                logger.info(
-                  "fill-post-process",
-                  `failed to extract royalties fillEvent=${JSON.stringify(
-                    fillEvent
-                  )}, cache=${JSON.stringify(
-                    cache
-                  )}, enableCache=${enableCache}, forceOnChain=${forceOnChain}`
-                );
-              }
-            }
-          } else {
-            if (config.chainId === 137) {
-              logger.info(
-                "fill-post-process",
-                `no royalty adapter for fillEvent=${JSON.stringify(fillEvent)}`
-              );
+              fillsToRetry.push(fillEvent);
             }
           }
         } catch (error) {
@@ -225,4 +209,6 @@ export const assignRoyaltiesToFillEvents = async (
       })
     )
   );
+
+  return fillsToRetry;
 };

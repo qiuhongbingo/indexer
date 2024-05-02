@@ -7,6 +7,8 @@ import { toBuffer } from "@/common/utils";
 import * as es from "@/events-sync/storage";
 import { assignRoyaltiesToFillEvents } from "@/events-sync/handlers/royalties";
 import { assignWashTradingScoreToFillEvents } from "@/events-sync/handlers/utils/fills";
+import _ from "lodash";
+import { logger } from "@/common/logger";
 
 export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
   queueName = "fill-post-process";
@@ -22,10 +24,15 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
     const allFillEvents = payload;
     const minValidPrice = 10; // Minimum amount of sale to be considered valid, any sale under is automatically considered wash trading
 
-    await Promise.all([
+    const promiseAllResults = await Promise.all([
       assignRoyaltiesToFillEvents(allFillEvents),
       assignWashTradingScoreToFillEvents(allFillEvents),
     ]);
+
+    if (!_.isEmpty(promiseAllResults[0])) {
+      logger.info(this.queueName, `retry fill events ${JSON.stringify(promiseAllResults[0])}`);
+      await this.addToQueue([promiseAllResults[0]]);
+    }
 
     const freeFillEvents: es.fills.Event[] = [];
     const limit = pLimit(10);
