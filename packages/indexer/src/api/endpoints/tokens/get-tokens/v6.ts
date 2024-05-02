@@ -1819,6 +1819,7 @@ export const getListedTokensFromES = async (query: any, attributeFloorAskPriceAs
     limit: query.limit,
     continuation: query.continuation,
     sources: query.sources,
+    sortBy: query.sortBy,
     sortDirection: query.sortDirection,
   });
 
