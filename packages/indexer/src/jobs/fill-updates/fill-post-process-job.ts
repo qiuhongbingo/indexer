@@ -36,7 +36,7 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
     ]);
 
     if (!_.isEmpty(promiseAllResults[0])) {
-      if (maxAttempts >= attempt) {
+      if (maxAttempts <= attempt) {
         logger.info(
           this.queueName,
           `max attempts for fill events ${JSON.stringify(promiseAllResults[0])}`
