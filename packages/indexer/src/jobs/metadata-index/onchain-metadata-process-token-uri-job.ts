@@ -41,7 +41,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
       this.queueName,
       JSON.stringify({
         topic: "tokenMetadataIndexing",
-        message: `Start. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+        message: `Start. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}, retryCount=${retryCount}`,
         payload,
         debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(contract),
       })

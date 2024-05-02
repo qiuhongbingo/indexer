@@ -300,11 +300,10 @@ export function handleTokenUriErrorResponse(contract: string, tokenId: string, e
       "onchain-fetcher",
       JSON.stringify({
         topic: "tokenMetadataIndexing",
-        message: `handleTokenUriErrorResponse. contract=${contract}, tokenId=${tokenId}`,
+        message: `handleTokenUriErrorResponse. contract=${contract}, tokenId=${tokenId}, url=${error.config.url}, responseStatus=${error.response?.status}`,
         contract,
         tokenId,
-        uri: error.request.url,
-        error,
+        error: JSON.stringify(error),
         errorResponseStatus: error.response?.status,
         errorResponseData: error.response?.data,
         debugMetadataIndexingCollection: true,

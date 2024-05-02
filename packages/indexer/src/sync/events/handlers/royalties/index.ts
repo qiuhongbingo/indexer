@@ -175,6 +175,7 @@ export const assignRoyaltiesToFillEvents = async (
               enableCache,
               forceOnChain
             );
+
             if (result) {
               const isValid = checkFeeIsValid(result);
               if (!isValid) {

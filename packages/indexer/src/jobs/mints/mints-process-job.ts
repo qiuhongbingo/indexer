@@ -12,6 +12,8 @@ import {
 } from "@/orderbook/mints";
 import * as detector from "@/orderbook/mints/calldata/detector";
 import { getContractKind } from "@/orderbook/mints/calldata/helpers";
+import { acquireLock } from "@/common/redis";
+import { config } from "@/config/index";
 
 export type MintsProcessJobPayload =
   | {
@@ -287,12 +289,22 @@ export default class MintsProcessJob extends AbstractRabbitMqJobHandler {
       }
 
       for (const collectionMint of collectionMints) {
-        const result = await simulateAndUpsertCollectionMint(collectionMint);
-        logger.info("mints-process", JSON.stringify({ success: result, collectionMint }));
+        // For specific chain lock simulation
+        const lock = [7777777].includes(config.chainId)
+          ? await acquireLock(
+              `mint-simulation:${collectionMint.collection}:${collectionMint.tokenId}`,
+              60 * 5
+            )
+          : true;
 
-        // Refresh the collection with a delay
-        if (result) {
-          await triggerDelayedRefresh(collectionMint.collection);
+        if (lock) {
+          const result = await simulateAndUpsertCollectionMint(collectionMint);
+          logger.info("mints-process", JSON.stringify({ success: result, collectionMint }));
+
+          // Refresh the collection with a delay
+          if (result) {
+            await triggerDelayedRefresh(collectionMint.collection);
+          }
         }
       }
 
