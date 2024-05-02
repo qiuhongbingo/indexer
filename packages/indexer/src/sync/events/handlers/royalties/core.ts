@@ -22,7 +22,6 @@ import * as utils from "@/events-sync/utils";
 import { FeeRecipients } from "@/models/fee-recipients";
 import { TransactionTrace } from "@/models/transaction-traces";
 import { Royalty, getRoyalties } from "@/utils/royalties";
-import { logger } from "@/common/logger";
 
 const findMatchingPayment = (payments: Payment[], fillEvent: PartialFillEvent) =>
   payments.find((payment) => paymentMatches(payment, fillEvent));
@@ -101,9 +100,6 @@ export async function extractRoyalties(
     }
   }
   if (!txTrace) {
-    if (config.chainId === 137) {
-      logger.info("fill-post-process", `no txtrace for ${JSON.stringify(fillEvent)}`);
-    }
     return null;
   }
 
