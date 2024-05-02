@@ -28,8 +28,10 @@ export class FillPostProcessJob extends AbstractRabbitMqJobHandler {
   public async process(payload: FillPostProcessJobPayload) {
     const minValidPrice = 10; // Minimum amount of sale to be considered valid, any sale under is automatically considered wash trading
     const maxAttempts = 5;
-    const { fillEvents } = payload;
-    let { attempt } = payload;
+    let { fillEvents, attempt } = payload;
+    if (_.isArray(payload)) {
+      fillEvents = payload;
+    }
 
     const promiseAllResults = await Promise.all([
       assignRoyaltiesToFillEvents(fillEvents),
