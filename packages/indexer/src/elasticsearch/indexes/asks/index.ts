@@ -254,6 +254,7 @@ export const searchTokenAsks = async (
     sources?: number[];
     limit?: number;
     continuation?: string | null;
+    sortBy?: "floorAskPrice" | "listedAt";
     sortDirection?: "asc" | "desc";
   },
   retries = 0,
@@ -442,21 +443,22 @@ export const searchTokenAsks = async (
     const from = params.continuation ? Number(splitContinuation(params.continuation)[0]) : 0;
     const order = params.sortDirection ?? "asc";
 
+    const sortBy =
+      params.sortBy === "listedAt"
+        ? "createdAt"
+        : params.normalizeRoyalties
+        ? "order.pricing.normalizedValueDecimal"
+        : "order.pricing.priceDecimal";
+
     const esSearchParams = {
       index: INDEX_NAME,
       query: esQuery,
       sort: [
-        params.normalizeRoyalties
-          ? {
-              "order.pricing.normalizedValueDecimal": {
-                order,
-              },
-            }
-          : {
-              "order.pricing.priceDecimal": {
-                order,
-              },
-            },
+        {
+          [sortBy]: {
+            order,
+          },
+        },
         {
           contract: {
             order,

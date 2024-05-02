@@ -151,6 +151,7 @@ export const assignRoyaltiesToFillEvents = async (
   enableCache = true,
   forceOnChain = false
 ) => {
+  const fillsToRetry: es.fills.Event[] = [];
   const cache: StateCache = {
     royalties: new Map(),
     orderInfos: new Map(),
@@ -192,6 +193,8 @@ export const assignRoyaltiesToFillEvents = async (
                 fillEvent.currencyPrice ?? fillEvent.price,
                 result.royaltyFeeBps + result.marketplaceFeeBps
               );
+            } else {
+              fillsToRetry.push(fillEvent);
             }
           }
         } catch (error) {
@@ -206,4 +209,6 @@ export const assignRoyaltiesToFillEvents = async (
       })
     )
   );
+
+  return fillsToRetry;
 };
