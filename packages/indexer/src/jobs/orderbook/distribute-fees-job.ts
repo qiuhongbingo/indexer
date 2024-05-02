@@ -21,7 +21,7 @@ import {
 } from "@/utils/payment-splits";
 import { getUSDAndNativePrices } from "@/utils/prices";
 
-const PAYMENT_SPLIT_DEPLOY_THRESHOLD = bn(1000);
+const PAYMENT_SPLIT_DEPLOY_THRESHOLD = bn(100);
 
 export const paymentSplitDistributor = () =>
   new Wallet(config.paymentSplitDistributorPrivateKey!, baseProvider);
@@ -58,11 +58,7 @@ export default class DistributeFeesJob extends AbstractRabbitMqJobHandler {
 
           if (config.paymentSplitDistributorPrivateKey) {
             if (usdBalance && bn(usdBalance).gt(PAYMENT_SPLIT_DEPLOY_THRESHOLD)) {
-              if (!paymentSplit.isDeployed) {
-                await this.deploy(paymentSplit);
-              }
-
-              await this.distribute(paymentSplit, currency);
+              await this.deployAndDistribute(paymentSplit, currency);
             }
           }
         }
@@ -106,56 +102,108 @@ export default class DistributeFeesJob extends AbstractRabbitMqJobHandler {
   }
 
   public getSplit() {
-    const split = new Contract(
+    return new Contract(
       Sdk.ZeroExSplits.Addresses.SplitMain[config.chainId],
       new Interface([
-        `function createSplit(address[] calldata accounts, uint32[] calldata percentAllocations, uint32 distributorFee, address controller) returns (address split)`,
-        `function distributeETH(address split, address[] calldata accounts, uint32[] calldata percentAllocations, uint32 distributorFee, address distributorAddress)`,
-        `function distributeERC20(address split, address token, address[] calldata accounts, uint32[] calldata percentAllocations, uint32 distributorFee, address distributorAddress)`,
+        "function createSplit(address[] calldata accounts, uint32[] calldata percentAllocations, uint32 distributorFee, address controller) returns (address split)",
+        "function distributeETH(address split, address[] calldata accounts, uint32[] calldata percentAllocations, uint32 distributorFee, address distributorAddress)",
+        "function distributeERC20(address split, address token, address[] calldata accounts, uint32[] calldata percentAllocations, uint32 distributorFee, address distributorAddress)",
+        "function withdraw(address account, uint256 withdrawETH, address[] tokens)",
       ])
     );
-    const distributor = paymentSplitDistributor();
-    return split.connect(distributor);
   }
 
-  public async distribute(paymentSplit: PaymentSplit, currency: string) {
-    const splitContract = this.getSplit();
-
-    if (currency === Sdk.Common.Addresses.Native[config.chainId]) {
-      const tx = await splitContract.distributeETH(
-        paymentSplit.address,
-        paymentSplit.fees.map((c) => c.recipient),
-        paymentSplit.fees.map((c) => c.bps),
-        0,
-        AddressZero
-      );
-      await tx.wait();
-    } else {
-      const tx = await splitContract.distributeERC20(
-        paymentSplit.address,
-        currency,
-        paymentSplit.fees.map((c) => c.recipient),
-        paymentSplit.fees.map((c) => c.bps),
-        0,
-        AddressZero
-      );
-      await tx.wait();
-    }
-  }
-
-  public async deploy(paymentSplit: PaymentSplit) {
-    const splitContract = this.getSplit();
-
-    const tx = await splitContract.createSplit(
-      paymentSplit.fees.map((c) => c.recipient),
-      paymentSplit.fees.map((c) => c.bps),
-      0,
-      AddressZero
+  public getMulticall() {
+    return new Contract(
+      "0xca11bde05977b3631167028862be2a173976ca11",
+      new Interface([
+        "function aggregate3((address target, bool allowFailure, bytes data)[] calls)",
+      ])
     );
-    await tx.wait();
+  }
 
-    // Mark as deployed
-    await setPaymentSplitIsDeployed(paymentSplit.address);
+  public async deployAndDistribute(paymentSplit: PaymentSplit, currency: string) {
+    const multicallContract = this.getMulticall();
+    const splitContract = this.getSplit();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let deployCall: any | undefined;
+
+    const code = await baseProvider.getCode(paymentSplit.address);
+    if (code === "0x") {
+      deployCall = {
+        target: splitContract.address,
+        allowFailure: false,
+        data: splitContract.interface.encodeFunctionData("createSplit", [
+          paymentSplit.fees.map((c) => c.recipient),
+          paymentSplit.fees.map((c) => c.bps),
+          0,
+          AddressZero,
+        ]),
+      };
+    } else {
+      // Mark as deployed
+      await setPaymentSplitIsDeployed(paymentSplit.address);
+    }
+
+    let multicallData: string;
+    if (currency === Sdk.Common.Addresses.Native[config.chainId]) {
+      let calls = [
+        {
+          target: splitContract.address,
+          allowFailure: false,
+          data: splitContract.interface.encodeFunctionData("distributeETH", [
+            paymentSplit.address,
+            paymentSplit.fees.map((c) => c.recipient),
+            paymentSplit.fees.map((c) => c.bps),
+            0,
+            AddressZero,
+          ]),
+        },
+        ...paymentSplit.fees.map(({ recipient }) => ({
+          target: splitContract.address,
+          allowFailure: false,
+          data: splitContract.interface.encodeFunctionData("withdraw", [recipient, 1, []]),
+        })),
+      ];
+      if (deployCall) {
+        calls = [deployCall, ...calls];
+      }
+
+      multicallData = multicallContract.interface.encodeFunctionData("aggregate3", [calls]);
+    } else {
+      let calls = [
+        {
+          target: splitContract.address,
+          allowFailure: false,
+          data: splitContract.interface.encodeFunctionData("distributeERC20", [
+            paymentSplit.address,
+            currency,
+            paymentSplit.fees.map((c) => c.recipient),
+            paymentSplit.fees.map((c) => c.bps),
+            0,
+            AddressZero,
+          ]),
+        },
+        ...paymentSplit.fees.map(({ recipient }) => ({
+          target: splitContract.address,
+          allowFailure: false,
+          data: splitContract.interface.encodeFunctionData("withdraw", [recipient, 0, [currency]]),
+        })),
+      ];
+      if (deployCall) {
+        calls = [deployCall, ...calls];
+      }
+
+      multicallData = multicallContract.interface.encodeFunctionData("aggregate3", [calls]);
+    }
+
+    await paymentSplitDistributor()
+      .sendTransaction({
+        to: multicallContract.address,
+        data: multicallData,
+      })
+      .then((tx) => tx.wait());
   }
 
   public async addToQueue(params: DistributeFeesJobPayload) {

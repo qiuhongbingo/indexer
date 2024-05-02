@@ -56,7 +56,7 @@ export const config = {
   doEventsSyncBackfill: Boolean(Number(process.env.DO_EVENTS_SYNC_BACKFILL)),
   disableOrders: Boolean(Number(process.env.DISABLE_ORDERS)),
 
-  // for kafka
+  // For kafka
   doKafkaWork: Boolean(Number(process.env.DO_KAFKA_WORK)),
   kafkaPartitionsConsumedConcurrently: Number(process.env.KAFKA_PARTITIONS_CONSUMED_CONCURRENTLY),
   kafkaConsumerGroupId: String(process.env.KAFKA_CONSUMER_GROUP_ID),
