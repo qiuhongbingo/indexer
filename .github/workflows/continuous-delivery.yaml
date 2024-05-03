@@ -216,12 +216,6 @@ jobs:
             ./prod/platform/indexer-worker-master-mainnet.yaml \
             ./prod/platform/indexer-websocket-ethereum.yaml
 
-          ./utils/version_update_batch.sh indexer-mumbai ${{ github.sha }} \
-            ./prod/platform/indexer-api-mumbai.yaml \
-            ./prod/platform/indexer-worker-mumbai.yaml \
-            ./prod/platform/indexer-worker-master-mumbai.yaml \
-            ./prod/platform/indexer-websocket-mumbai.yaml
-
           ./utils/version_update_batch.sh indexer-opbnb ${{ github.sha }} \
             ./prod/platform/indexer-api-opbnb.yaml \
             ./prod/platform/indexer-worker-opbnb.yaml \
