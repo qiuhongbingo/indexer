@@ -126,19 +126,19 @@ const getConfig = async (contract: string): Promise<ERC721CV2Config | undefined>
             Sdk.SeaportBase.Addresses.OpenseaConduitKey[config.chainId]
           )
         );
-      }
 
-      await orderRevalidationsJob.addToQueue([
-        {
-          by: "operator-or-zone",
-          data: {
-            origin: "os-royalty-enforcement",
-            contract,
-            whitelistedZones: [Sdk.SeaportBase.Addresses.OpenSeaV16SignedZone[config.chainId]],
-            status: "inactive",
+        await orderRevalidationsJob.addToQueue([
+          {
+            by: "operator-or-zone",
+            data: {
+              origin: "os-royalty-enforcement",
+              contract,
+              whitelistedZones: [Sdk.SeaportBase.Addresses.OpenSeaV16SignedZone[config.chainId]],
+              status: "inactive",
+            },
           },
-        },
-      ]);
+        ]);
+      }
 
       return {
         transferValidator: transferValidatorAddress.toLowerCase(),
