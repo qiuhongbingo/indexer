@@ -184,7 +184,7 @@ export const refreshOperatorWhitelist = async (transferValidator: string, id: st
   if (whitelist.length) {
     await orderRevalidationsJob.addToQueue(
       relevantContracts.map((c) => ({
-        by: "operator",
+        by: "operator-or-zone",
         data: {
           origin: "erc721c",
           contract: fromBuffer(c.contract),

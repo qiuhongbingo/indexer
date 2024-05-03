@@ -128,6 +128,18 @@ const getConfig = async (contract: string): Promise<ERC721CV2Config | undefined>
         );
       }
 
+      await orderRevalidationsJob.addToQueue([
+        {
+          by: "operator-or-zone",
+          data: {
+            origin: "os-royalty-enforcement",
+            contract,
+            whitelistedZones: [Sdk.SeaportBase.Addresses.OpenSeaV16SignedZone[config.chainId]],
+            status: "inactive",
+          },
+        },
+      ]);
+
       return {
         transferValidator: transferValidatorAddress.toLowerCase(),
         transferSecurityLevel,
@@ -311,7 +323,7 @@ export const refreshWhitelist = async (
   // Invalid any orders relying on blacklisted operators
   await orderRevalidationsJob.addToQueue(
     relevantContracts.map((c) => ({
-      by: "operator",
+      by: "operator-or-zone",
       data: {
         origin: "erc721c-v2",
         contract: fromBuffer(c.contract),
@@ -396,7 +408,7 @@ export const refreshBlacklist = async (
   // Invalid any orders relying on blacklisted operators
   await orderRevalidationsJob.addToQueue(
     relevantContracts.map((c) => ({
-      by: "operator",
+      by: "operator-or-zone",
       data: {
         origin: "erc721c-v2",
         contract: fromBuffer(c.contract),

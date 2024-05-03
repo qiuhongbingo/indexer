@@ -168,7 +168,7 @@ export const isBlockedByCustomLogic = async (
       if (blacklist.length) {
         await orderRevalidationsJob.addToQueue([
           {
-            by: "operator",
+            by: "operator-or-zone",
             data: {
               origin: "marketplace-blacklist",
               contract,
@@ -254,7 +254,7 @@ export const updateMarketplaceBlacklist = async (contract: string) => {
   // Invalid any orders relying on the blacklisted operator
   await orderRevalidationsJob.addToQueue([
     {
-      by: "operator",
+      by: "operator-or-zone",
       data: {
         origin: "marketplace-blacklist",
         contract,
