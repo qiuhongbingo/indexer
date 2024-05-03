@@ -941,6 +941,8 @@ export class Router {
     // - fetch the full order data for each partial order (concurrently)
     // - remove any partial order from the details
 
+    const relayer = options?.relayer ?? taker;
+
     await Promise.all(
       details.map(async (detail, i) => {
         if (["seaport-v1.5-partial", "seaport-v1.6-partial"].includes(detail.kind)) {
@@ -953,7 +955,7 @@ export class Router {
               tokenId: detail.tokenId,
               unitPrice: order.unitPrice,
               orderHash: order.id,
-              taker,
+              taker: relayer,
               chainId: this.chainId,
               protocolVersion,
               openseaApiKey: this.options?.openseaApiKey,
@@ -1050,8 +1052,6 @@ export class Router {
         }
       })
     );
-
-    const relayer = options?.relayer ?? taker;
 
     // Direct filling for:
     // - seaport-1.5
