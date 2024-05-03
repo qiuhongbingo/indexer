@@ -1579,13 +1579,16 @@ export const getExecuteBuyV7Options: RouteOptions = {
           source: payload.source,
         };
 
-        const { requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
+        const { txData, requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
           .post(`${config.crossChainSolverBaseUrl}/intents/quote`, data, {
-            headers: {
-              origin: request.headers["origin"],
-            },
+            headers: request.headers["origin"]
+              ? {
+                  origin: request.headers["origin"],
+                }
+              : undefined,
           })
           .then((response) => ({
+            txData: response.data.txData,
             requestId: response.data.requestId,
             shortRequestId: response.data.shortRequestId,
             price: response.data.price,
@@ -1607,6 +1610,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
         }
 
         return {
+          txData,
           requestId,
           shortRequestId,
           request: data.request,
@@ -2034,10 +2038,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
           status: "incomplete",
           data: {
             from: payload.taker,
-            to: data.solver.address,
-            data: data.shortRequestId,
-            value: bn(cost).toString(),
-            gasLimit: 22000,
+            ...data.txData,
             chainId: payload.currencyChainId,
           },
           check: {
