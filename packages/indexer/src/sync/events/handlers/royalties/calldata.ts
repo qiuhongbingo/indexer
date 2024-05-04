@@ -1,4 +1,5 @@
 import * as Sdk from "@reservoir0x/sdk";
+import { Result } from "@ethersproject/abi";
 
 import { config } from "@/config/index";
 
@@ -101,6 +102,7 @@ export const extractOrdersFromCalldata = async (calldata: string) => {
     } else if (["fulfillBasicOrder_efficient_6GL6yc", "fulfillBasicOrder"].includes(funcName)) {
       const parameters = args[0];
       const types = getItemTypeFromOrderType(parameters.basicOrderType);
+      const additionalRecipients = parameters.additionalRecipients;
       orders = [
         {
           parameters: {
@@ -125,6 +127,16 @@ export const extractOrdersFromCalldata = async (calldata: string) => {
                 endAmount: parameters.considerationAmount,
                 recipient: parameters.offerer,
               },
+              ...additionalRecipients.map((c: Result) => {
+                return {
+                  itemType: types?.considerationType,
+                  token: parameters.considerationToken,
+                  identifierOrCriteria: parameters.considerationIdentifier,
+                  startAmount: c.amount,
+                  endAmount: c.amount,
+                  recipient: c.recipient,
+                };
+              }),
             ],
             startTime: parameters.startTime,
             endTime: parameters.endTime,

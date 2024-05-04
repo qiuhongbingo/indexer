@@ -301,8 +301,10 @@ export async function extractRoyalties(
   const isSingleSaleViaRouter = routerCall && nftTransfers === 1;
 
   // Extract the orders from calldata when there have multiple fill events
-  const parsedOrders =
-    fillEvents.length > 1 ? await extractOrdersFromCalldata(subcallToAnalyze.input) : [];
+  // const parsedOrders =
+  //   fillEvents.length > 1 ? await extractOrdersFromCalldata(subcallToAnalyze.input) : [];
+
+  const parsedOrders = await extractOrdersFromCalldata(subcallToAnalyze.input);
 
   const linkedOrder = parsedOrders.find(
     (c) => c.contract === fillEvent.contract && c.tokenId === fillEvent.tokenId
@@ -544,7 +546,7 @@ export async function extractRoyalties(
         // Make sure current fee address in every order
         let protocolFeeSum = sameProtocolTotalPrice;
         if (linkedOrder) {
-          protocolFeeSum = sameProtocolFills.reduce((total, item) => {
+          const matchedSum = sameProtocolFills.reduce((total, item) => {
             const matchOrder = parsedOrders.find(
               (c) => c.contract === item.event.contract && c.tokenId === item.event.tokenId
             );
@@ -559,6 +561,9 @@ export async function extractRoyalties(
               return total;
             }
           }, bn(0));
+          if (matchedSum.gt(0)) {
+            protocolFeeSum = matchedSum;
+          }
         }
 
         // This is a marketplace fee payment
@@ -573,8 +578,24 @@ export async function extractRoyalties(
             .toNumber();
         }
 
-        const recipientIsEligible = !notRoyaltyRecipients.has(address);
-        if (recipientIsEligible) marketplaceFeeBreakdown.push(royalty);
+        let recipientIsEligible = !notRoyaltyRecipients.has(address);
+
+        if (linkedOrder) {
+          const feeItem = linkedOrder.fees.find(
+            (c) => c.recipient.toLowerCase() === address.toLowerCase()
+          );
+          if (feeItem) {
+            recipientIsEligible = true;
+            royalty.bps = bn(feeItem.amount)
+              .mul(PRECISION_BASE)
+              .div(fillEvent.currencyPrice ?? fillEvent.price)
+              .toNumber();
+          }
+        }
+
+        if (recipientIsEligible) {
+          marketplaceFeeBreakdown.push(royalty);
+        }
       } else {
         // For different collection with same fee recipient
         const sameRecipientDetails = sameProtocolDetails.filter((d) => d.recipient === address);
