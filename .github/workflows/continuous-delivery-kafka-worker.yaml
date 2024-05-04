@@ -189,9 +189,6 @@ jobs:
           ./utils/version_update_batch.sh indexer-mainnet ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-mainnet.yaml
 
-          ./utils/version_update_batch.sh indexer-mumbai ${{ github.sha }} \
-            ./prod/platform/indexer-kafka-worker-mumbai.yaml
-
           ./utils/version_update_batch.sh indexer-opbnb ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-opbnb.yaml
 
