@@ -80,9 +80,9 @@ export async function extractRoyalties(
   const royaltyFeeOnTop: Royalty[] = [];
 
   const { txHash } = fillEvent.baseEventParams;
-  const { tokenId, contract, currency, price } = fillEvent;
+  const { tokenId, contract, currency } = fillEvent;
 
-  const currencyPrice = fillEvent.currencyPrice ?? price;
+  const currencyPrice = bn(fillEvent.currencyPrice ?? fillEvent.price).mul(bn(fillEvent.amount));
 
   // Fetch the current transaction's trace
   let txTrace: TransactionTrace | undefined;
@@ -301,10 +301,8 @@ export async function extractRoyalties(
   const isSingleSaleViaRouter = routerCall && nftTransfers === 1;
 
   // Extract the orders from calldata when there have multiple fill events
-  // const parsedOrders =
-  //   fillEvents.length > 1 ? await extractOrdersFromCalldata(subcallToAnalyze.input) : [];
-
-  const parsedOrders = await extractOrdersFromCalldata(subcallToAnalyze.input);
+  const parsedOrders =
+    fillEvents.length > 1 ? await extractOrdersFromCalldata(subcallToAnalyze.input) : [];
 
   const linkedOrder = parsedOrders.find(
     (c) => c.contract === fillEvent.contract && c.tokenId === fillEvent.tokenId
@@ -546,7 +544,7 @@ export async function extractRoyalties(
         // Make sure current fee address in every order
         let protocolFeeSum = sameProtocolTotalPrice;
         if (linkedOrder) {
-          const matchedSum = sameProtocolFills.reduce((total, item) => {
+          protocolFeeSum = sameProtocolFills.reduce((total, item) => {
             const matchOrder = parsedOrders.find(
               (c) => c.contract === item.event.contract && c.tokenId === item.event.tokenId
             );
@@ -561,9 +559,6 @@ export async function extractRoyalties(
               return total;
             }
           }, bn(0));
-          if (matchedSum.gt(0)) {
-            protocolFeeSum = matchedSum;
-          }
         }
 
         // This is a marketplace fee payment
@@ -574,28 +569,12 @@ export async function extractRoyalties(
         if (matchRangePayment && isReliable && hasMultiple) {
           royalty.bps = bn(matchRangePayment.amount)
             .mul(PRECISION_BASE)
-            .div(fillEvent.currencyPrice ?? fillEvent.price)
+            .div(currencyPrice)
             .toNumber();
         }
 
-        let recipientIsEligible = !notRoyaltyRecipients.has(address);
-
-        if (linkedOrder) {
-          const feeItem = linkedOrder.fees.find(
-            (c) => c.recipient.toLowerCase() === address.toLowerCase()
-          );
-          if (feeItem) {
-            recipientIsEligible = true;
-            royalty.bps = bn(feeItem.amount)
-              .mul(PRECISION_BASE)
-              .div(fillEvent.currencyPrice ?? fillEvent.price)
-              .toNumber();
-          }
-        }
-
-        if (recipientIsEligible) {
-          marketplaceFeeBreakdown.push(royalty);
-        }
+        const recipientIsEligible = !notRoyaltyRecipients.has(address);
+        if (recipientIsEligible) marketplaceFeeBreakdown.push(royalty);
       } else {
         // For different collection with same fee recipient
         const sameRecipientDetails = sameProtocolDetails.filter((d) => d.recipient === address);
@@ -631,10 +610,7 @@ export async function extractRoyalties(
             (c) => c.recipient.toLowerCase() === address.toLowerCase()
           );
           if (feeItem) {
-            bps = bn(feeItem.amount)
-              .mul(PRECISION_BASE)
-              .div(fillEvent.currencyPrice ?? fillEvent.price)
-              .toNumber();
+            bps = bn(feeItem.amount).mul(PRECISION_BASE).div(currencyPrice).toNumber();
           } else {
             // Skip if not the in the fees
             continue;
@@ -704,10 +680,7 @@ export async function extractRoyalties(
         if (isInPayment) {
           const royalty = {
             recipient: missingInStateFee.recipient,
-            bps: bn(missingInStateFee.amount)
-              .mul(PRECISION_BASE)
-              .div(fillEvent.currencyPrice ?? fillEvent.price)
-              .toNumber(),
+            bps: bn(missingInStateFee.amount).mul(PRECISION_BASE).div(currencyPrice).toNumber(),
           };
 
           royaltyFeeBreakdown.push(royalty);
