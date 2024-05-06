@@ -2265,7 +2265,7 @@ export const getExecuteBidV5Options: RouteOptions = {
         } else if (orders.length > 1) {
           const exchange = new Sdk.Mintify.Exchange(config.chainId);
           const { signatureData, proofs } = exchange.getBulkSignatureDataWithProofs(
-            orders.map((o) => new Sdk.Alienswap.Order(config.chainId, o.order.data))
+            orders.map((o) => new Sdk.Mintify.Order(config.chainId, o.order.data))
           );
 
           steps[5].items.push({
