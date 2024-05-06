@@ -319,6 +319,16 @@ jobs:
             ./prod/platform/indexer-worker-degen.yaml \
             ./prod/platform/indexer-worker-master-degen.yaml
 
+          ./utils/version_update_batch.sh indexer-sei-testnet ${{ github.sha }} \
+            ./prod/platform/indexer-api-sei-testnet.yaml \
+            ./prod/platform/indexer-worker-sei-testnet.yaml \
+            ./prod/platform/indexer-worker-master-sei-testnet.yaml
+
+          ./utils/version_update_batch.sh indexer-xai ${{ github.sha }} \
+            ./prod/platform/indexer-api-xai.yaml \
+            ./prod/platform/indexer-worker-xai.yaml \
+            ./prod/platform/indexer-worker-master-xai.yaml
+
       - name: Post to Slack
         if: ${{ always() }}
         id: slack-deploy-prod
