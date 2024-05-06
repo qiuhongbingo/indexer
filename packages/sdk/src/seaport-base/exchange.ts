@@ -50,7 +50,6 @@ export abstract class SeaportBaseExchange {
     }
   ): Promise<TransactionResponse> {
     const tx = await this.fillOrderTx(await taker.getAddress(), order, matchParams, options);
-    // console.log(`cast call ${tx.to} --data ${tx.data} --from ${tx.from} --value ${parseInt(tx.value ?? '0')} --rpc-url http://127.0.0.1:8545 --trace`)
     return taker.sendTransaction(tx);
   }
 
