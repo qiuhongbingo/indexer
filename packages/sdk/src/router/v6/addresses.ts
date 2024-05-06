@@ -329,8 +329,5 @@ export const SeaportV16Module: ChainIdToAddress = {
 };
 
 export const MintifyModule = {
-  [Network.Ethereum]: "",
-  [Network.Base]: "",
-  [Network.EthereumSepolia]: "",
-  [Network.Blast]: "",
+  [Network.EthereumSepolia]: "0x706d9536a0573c53f6e3375f0977ac046913ddac",
 };

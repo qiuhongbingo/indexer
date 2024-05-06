@@ -269,6 +269,12 @@ export const trigger = {
         Sdk.RouterV6.Addresses.Router[chainId],
         Sdk.Alienswap.Addresses.Exchange[chainId],
       ]),
+    MintifyModule: async (chainId: number) =>
+      dv("MintifyModule", "v1", [
+        DEPLOYER,
+        Sdk.RouterV6.Addresses.Router[chainId],
+        Sdk.Mintify.Addresses.Exchange[chainId],
+      ]),
     SudoswapModule: async (chainId: number) =>
       dv("SudoswapModule", "v1", [
         DEPLOYER,
