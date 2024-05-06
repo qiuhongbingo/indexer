@@ -24,3 +24,4 @@ supportedExchanges.set(
 );
 
 supportedExchanges.set("seaport-v1.6", Sdk.SeaportV16.Addresses.Exchange[config.chainId]);
+supportedExchanges.set("mintify", Sdk.Mintify.Addresses.Exchange[config.chainId]);

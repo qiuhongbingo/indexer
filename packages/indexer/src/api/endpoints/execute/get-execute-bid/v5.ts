@@ -53,6 +53,11 @@ import * as alienswapBuyAttribute from "@/orderbook/orders/alienswap/build/buy/a
 import * as alienswapBuyToken from "@/orderbook/orders/alienswap/build/buy/token";
 import * as alienswapBuyCollection from "@/orderbook/orders/alienswap/build/buy/collection";
 
+// Mintify
+import * as mintifyBuyAttribute from "@/orderbook/orders/mintify/build/buy/attribute";
+import * as mintifyBuyToken from "@/orderbook/orders/mintify/build/buy/token";
+import * as mintifyBuyCollection from "@/orderbook/orders/mintify/build/buy/collection";
+
 // X2Y2
 import * as x2y2BuyCollection from "@/orderbook/orders/x2y2/build/buy/collection";
 import * as x2y2BuyToken from "@/orderbook/orders/x2y2/build/buy/token";
@@ -145,7 +150,8 @@ export const getExecuteBidV5Options: RouteOptions = {
                 "x2y2",
                 "alienswap",
                 "payment-processor",
-                "payment-processor-v2"
+                "payment-processor-v2",
+                "mintify"
               )
               .default("seaport-v1.5")
               .description("Exchange protocol used to create order. Example: `seaport-v1.5`"),
@@ -169,6 +175,15 @@ export const getExecuteBidV5Options: RouteOptions = {
                 }),
               }),
               "seaport-v1.6": Joi.object({
+                conduitKey: Joi.string().pattern(regex.bytes32),
+                useOffChainCancellation: Joi.boolean().required(),
+                replaceOrderId: Joi.string().when("useOffChainCancellation", {
+                  is: true,
+                  then: Joi.optional(),
+                  otherwise: Joi.forbidden(),
+                }),
+              }),
+              mintify: Joi.object({
                 conduitKey: Joi.string().pattern(regex.bytes32),
                 useOffChainCancellation: Joi.boolean().required(),
                 replaceOrderId: Joi.string().when("useOffChainCancellation", {
@@ -459,6 +474,24 @@ export const getExecuteBidV5Options: RouteOptions = {
         alienswap: [] as {
           order: {
             kind: "alienswap";
+            data: Sdk.SeaportBase.Types.OrderComponents;
+          };
+          tokenSetId?: string;
+          attribute?: {
+            collection: string;
+            key: string;
+            value: string;
+          };
+          collection?: string;
+          isNonFlagged?: boolean;
+          orderbook: string;
+          orderbookApiKey?: string;
+          source?: string;
+          orderIndex: number;
+        }[],
+        mintify: [] as {
+          order: {
+            kind: "mintify";
             data: Sdk.SeaportBase.Types.OrderComponents;
           };
           tokenSetId?: string;
@@ -1358,6 +1391,106 @@ export const getExecuteBidV5Options: RouteOptions = {
                 break;
               }
 
+              case "mintify": {
+                if (!["reservoir"].includes(params.orderbook)) {
+                  return errors.push({
+                    message: "Unsupported orderbook",
+                    orderIndex: i,
+                  });
+                }
+
+                const options = params.options?.[params.orderKind] as
+                  | {
+                      useOffChainCancellation?: boolean;
+                      replaceOrderId?: string;
+                    }
+                  | undefined;
+
+                let order: Sdk.Mintify.Order;
+                if (token) {
+                  const [contract, tokenId] = token.split(":");
+                  order = await mintifyBuyToken.build({
+                    ...params,
+                    ...options,
+                    orderbook: params.orderbook as "reservoir",
+                    maker,
+                    contract,
+                    tokenId,
+                    source,
+                  });
+                } else if (tokenSetId) {
+                  order = await mintifyBuyAttribute.build({
+                    ...params,
+                    ...options,
+                    orderbook: params.orderbook as "reservoir",
+                    maker,
+                    source,
+                  });
+                } else if (attribute) {
+                  order = await mintifyBuyAttribute.build({
+                    ...params,
+                    ...options,
+                    orderbook: params.orderbook as "reservoir",
+                    maker,
+                    collection: attribute.collection,
+                    attributes: [attribute],
+                    source,
+                  });
+                } else if (collection) {
+                  order = await mintifyBuyCollection.build({
+                    ...params,
+                    ...options,
+                    orderbook: params.orderbook as "reservoir",
+                    maker,
+                    collection,
+                    source,
+                  });
+                } else {
+                  return errors.push({
+                    message:
+                      "Only token, token-set-id, attribute and collection bids are supported",
+                    orderIndex: i,
+                  });
+                }
+
+                const exchange = new Sdk.Mintify.Exchange(config.chainId);
+                const conduit = exchange.deriveConduit(order.params.conduitKey);
+
+                // Check the maker's approval
+                let approvalTx: TxData | undefined;
+                const currencyApproval = await currency.getAllowance(maker, conduit);
+                if (bn(currencyApproval).lt(order.getMatchingPrice())) {
+                  approvalTx = currency.approveTransaction(maker, conduit);
+                }
+
+                steps[2].items.push({
+                  status: !approvalTx ? "complete" : "incomplete",
+                  data: approvalTx,
+                  orderIndexes: [i],
+                });
+
+                bulkOrders["mintify"].push({
+                  order: {
+                    kind: params.orderKind,
+                    data: {
+                      ...order.params,
+                    },
+                  },
+                  tokenSetId,
+                  attribute,
+                  collection,
+                  isNonFlagged: params.excludeFlaggedTokens,
+                  orderbook: params.orderbook,
+                  orderbookApiKey: params.orderbookApiKey,
+                  source,
+                  orderIndex: i,
+                });
+
+                addExecution(order.hash(), params.quantity);
+
+                break;
+              }
+
               case "zeroex-v4" as any: {
                 if (!["reservoir"].includes(params.orderbook)) {
                   return errors.push({
@@ -2085,6 +2218,76 @@ export const getExecuteBidV5Options: RouteOptions = {
                     orderbookApiKey: o.orderbookApiKey,
                     bulkData: {
                       kind: "alienswap",
+                      data: {
+                        orderIndex: i,
+                        merkleProof: proofs[i],
+                      },
+                    },
+                  })),
+                  source,
+                },
+              },
+            },
+            orderIndexes: orders.map(({ orderIndex }) => orderIndex),
+          });
+        }
+      }
+
+      // Post any mintify bulk orders together
+      {
+        const orders = bulkOrders["mintify"];
+        if (orders.length === 1) {
+          const order = new Sdk.Mintify.Order(config.chainId, orders[0].order.data);
+          steps[5].items.push({
+            status: "incomplete",
+            data: {
+              sign: order.getSignatureData(),
+              post: {
+                endpoint: "/order/v3",
+                method: "POST",
+                body: {
+                  order: {
+                    kind: "mintify",
+                    data: {
+                      ...order.params,
+                    },
+                  },
+                  tokenSetId: orders[0].tokenSetId,
+                  attribute: orders[0].attribute,
+                  collection: orders[0].collection,
+                  isNonFlagged: orders[0].isNonFlagged,
+                  orderbook: orders[0].orderbook,
+                  orderbookApiKey: orders[0].orderbookApiKey,
+                  source,
+                },
+              },
+            },
+            orderIndexes: [orders[0].orderIndex],
+          });
+        } else if (orders.length > 1) {
+          const exchange = new Sdk.Mintify.Exchange(config.chainId);
+          const { signatureData, proofs } = exchange.getBulkSignatureDataWithProofs(
+            orders.map((o) => new Sdk.Mintify.Order(config.chainId, o.order.data))
+          );
+
+          steps[5].items.push({
+            status: "incomplete",
+            data: {
+              sign: signatureData,
+              post: {
+                endpoint: "/order/v4",
+                method: "POST",
+                body: {
+                  items: orders.map((o, i) => ({
+                    order: o.order,
+                    tokenSetId: o.tokenSetId,
+                    attribute: o.attribute,
+                    collection: o.collection,
+                    isNonFlagged: o.isNonFlagged,
+                    orderbook: o.orderbook,
+                    orderbookApiKey: o.orderbookApiKey,
+                    bulkData: {
+                      kind: "mintify",
                       data: {
                         orderIndex: i,
                         merkleProof: proofs[i],

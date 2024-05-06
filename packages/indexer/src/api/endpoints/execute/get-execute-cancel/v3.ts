@@ -39,7 +39,8 @@ export const getExecuteCancelV3Options: RouteOptions = {
         "zeroex-v4-erc1155",
         "payment-processor-v2",
         "rarible",
-        "alienswap"
+        "alienswap",
+        "mintify"
       ),
       token: Joi.string().pattern(regex.token),
       blurAuth: Joi.string(),
@@ -151,6 +152,12 @@ export const getExecuteCancelV3Options: RouteOptions = {
 
         case "seaport-v1.6": {
           const exchange = new Sdk.SeaportV16.Exchange(config.chainId);
+          cancelTx = exchange.cancelAllOrdersTx(payload.maker);
+          break;
+        }
+
+        case "mintify": {
+          const exchange = new Sdk.Mintify.Exchange(config.chainId);
           cancelTx = exchange.cancelAllOrdersTx(payload.maker);
           break;
         }
@@ -459,6 +466,19 @@ export const getExecuteCancelV3Options: RouteOptions = {
                 return new Sdk.Alienswap.Order(config.chainId, order.raw_data);
               });
               const exchange = new Sdk.Alienswap.Exchange(config.chainId);
+
+              cancelTxs.push({
+                data: exchange.cancelOrdersTx(maker, orders),
+                orderIds: data.onchainCancellable.map((o) => o.id),
+              });
+              break;
+            }
+
+            case "mintify": {
+              const orders = data.onchainCancellable.map((order) => {
+                return new Sdk.Mintify.Order(config.chainId, order.raw_data);
+              });
+              const exchange = new Sdk.Mintify.Exchange(config.chainId);
 
               cancelTxs.push({
                 data: exchange.cancelOrdersTx(maker, orders),

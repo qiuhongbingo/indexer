@@ -317,6 +317,19 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
                 Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId]
               ),
             },
+            mintify: {
+              orderKind: "mintify",
+              enabled: Boolean(Sdk.Mintify.Addresses.Exchange[config.chainId]),
+              customFeesSupported: true,
+              collectionBidSupported:
+                Number(collectionResult.token_count) <= config.maxTokenSetSize,
+              supportedBidCurrencies,
+              partialOrderSupported: true,
+              traitBidSupported: true,
+              oracleEnabled: Boolean(
+                Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId]
+              ),
+            },
             "payment-processor": {
               orderKind: "payment-processor",
               enabled: Boolean(Sdk.PaymentProcessor.Addresses.Exchange[config.chainId]),
@@ -496,6 +509,11 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
 
                 case "seaport-v1.6": {
                   operators = [Sdk.SeaportV16.Addresses.Exchange[config.chainId], openseaConduit];
+                  break;
+                }
+
+                case "mintify": {
+                  operators = [Sdk.Mintify.Addresses.Exchange[config.chainId], openseaConduit];
                   break;
                 }
 

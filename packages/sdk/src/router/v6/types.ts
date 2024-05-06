@@ -188,6 +188,10 @@ export type GenericOrder =
   | {
       kind: "payment-processor-v2";
       order: Sdk.PaymentProcessorV2.Order;
+    }
+  | {
+      kind: "mintify";
+      order: Sdk.Mintify.Order;
     };
 
 // Listings

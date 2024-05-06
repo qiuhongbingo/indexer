@@ -11,7 +11,8 @@ export type SeaportOrderKind =
   | "seaport"
   | "seaport-v1.4"
   | "seaport-v1.5"
-  | "seaport-v1.6";
+  | "seaport-v1.6"
+  | "mintify";
 
 export const offChainCheck = async (
   order: Sdk.SeaportBase.IOrder,

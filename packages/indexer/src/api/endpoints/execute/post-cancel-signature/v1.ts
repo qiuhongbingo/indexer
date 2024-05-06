@@ -42,6 +42,7 @@ export const postCancelSignatureV1Options: RouteOptions = {
           "seaport-v1.5",
           "seaport-v1.6",
           "alienswap",
+          "mintify",
           "blur-bid",
           "payment-processor-v2"
         )
@@ -116,6 +117,7 @@ export const postCancelSignatureV1Options: RouteOptions = {
         }
 
         case "alienswap":
+        case "mintify":
         case "seaport-v1.4":
         case "seaport-v1.5":
         case "seaport-v1.6": {

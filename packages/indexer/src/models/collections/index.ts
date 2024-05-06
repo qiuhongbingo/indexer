@@ -529,14 +529,14 @@ export class Collections {
   ) {
     const updateResult = await idb.manyOrNone(
       `
-            UPDATE collections
-            SET
-              is_spam = $/spam/,
-              updated_at = now()
-            WHERE id IN ($/ids:list/)
-            AND is_spam IS DISTINCT FROM $/spam/
-            RETURNING id
-          `,
+        UPDATE collections
+        SET
+          is_spam = $/spam/,
+          updated_at = now()
+        WHERE id IN ($/ids:list/)
+        AND is_spam IS DISTINCT FROM $/spam/
+        RETURNING id
+      `,
       {
         ids: collectionIds,
         spam: newSpamState,
