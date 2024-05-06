@@ -189,7 +189,6 @@ export class BackfillAsksElasticsearchJob extends AbstractRabbitMqJobHandler {
           onlyActive,
           cursor,
         },
-        jobId: this.queueName,
       },
       1000
     );
