@@ -85,6 +85,9 @@ const getNetworkConfig = (chainId?: number) => {
       case 888888888:
         url = "https://rpc.ancient8.gg/";
         break;
+      case 660279:
+        url = "https://xai-chain.net/rpc";
+        break;
       // Testnets
       case 5001:
         url = "https://rpc.testnet.mantle.xyz";
@@ -109,6 +112,9 @@ const getNetworkConfig = (chainId?: number) => {
         break;
       case 168587773:
         url = "https://sepolia.blast.io";
+        break;
+      case 713715:
+        url = "https://evm-rpc-arctic-1.sei-apis.com";
         break;
       default:
         throw new Error("Unsupported chain id");
@@ -190,6 +196,7 @@ const config: HardhatUserConfig = {
     zora: getNetworkConfig(7777777),
     degen: getNetworkConfig(666666666),
     ancient8: getNetworkConfig(888888888),
+    xai: getNetworkConfig(660279),
     // Testnets
     mantleTestnet: getNetworkConfig(5001),
     apexTestnet: getNetworkConfig(70800),
@@ -199,6 +206,7 @@ const config: HardhatUserConfig = {
     sepolia: getNetworkConfig(11155111),
     ancient8Testnet: getNetworkConfig(28122024),
     blastSepolia: getNetworkConfig(168587773),
+    seiTestnet: getNetworkConfig(713715),
   },
   etherscan: {
     apiKey: {
@@ -224,6 +232,7 @@ const config: HardhatUserConfig = {
       degen: "0x",
       garnet: "0x",
       redstone: "0x",
+      xai: "0x",
       // Testnets
       mantleTestnet: "0x",
       lineaTestnet: process.env.ETHERSCAN_API_KEY_LINEA_TESTNET ?? "",
@@ -234,6 +243,7 @@ const config: HardhatUserConfig = {
       apexTestnet: "0x",
       berachainTestnet: "0x",
       amoy: "0x",
+      seiTestnet: "0x",
     },
     customChains: [
       // Mainnets
@@ -373,6 +383,14 @@ const config: HardhatUserConfig = {
           browserURL: "https://explorer.degen.tips/",
         },
       },
+      {
+        network: "xai",
+        chainId: 660279,
+        urls: {
+          apiURL: "https://explorer.xai-chain.net/api",
+          browserURL: "https://explorer.xai-chain.net/",
+        },
+      },
       // Testnets
       {
         network: "mantleTestnet",
@@ -428,6 +446,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api-sepolia.blastscan.io/api",
           browserURL: "https://sepolia.blastscan.io/",
+        },
+      },
+      {
+        network: "seiTestnet",
+        chainId: 713715,
+        urls: {
+          apiURL: "https://seitrace.com/api",
+          browserURL: "https://seitrace.com/",
         },
       },
     ],
