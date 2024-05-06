@@ -108,7 +108,7 @@ export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
             logIndex: lastResult.log_index,
             batchIndex: lastResult.batch_index,
             createdTs: lastResult.created_ts,
-          },
+          } as BackfillTokensLastSaleJobCursor,
         };
       }
     }
@@ -129,7 +129,7 @@ export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
   }
 
   public async addToQueue(cursor?: BackfillTokensLastSaleJobCursor, delay = 0) {
-    await this.send({ payload: cursor ?? {} }, delay);
+    await this.send({ payload: { cursor } }, delay);
   }
 }
 
