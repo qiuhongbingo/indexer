@@ -369,7 +369,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       });
     }
 
-    return {
+    const parsedMetadata = {
       contract: metadata.contract,
       slug: null,
       tokenURI: metadata.uri,
@@ -398,6 +398,21 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       })),
       decimals: metadata?.decimals ? parseInt(metadata.decimals) : undefined,
     };
+
+    if (config.debugMetadataIndexingCollections.includes(metadata.contract)) {
+      logger.info(
+        "onchain-fetcher",
+        JSON.stringify({
+          topic: "tokenMetadataIndexing",
+          message: `_parseToken. contract=${metadata.contract}, tokenId=${metadata.tokenId}`,
+          debugMetadataIndexingCollection: true,
+          metadata: JSON.stringify(metadata),
+          parsedMetadata: JSON.stringify(parsedMetadata),
+        })
+      );
+    }
+
+    return parsedMetadata;
   }
 
   parseCollection(metadata: any): CollectionMetadata {
