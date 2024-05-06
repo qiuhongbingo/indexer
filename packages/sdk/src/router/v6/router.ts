@@ -838,6 +838,7 @@ export class Router {
             })),
             authToken: options?.blurAuth?.accessToken,
             metadata: this.options?.orderFetcherMetadata,
+            chainId: this.chainId,
           })
           .then((response) => response.data.calldata);
 
@@ -4178,6 +4179,7 @@ export class Router {
               price: d.price,
             })),
             authToken: options?.blurAuth?.accessToken,
+            chainId: this.chainId,
           })
           .then((response) => response.data.calldata);
 

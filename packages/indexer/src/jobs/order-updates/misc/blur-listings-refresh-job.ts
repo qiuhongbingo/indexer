@@ -34,7 +34,9 @@ export default class BlurListingsRefreshJob extends AbstractRabbitMqJobHandler {
     try {
       // First fetch the most up-to-date state of the listings
       await axios
-        .get(`${config.orderFetcherBaseUrl}/api/blur-collection-listings?collection=${collection}`)
+        .get(
+          `${config.orderFetcherBaseUrl}/api/blur-collection-listings?collection=${collection}&chainId=${config.chainId}`
+        )
         .then(async (response) => {
           const blurListings = response.data.listings as {
             owner: string;
