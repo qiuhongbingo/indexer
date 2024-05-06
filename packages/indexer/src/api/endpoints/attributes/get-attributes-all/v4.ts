@@ -147,7 +147,7 @@ export const getAttributesAllV4Options: RouteOptions = {
 
       const result = await redb.manyOrNone(baseQuery, params).then((result) => {
         return result.map(async (r) => {
-          if (r.values.count == 0) {
+          if (Number(r?.values?.count) == 0) {
             return undefined;
           }
 
