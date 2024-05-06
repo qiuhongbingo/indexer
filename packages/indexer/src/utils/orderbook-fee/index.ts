@@ -1,4 +1,3 @@
-import { config } from "@/config/index";
 import { ApiKeyManager } from "@/models/api-keys";
 import { OrderKind } from "@/orderbook/orders";
 import {
@@ -8,8 +7,6 @@ import {
   supportsPaymentSplits,
   updatePaymentSplitBalance,
 } from "@/utils/payment-splits";
-
-const orderbookFeeEnabled = config.chainId === 11155111;
 
 export const FEE_RECIPIENT = "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e";
 
@@ -34,11 +31,6 @@ export const attachOrderbookFee = async (
   },
   apiKey = ""
 ) => {
-  // Only if enabled
-  if (!orderbookFeeEnabled) {
-    return;
-  }
-
   // Only native orders
   if (params.orderbook != "reservoir") {
     return;
@@ -98,11 +90,6 @@ export const validateOrderbookFee = async (
   apiKey = "",
   isReservoir?: boolean
 ) => {
-  // Only if enabled
-  if (!orderbookFeeEnabled) {
-    return;
-  }
-
   // Only native orders
   if (!isReservoir) {
     return;
