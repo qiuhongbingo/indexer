@@ -27,7 +27,7 @@ export default class BlurBidsBufferJob extends AbstractRabbitMqJobHandler {
   public async process(payload: BlurBidsBufferJobPayload) {
     const { collection } = payload;
 
-    if (config.chainId !== 1) {
+    if (![1, 81457].includes(config.chainId)) {
       return;
     }
 
