@@ -24,7 +24,6 @@ export const build = async (options: BuildOrderOptions) => {
       maker: options.maker,
       expirationTime: options.expirationTime ?? now() + 24 * 3600,
       authToken: options.authToken,
-      chainId: config.chainId,
     })
     .then((response) => response.data.data);
 

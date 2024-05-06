@@ -107,7 +107,6 @@ export const postCancelSignatureV1Options: RouteOptions = {
                 contract,
                 prices,
                 authToken: auth,
-                chainId: config.chainId,
               });
             })
           );

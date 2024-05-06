@@ -18,7 +18,7 @@ export const updateBlurRoyalties = async (collection: string, skipCache = false)
         .get(
           `${config.orderFetcherBaseUrl}/api/blur-collection-fees?collection=${collection}${
             skipCache ? "&skipCache=1" : ""
-          }&chainId=${config.chainId}`
+          }`
         )
         .then(
           (response) => response.data as { minimumRoyaltyBps: number; maximumRoyaltyBps: number }

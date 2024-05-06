@@ -18,7 +18,6 @@ export const ExecutionDelegate: ChainIdToAddress = {
 
 export const Beth: ChainIdToAddress = {
   [Network.Ethereum]: "0x0000000000a39bb272e79075ade125fd351887ac",
-  [Network.Blast]: "0xb772d5c5f4a2eef67dfbc89aa658d2711341b8e5",
 };
 
 export const OperatorFilterRegistry: ChainIdToAddress = {

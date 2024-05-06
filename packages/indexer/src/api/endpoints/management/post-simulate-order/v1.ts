@@ -213,7 +213,7 @@ export const postSimulateOrderV1Options: RouteOptions = {
 
         const blurPrice = await axios
           .get(
-            `${config.orderFetcherBaseUrl}/api/blur-token?contract=${contract}&tokenId=${tokenId}&chainId=${config.chainId}`
+            `${config.orderFetcherBaseUrl}/api/blur-token?contract=${contract}&tokenId=${tokenId}`
           )
           .then((response) =>
             response.data.blurPrice
@@ -327,9 +327,7 @@ export const postSimulateOrderV1Options: RouteOptions = {
           let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
           if (!blurAuthChallenge) {
             blurAuthChallenge = (await axios
-              .get(
-                `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${taker}&chainId=${config.chainId}`
-              )
+              .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${taker}`)
               .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
             await b.saveAuthChallenge(blurAuthChallengeId, blurAuthChallenge, 60);
