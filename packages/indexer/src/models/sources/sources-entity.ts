@@ -51,6 +51,8 @@ export type SourcesMetadata = {
   tokenUrlRedstone?: string;
   tokenUrlAmoy?: string;
   tokenUrlDegen?: string;
+  tokenUrlSeiTestnet?: string;
+  tokenUrlXai?: string;
 };
 
 export class SourcesEntity {

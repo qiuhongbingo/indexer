@@ -144,6 +144,7 @@ export enum Network {
   Blast = 81457,
   AstarZkevm = 3776,
   Degen = 666666666,
+  Xai = 660279,
   // Testnets
   EthereumGoerli = 5,
   MantleTestnet = 5001,
@@ -161,6 +162,7 @@ export enum Network {
   Garnet = 17069,
   Redstone = 690,
   Amoy = 80002,
+  SeiTestnet = 713715,
 }
 
 export type ChainIdToAddress = { [chainId: number]: string };
