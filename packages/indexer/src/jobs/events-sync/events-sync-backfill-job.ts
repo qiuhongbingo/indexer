@@ -2,6 +2,7 @@ import { AbstractRabbitMqJobHandler, BackoffStrategy } from "@/jobs/abstract-rab
 import { logger } from "@/common/logger";
 import { SyncBlockOptions, syncEvents, syncEventsOnly } from "@/events-sync/index";
 import _ from "lodash";
+import { config } from "@/config/index";
 
 export type EventSyncBackfillJobPayload = {
   fromBlock: number;
@@ -12,7 +13,7 @@ export type EventSyncBackfillJobPayload = {
 export default class EventsSyncBackfillJob extends AbstractRabbitMqJobHandler {
   queueName = "events-sync-backfill";
   maxRetries = 10;
-  concurrency = 1;
+  concurrency = [660279].includes(config.chainId) ? 5 : 1;
   timeout = 60 * 30 * 1000;
   backoff = {
     type: "exponential",
