@@ -39,6 +39,9 @@ import * as seaportV15SellToken from "@/orderbook/orders/seaport-v1.5/build/sell
 // Seaport v1.6
 import * as seaportV16SellToken from "@/orderbook/orders/seaport-v1.6/build/sell/token";
 
+// Mintify
+import * as mintifySellToken from "@/orderbook/orders/mintify/build/sell/token";
+
 // Alienswap
 import * as alienswapSellToken from "@/orderbook/orders/alienswap/build/sell/token";
 
@@ -123,6 +126,7 @@ export const getExecuteListV5Options: RouteOptions = {
                 "seaport-v1.4",
                 "seaport-v1.5",
                 "seaport-v1.6",
+                "mintify",
                 "x2y2",
                 "alienswap",
                 "payment-processor",
@@ -150,6 +154,15 @@ export const getExecuteListV5Options: RouteOptions = {
                 }),
               }),
               "seaport-v1.6": Joi.object({
+                conduitKey: Joi.string().pattern(regex.bytes32),
+                useOffChainCancellation: Joi.boolean().required(),
+                replaceOrderId: Joi.string().when("useOffChainCancellation", {
+                  is: true,
+                  then: Joi.optional(),
+                  otherwise: Joi.forbidden(),
+                }),
+              }),
+              mintify: Joi.object({
                 conduitKey: Joi.string().pattern(regex.bytes32),
                 useOffChainCancellation: Joi.boolean().required(),
                 replaceOrderId: Joi.string().when("useOffChainCancellation", {
@@ -382,6 +395,16 @@ export const getExecuteListV5Options: RouteOptions = {
         "seaport-v1.6": [] as {
           order: {
             kind: "seaport-v1.6";
+            data: Sdk.SeaportBase.Types.OrderComponents;
+          };
+          orderbook: string;
+          orderbookApiKey?: string;
+          source?: string;
+          orderIndex: number;
+        }[],
+        mintify: [] as {
+          order: {
+            kind: "mintify";
             data: Sdk.SeaportBase.Types.OrderComponents;
           };
           orderbook: string;
@@ -957,6 +980,84 @@ export const getExecuteListV5Options: RouteOptions = {
                 break;
               }
 
+              case "mintify": {
+                if (!["reservoir"].includes(params.orderbook)) {
+                  return errors.push({ message: "Unsupported orderbook", orderIndex: i });
+                }
+
+                const options = params.options?.[params.orderKind] as
+                  | {
+                      useOffChainCancellation?: boolean;
+                      replaceOrderId?: string;
+                    }
+                  | undefined;
+
+                const order = await mintifySellToken.build({
+                  ...params,
+                  ...options,
+                  orderbook: params.orderbook as "reservoir" | "opensea",
+                  maker,
+                  contract,
+                  tokenId,
+                  source,
+                });
+
+                // Will be set if an approval is needed before listing
+                let approvalTx: TxData | undefined;
+
+                // Check the order's fillability
+                const exchange = new Sdk.Mintify.Exchange(config.chainId);
+                try {
+                  await seaportBaseCheck.offChainCheck(order, "mintify", exchange, {
+                    onChainApprovalRecheck: true,
+                  });
+                } catch (error: any) {
+                  switch (error.message) {
+                    case "no-balance-no-approval":
+                    case "no-balance": {
+                      return errors.push({ message: "Maker does not own token", orderIndex: i });
+                    }
+
+                    case "no-approval": {
+                      // Generate an approval transaction
+                      const info = order.getInfo()!;
+
+                      const kind = order.params.kind?.startsWith("erc721") ? "erc721" : "erc1155";
+                      approvalTx = (
+                        kind === "erc721"
+                          ? new Sdk.Common.Helpers.Erc721(baseProvider, info.contract)
+                          : new Sdk.Common.Helpers.Erc1155(baseProvider, info.contract)
+                      ).approveTransaction(maker, exchange.deriveConduit(order.params.conduitKey));
+
+                      break;
+                    }
+                  }
+                }
+
+                steps[1].items.push({
+                  status: approvalTx ? "incomplete" : "complete",
+                  data: approvalTx,
+                  orderIndexes: [i],
+                });
+
+                bulkOrders["mintify"].push({
+                  order: {
+                    kind: params.orderKind,
+                    data: {
+                      ...order.params,
+                    },
+                  },
+                  orderbook: params.orderbook,
+                  orderbookApiKey: params.orderbookApiKey,
+                  source,
+                  orderIndex: i,
+                });
+
+                addExecution(order.hash(), params.quantity);
+
+                break;
+              }
+
               case "looks-rare-v2": {
                 if (!["reservoir", "looks-rare"].includes(params.orderbook)) {
                   return errors.push({ message: "Unsupported orderbook", orderIndex: i });
@@ -1511,6 +1612,68 @@ export const getExecuteListV5Options: RouteOptions = {
                     orderbookApiKey: o.orderbookApiKey,
                     bulkData: {
                       kind: "alienswap",
+                      data: {
+                        orderIndex: i,
+                        merkleProof: proofs[i],
+                      },
+                    },
+                  })),
+                  source,
+                },
+              },
+            },
+            orderIndexes: orders.map(({ orderIndex }) => orderIndex),
+          });
+        }
+      }
+
+      // Post any mintify bulk orders together
+      {
+        const orders = bulkOrders["mintify"];
+        if (orders.length === 1) {
+          const order = new Sdk.Mintify.Order(config.chainId, orders[0].order.data);
+          steps[2].items.push({
+            status: "incomplete",
+            data: {
+              sign: order.getSignatureData(),
+              post: {
+                endpoint: "/order/v3",
+                method: "POST",
+                body: {
+                  order: {
+                    kind: "mintify",
+                    data: {
+                      ...order.params,
+                    },
+                  },
+                  orderbook: orders[0].orderbook,
+                  orderbookApiKey: orders[0].orderbookApiKey,
+                  source,
+                },
+              },
+            },
+            orderIndexes: [orders[0].orderIndex],
+          });
+        } else if (orders.length > 1) {
+          const exchange = new Sdk.Mintify.Exchange(config.chainId);
+          const { signatureData, proofs } = exchange.getBulkSignatureDataWithProofs(
+            orders.map((o) => new Sdk.Alienswap.Order(config.chainId, o.order.data))
+          );
+
+          steps[2].items.push({
+            status: "incomplete",
+            data: {
+              sign: signatureData,
+              post: {
+                endpoint: "/order/v4",
+                method: "POST",
+                body: {
+                  items: orders.map((o, i) => ({
+                    order: o.order,
+                    orderbook: o.orderbook,
+                    orderbookApiKey: o.orderbookApiKey,
+                    bulkData: {
+                      kind: "mintify",
                       data: {
                         orderIndex: i,
                         merkleProof: proofs[i],

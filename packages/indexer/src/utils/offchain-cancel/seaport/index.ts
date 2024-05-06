@@ -12,13 +12,15 @@ export type OffChainCancellableOrderKind =
   | "seaport-v1.4"
   | "seaport-v1.5"
   | "seaport-v1.6"
-  | "alienswap";
+  | "alienswap"
+  | "mintify";
 
 type Order =
   | Sdk.SeaportV14.Order
   | Sdk.SeaportV15.Order
   | Sdk.SeaportV16.Order
-  | Sdk.Alienswap.Order;
+  | Sdk.Alienswap.Order
+  | Sdk.Mintify.Order;
 
 type CancelCall = {
   orderKind: OffChainCancellableOrderKind;
@@ -50,6 +52,8 @@ export const createOrder = (
     return new Sdk.SeaportV14.Order(chainId, orderData);
   } else if (orderKind === "seaport-v1.5") {
     return new Sdk.SeaportV15.Order(chainId, orderData);
+  } else if (orderKind === "mintify") {
+    return new Sdk.Mintify.Order(chainId, orderData);
   } else {
     return new Sdk.SeaportV16.Order(chainId, orderData);
   }

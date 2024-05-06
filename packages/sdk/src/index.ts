@@ -54,6 +54,7 @@ import * as Mooar from "./mooar";
 import * as HighlightXyz from "./highlightxyz";
 import * as FairXyz from "./fairxyz";
 import * as ZeroExSplits from "./zeroex-splits";
+import * as Mintify from "./mintify";
 
 export {
   // Common
@@ -114,4 +115,5 @@ export {
   HighlightXyz,
   FairXyz,
   ZeroExSplits,
+  Mintify,
 };

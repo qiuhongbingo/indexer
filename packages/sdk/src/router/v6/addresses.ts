@@ -327,3 +327,10 @@ export const SeaportV16Module: ChainIdToAddress = {
   [Network.Zora]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
   [Network.Blast]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
 };
+
+export const MintifyModule = {
+  [Network.Ethereum]: "",
+  [Network.Base]: "",
+  [Network.EthereumSepolia]: "",
+  [Network.Blast]: "",
+};

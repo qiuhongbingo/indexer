@@ -80,6 +80,7 @@ export const getExecuteSellV7Options: RouteOptions = {
                   "seaport-v1.4",
                   "seaport-v1.5",
                   "seaport-v1.6",
+                  "mintify",
                   "x2y2",
                   "rarible",
                   "sudoswap",
