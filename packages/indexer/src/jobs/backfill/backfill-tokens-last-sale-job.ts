@@ -3,10 +3,9 @@ import { idb, ridb, pgp } from "@/common/db";
 import { AbstractRabbitMqJobHandler } from "@/jobs/abstract-rabbit-mq-job-handler";
 import { RabbitMQMessage } from "@/common/rabbit-mq";
 import { fromBuffer, toBuffer } from "@/common/utils";
-import { logger } from "@/common/logger";
-import pgPromise from "pg-promise";
 import _ from "lodash";
 import { redis } from "@/common/redis";
+import { logger } from "@/common/logger";
 
 export type BackfillTokensLastSaleJobCursor = {
   txHash: string;
@@ -92,12 +91,12 @@ export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
               AND x.token_id::numeric = tokens.token_id
               AND COALESCE(tokens.last_sale_timestamp, 0) < x.last_sale_timestamp`;
 
+      await idb.none(updateQuery);
+
       logger.info(
         this.queueName,
-        `debug.  limit=${limit}, updateQuery=${pgPromise.as.format(updateQuery)}`
+        `Backfilled ${results.length} tokens.  limit=${limit}, cursor=${JSON.stringify(cursor)}`
       );
-
-      await idb.none(updateQuery);
 
       if (results.length == limit) {
         const lastResult = _.last(results);

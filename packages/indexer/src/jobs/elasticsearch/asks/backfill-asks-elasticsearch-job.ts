@@ -159,7 +159,7 @@ export class BackfillAsksElasticsearchJob extends AbstractRabbitMqJobHandler {
         })
       );
 
-      await backfillAsksElasticsearchJob.addToQueue(
+      await this.addToQueue(
         payload.fromTimestamp,
         payload.orderKind,
         payload.onlyActive,
