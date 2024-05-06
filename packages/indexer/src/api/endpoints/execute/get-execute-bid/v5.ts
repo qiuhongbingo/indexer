@@ -491,7 +491,9 @@ export const getExecuteBidV5Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(
