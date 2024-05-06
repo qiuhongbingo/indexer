@@ -36,7 +36,6 @@ export const build = async (options: BuildOrderOptions) => {
       maker: options.maker,
       expirationTime,
       authToken: options.authToken,
-      chainId: config.chainId,
     })
     .then((response) => response.data.data);
 

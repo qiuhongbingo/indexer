@@ -227,9 +227,7 @@ export const getOrdersBidsV5Options: RouteOptions = {
           quantity: number;
           contract_kind: string;
         }[] = await axios
-          .get(
-            `${config.orderFetcherBaseUrl}/api/blur-user-collection-bids?user=${query.maker}&chainId=${config.chainId}`
-          )
+          .get(`${config.orderFetcherBaseUrl}/api/blur-user-collection-bids?user=${query.maker}`)
           .then(async (response) => {
             if (_.isEmpty(response.data.bids)) {
               return [];

@@ -215,9 +215,7 @@ export const getExecuteCancelV3Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(
-                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}&chainId=${config.chainId}`
-                )
+                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}`)
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(
@@ -551,9 +549,7 @@ export const getExecuteCancelV3Options: RouteOptions = {
                   let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
                   if (!blurAuthChallenge) {
                     blurAuthChallenge = (await axios
-                      .get(
-                        `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}&chainId=${config.chainId}`
-                      )
+                      .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}`)
                       .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
                     await b.saveAuthChallenge(
@@ -605,7 +601,6 @@ export const getExecuteCancelV3Options: RouteOptions = {
                     contract: order.raw_data.collection,
                     tokenId: order.raw_data.tokenId,
                     authToken: blurAuth.accessToken,
-                    chainId: config.chainId,
                   })
                   .then((response) => response.data);
                 if (!blurCancelTx) {
