@@ -49,14 +49,6 @@ if (
         } = JSON.parse(message);
 
         const collection = parsedMessage.contractAddress.toLowerCase();
-        if (
-          config.chainId === 81457 &&
-          collection !== "0x16594af3945fcb290c6cd9de998698a3216f6e1a" &&
-          collection !== "0x1195cf65f83b3a5768f3c496d3a05ad6412c64b7"
-        ) {
-          return;
-        }
-
         const orderInfos = parsedMessage.tops.map((t) => ({
           kind: "blur-listing",
           info: {
@@ -92,14 +84,6 @@ if (
         } = JSON.parse(message);
 
         const collection = parsedMessage.contractAddress.toLowerCase();
-        if (
-          config.chainId === 81457 &&
-          collection !== "0x16594af3945fcb290c6cd9de998698a3216f6e1a" &&
-          collection !== "0x1195cf65f83b3a5768f3c496d3a05ad6412c64b7"
-        ) {
-          return;
-        }
-
         const pricePoints = parsedMessage.updates;
 
         await blurBidsBufferJob.addToQueue(
