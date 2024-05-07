@@ -5321,7 +5321,7 @@ export class Router {
 
         case "mintify": {
           const order = detail.order as Sdk.Mintify.Order;
-          const module = this.contracts.seaportV16Module;
+          const module = this.contracts.mintifyModule;
 
           const matchParams = order.buildMatching({
             tokenId: detail.tokenId,
