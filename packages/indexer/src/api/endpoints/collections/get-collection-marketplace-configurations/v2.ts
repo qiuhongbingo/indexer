@@ -411,43 +411,39 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
       // Handle Blur
       if (Sdk.Blur.Addresses.Beth[config.chainId]) {
         const royalties = await getOrUpdateBlurRoyalties(contract);
-        if (royalties) {
-          marketplaces.push({
-            name: "Blur",
-            domain: "blur.io",
-            imageUrl: `https://${getSubDomain()}.reservoir.tools/redirect/sources/blur.io/logo/v2`,
-            fee: {
-              bps: 0,
+        marketplaces.push({
+          name: "Blur",
+          domain: "blur.io",
+          imageUrl: `https://${getSubDomain()}.reservoir.tools/redirect/sources/blur.io/logo/v2`,
+          fee: {
+            bps: 0,
+          },
+          royalties: royalties
+            ? {
+                minBps: royalties.minimumRoyaltyBps,
+                // If the maximum royalty is not available for Blur, use the OpenSea one
+                maxBps:
+                  royalties.maximumRoyaltyBps ??
+                  marketplaces[marketplaces.length - 1].royalties?.maxBps,
+              }
+            : undefined,
+          orderbook: "blur",
+          exchanges: {
+            blur: {
+              orderKind: "blur",
+              enabled: false,
+              customFeesSupported: false,
+              minimumPrecision: "0.01",
+              minimumBidExpiry: 10 * 24 * 60 * 60,
+              supportedBidCurrencies: [
+                convertCurrencyToToken(await getCurrency(Sdk.Blur.Addresses.Beth[config.chainId])),
+              ],
+              partialOrderSupported: true,
+              traitBidSupported: false,
+              oracleEnabled: false,
             },
-            royalties: royalties
-              ? {
-                  minBps: royalties.minimumRoyaltyBps,
-                  // If the maximum royalty is not available for Blur, use the OpenSea one
-                  maxBps:
-                    royalties.maximumRoyaltyBps ??
-                    marketplaces[marketplaces.length - 1].royalties?.maxBps,
-                }
-              : undefined,
-            orderbook: "blur",
-            exchanges: {
-              blur: {
-                orderKind: "blur",
-                enabled: false,
-                customFeesSupported: false,
-                minimumPrecision: "0.01",
-                minimumBidExpiry: 10 * 24 * 60 * 60,
-                supportedBidCurrencies: [
-                  convertCurrencyToToken(
-                    await getCurrency(Sdk.Blur.Addresses.Beth[config.chainId])
-                  ),
-                ],
-                partialOrderSupported: true,
-                traitBidSupported: false,
-                oracleEnabled: false,
-              },
-            },
-          });
-        }
+          },
+        });
       }
 
       for await (const marketplace of marketplaces) {
