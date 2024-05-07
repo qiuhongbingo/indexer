@@ -949,20 +949,37 @@ export class Router {
     // - remove any partial order from the details
 
     const relayer = options?.relayer ?? taker;
-    const useRouter =
-      options?.forceRouter || options?.usePermit || details.some((c) => c.fees?.length);
+
+    const directSeaportV16Fill =
+      details.length &&
+      details.every(
+        ({ kind, fees, currency, order }) =>
+          kind === "seaport-v1.6" &&
+          buyInCurrency === currency &&
+          // All orders must have the same currency
+          currency === details[0].currency &&
+          // All orders must have the same conduit
+          (order as Sdk.SeaportV16.Order).params.conduitKey ===
+            (details[0].order as Sdk.SeaportV16.Order).params.conduitKey &&
+          !fees?.length
+      ) &&
+      !options?.forceRouter &&
+      !options?.usePermit;
 
     await Promise.all(
       details.map(async (detail, i) => {
         if (["seaport-v1.5-partial", "seaport-v1.6-partial"].includes(detail.kind)) {
           const protocolVersion = detail.kind.includes("seaport-v1.5") ? "v1.5" : "v1.6";
           const order = detail.order as Sdk.SeaportBase.Types.OpenseaPartialOrder;
-          // To fill royalty-enforcing listings via router,
-          // we need to using the module address as the taker.
-          const isSignedZoneOrder =
-            order.zone === Sdk.SeaportBase.Addresses.OpenSeaV16SignedZone[this.chainId];
+
+          // When filling royalty-enforcing orders via the router, we need to set the router
+          // module address as the taker in order to get a correct oracle signature from the
+          // order fetcher / opensea API
           const fulfiller =
-            isSignedZoneOrder && useRouter ? this.contracts.seaportV16Module.address : relayer;
+            order.zone === Sdk.SeaportBase.Addresses.OpenSeaV16SignedZone[this.chainId] &&
+            !directSeaportV16Fill
+              ? this.contracts.seaportV16Module.address
+              : relayer;
           try {
             const result = await axios.post(`${this.options?.orderFetcherBaseUrl}/api/listing`, {
               contract: detail.contract,
@@ -1168,22 +1185,7 @@ export class Router {
       }
     }
 
-    if (
-      details.length &&
-      details.every(
-        ({ kind, fees, currency, order }) =>
-          kind === "seaport-v1.6" &&
-          buyInCurrency === currency &&
-          // All orders must have the same currency
-          currency === details[0].currency &&
-          // All orders must have the same conduit
-          (order as Sdk.SeaportV16.Order).params.conduitKey ===
-            (details[0].order as Sdk.SeaportV16.Order).params.conduitKey &&
-          !fees?.length
-      ) &&
-      !options?.forceRouter &&
-      !options?.usePermit
-    ) {
+    if (directSeaportV16Fill) {
       const exchange = new Sdk.SeaportV16.Exchange(this.chainId);
 
       const conduitKey =
