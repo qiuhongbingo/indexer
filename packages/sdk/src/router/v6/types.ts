@@ -1,5 +1,5 @@
 import { BigNumberish } from "@ethersproject/bignumber";
-
+import { SwapInfo } from "./swap/index";
 import { Permit } from "./permit";
 import * as Sdk from "../../index";
 import { TxData } from "../../utils";
@@ -230,6 +230,7 @@ export type FillListingsResult = {
     preSignatures: PreSignature[];
   }[];
   success: { [orderId: string]: boolean };
+  swaps?: SwapInfo[];
 };
 
 // Bids
@@ -272,6 +273,7 @@ export type FillBidsResult = {
     preSignatures: PreSignature[];
   }[];
   success: { [orderId: string]: boolean };
+  swaps?: SwapInfo[];
 };
 
 // Mints

@@ -4422,6 +4422,7 @@ export class Router {
     }
 
     return {
+      swaps: successfulSwapInfos,
       txs,
       success,
     };
@@ -6429,6 +6430,7 @@ export class Router {
     return {
       preTxs,
       txs,
+      swaps: successfulSwapInfos,
       success,
     };
   }

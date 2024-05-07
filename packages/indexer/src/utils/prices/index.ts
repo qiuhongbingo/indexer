@@ -3,6 +3,7 @@ import { parseUnits } from "@ethersproject/units";
 import * as Sdk from "@reservoir0x/sdk";
 import axios from "axios";
 import _ from "lodash";
+import { BigNumberish } from "@ethersproject/bignumber";
 
 import { idb } from "@/common/db";
 import { logger } from "@/common/logger";
@@ -433,4 +434,65 @@ export const getUSDAndCurrencyPrices = async (
   }
 
   return { usdPrice, currencyPrice };
+};
+
+export const validateSwapPrice = (
+  paths: {
+    currency: string;
+    totalRawPrice?: string;
+    buyInRawQuote?: string;
+    buyInCurrency?: string;
+    sellOutCurrency?: string;
+    sellOutRawQuote?: string;
+  }[],
+  swaps?: {
+    tokenIn: string;
+    amountIn: BigNumberish;
+    amountOut?: BigNumberish;
+  }[],
+  slippageLimit = 70 // 7%
+) => {
+  if (!swaps) return;
+  for (const path of paths) {
+    if (!path.totalRawPrice) {
+      continue;
+    }
+
+    // Buy
+    if (path.buyInCurrency && !path.buyInRawQuote) {
+      continue;
+    }
+
+    // Sell
+    if (path.sellOutCurrency && !path.sellOutRawQuote) {
+      continue;
+    }
+
+    for (const swap of swaps) {
+      if (
+        path.buyInCurrency === swap.tokenIn ||
+        (path.sellOutCurrency && path.currency === swap.tokenIn)
+      ) {
+        if (!swap.amountOut) {
+          throw new Error("swap failed");
+        }
+        let diffPercent = 0;
+        try {
+          const base = bn(10).pow(15);
+          const swapPrice = bn(swap.amountIn).mul(base).div(bn(swap.amountOut));
+
+          const pathPrice = path.sellOutRawQuote
+            ? bn(path.totalRawPrice).mul(base).div(path.sellOutRawQuote)
+            : bn(path.buyInRawQuote!).mul(base).div(bn(path.totalRawPrice));
+
+          diffPercent = swapPrice.sub(pathPrice).mul(1000).div(pathPrice).toNumber();
+        } catch (err) {
+          // skip errors
+        }
+        if (diffPercent > slippageLimit) {
+          throw Error(`Slippage is too large compared with Coingecko(${diffPercent / 10}%)`);
+        }
+      }
+    }
+  }
 };
