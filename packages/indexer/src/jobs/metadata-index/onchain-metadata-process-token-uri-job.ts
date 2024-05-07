@@ -102,6 +102,18 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           } else if (![690, 17069].includes(config.chainId)) {
             metadata[0].imageUrl = null;
           }
+        } else if (metadata[0].mediaUrl?.startsWith("data:")) {
+          logger.warn(
+            this.queueName,
+            JSON.stringify({
+              topic: "tokenMetadataIndexingDebug",
+              message: `Invalid Media Encoding. contract=${contract}, tokenId=${tokenId}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+              debugMetadataIndexingCollection:
+                config.debugMetadataIndexingCollections.includes(contract),
+            })
+          );
+
+          metadata[0].mediaUrl = null;
         }
 
         // if missing imageMimeType/mediaMimeTyp, we fallback to simplehash
