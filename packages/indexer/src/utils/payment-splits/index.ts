@@ -5,7 +5,6 @@ import * as Sdk from "@reservoir0x/sdk";
 import { idb, pgp, redb } from "@/common/db";
 import { fromBuffer, toBuffer, bn } from "@/common/utils";
 import { config } from "@/config/index";
-import { FeeRecipients } from "@/models/fee-recipients";
 
 type Fee = {
   recipient: string;
@@ -80,11 +79,6 @@ export const generatePaymentSplit = async (
         apiKey,
         fees: splitFees,
       });
-
-      // Mark the split as a marketplace fee
-      await FeeRecipients.getInstance().then((feeRecipients) =>
-        feeRecipients.create(splitAddress, "marketplace")
-      );
 
       existingSplit = await getPaymentSplitFromDb(splitAddress);
     }

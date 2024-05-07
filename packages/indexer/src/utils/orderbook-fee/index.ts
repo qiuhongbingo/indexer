@@ -1,4 +1,5 @@
 import { ApiKeyManager } from "@/models/api-keys";
+import { FeeRecipients } from "@/models/fee-recipients";
 import { OrderKind } from "@/orderbook/orders";
 import {
   getPaymentSplitFromDb,
@@ -73,9 +74,19 @@ export const attachOrderbookFee = async (
       // Override
       params.feeRecipient = [paymentSplit.address];
       params.fee = [String(params.fee.map(Number).reduce((a, b) => a + b) + feeBps)];
+
+      // Mark the fee as marketplace fee
+      await FeeRecipients.getInstance().then((feeRecipients) =>
+        feeRecipients.create(paymentSplit.address, "marketplace")
+      );
     } else {
       params.fee.push(String(feeBps));
       params.feeRecipient.push(FEE_RECIPIENT);
+
+      // Mark the fee as marketplace fee
+      await FeeRecipients.getInstance().then((feeRecipients) =>
+        feeRecipients.create(FEE_RECIPIENT, "marketplace")
+      );
     }
   }
 };
