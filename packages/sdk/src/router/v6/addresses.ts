@@ -334,7 +334,7 @@ export const SeaportV16Module: ChainIdToAddress = {
   [Network.Xai]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
 };
 
-export const MintifyModule = {
+export const MintifyModule: ChainIdToAddress = {
   [Network.EthereumSepolia]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
   [Network.BaseSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
   [Network.BlastSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
