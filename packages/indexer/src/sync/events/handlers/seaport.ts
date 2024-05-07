@@ -126,7 +126,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
       }
     }
 
-    const eventData5 = getEventData(["mintify-v1.6-orders-matched"])[0];
+    const eventData5 = getEventData(["mintify-orders-matched"])[0];
     if (eventData5?.addresses?.[baseEventParams.address]) {
       if (!mintifyMatchedOrderIds[txHash]) {
         mintifyMatchedOrderIds[txHash] = new Set<string>();
