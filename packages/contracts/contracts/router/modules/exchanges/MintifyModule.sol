@@ -14,6 +14,8 @@ import {ISeaport} from "../../../interfaces/ISeaport.sol";
 // - supports filling offers (both ERC721/ERC1155)
 
 contract MintifyModule is BaseExchangeModule {
+  string public constant NAME = "MintifyModule";
+
   // --- Structs ---
 
   struct SeaportETHListingWithPrice {

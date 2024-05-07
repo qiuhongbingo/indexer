@@ -18,12 +18,7 @@ export const getConduitKeyWithDefault = (conduitKey?: string) => {
   // - opensea conduit
   // - reservoir conduit
   // - no conduit (exchange address)
-  return (
-    conduitKey ??
-    Sdk.SeaportBase.Addresses.OpenseaConduitKey[config.chainId] ??
-    Sdk.SeaportBase.Addresses.ReservoirConduitKey[config.chainId] ??
-    HashZero
-  );
+  return conduitKey ?? Sdk.SeaportBase.Addresses.ReservoirConduitKey[config.chainId] ?? HashZero;
 };
 
 export const getBuildInfo = async (
