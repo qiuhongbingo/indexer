@@ -4,6 +4,7 @@ import { AbstractRabbitMqJobHandler } from "@/jobs/abstract-rabbit-mq-job-handle
 import { RabbitMQMessage } from "@/common/rabbit-mq";
 import { redis } from "@/common/redis";
 import { logger } from "@/common/logger";
+import _ from "lodash";
 
 export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
   queueName = "backfill-tokens-last-sale-queue";
