@@ -949,20 +949,27 @@ export class Router {
     // - remove any partial order from the details
 
     const relayer = options?.relayer ?? taker;
+    const useRouter =
+      options?.forceRouter || options?.usePermit || details.some((c) => c.fees?.length);
 
     await Promise.all(
       details.map(async (detail, i) => {
         if (["seaport-v1.5-partial", "seaport-v1.6-partial"].includes(detail.kind)) {
           const protocolVersion = detail.kind.includes("seaport-v1.5") ? "v1.5" : "v1.6";
           const order = detail.order as Sdk.SeaportBase.Types.OpenseaPartialOrder;
-
+          // To fill royalty-enforcing listings via router,
+          // we need to using the module address as the taker.
+          const isSignedZoneOrder =
+            order.zone === Sdk.SeaportBase.Addresses.OpenSeaV16SignedZone[this.chainId];
+          const fulfiller =
+            isSignedZoneOrder && useRouter ? this.contracts.seaportV16Module.address : relayer;
           try {
             const result = await axios.post(`${this.options?.orderFetcherBaseUrl}/api/listing`, {
               contract: detail.contract,
               tokenId: detail.tokenId,
               unitPrice: order.unitPrice,
               orderHash: order.id,
-              taker: relayer,
+              taker: fulfiller,
               chainId: this.chainId,
               protocolVersion,
               openseaApiKey: this.options?.openseaApiKey,
