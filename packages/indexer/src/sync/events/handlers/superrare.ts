@@ -346,12 +346,13 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
         const contract = parsedLog.args["_originContract"].toLowerCase();
         const tokenId = parsedLog.args["_tokenId"].toString();
         const price = parsedLog.args["_amount"].toString();
-        const maker = parsedLog.args["_splitRecipients"][0].toLowerCase();
         const currency = parsedLog.args["_currencyAddress"].toLowerCase();
         const splitAddresses = parsedLog.args["_splitRecipients"];
         const splitRatios = parsedLog.args["_splitRatios"];
 
         if (bn(price).gt(0)) {
+          const maker = parsedLog.args["_splitRecipients"][0].toLowerCase();
+
           onChainData.orders.push({
             kind: "superrare",
             info: {
