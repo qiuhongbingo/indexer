@@ -465,6 +465,10 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
             supportedOrderbooks = ["reservoir", "opensea", "looks-rare", "x2y2"];
             break;
           }
+          case 81457: {
+            supportedOrderbooks = ["reservoir", "blur"];
+            break;
+          }
           case 10:
           case 56:
           case 8453:
