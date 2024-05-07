@@ -137,6 +137,10 @@ export class IndexerCollectionsHandler extends KafkaEventHandler {
 
         const { contract, metadata, ...updatedCollection } = payload.after;
 
+        const parsedMetadata = JSON.parse(metadata);
+
+        parsedMetadata.openseaVerificationStatus = parsedMetadata?.safelistRequestStatus;
+
         const updatedPayload = {
           ...updatedCollection,
           contract: fromBuffer(contract),
@@ -144,7 +148,7 @@ export class IndexerCollectionsHandler extends KafkaEventHandler {
             ? fromBuffer(result.floor_sell_currency)
             : Sdk.Common.Addresses.Native[config.chainId],
           metadata: {
-            ...JSON.parse(metadata),
+            ...parsedMetadata,
           },
           sample_images: result?.sample_images || [],
           on_sale_count: result.on_sale_count,
