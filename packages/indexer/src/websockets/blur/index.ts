@@ -64,15 +64,6 @@ if (
           ingestMethod: "websocket",
         }));
 
-        if (config.chainId === 81457) {
-          logger.info(
-            "blur-debug",
-            JSON.stringify({
-              orderInfos,
-            })
-          );
-        }
-
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await orderbookOrdersJob.addToQueue(orderInfos as any);
         await blurListingsRefreshJob.addToQueue(collection);
