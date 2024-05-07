@@ -1,5 +1,5 @@
-import { config } from "@/config/index";
 import { ApiKeyManager } from "@/models/api-keys";
+import { FeeRecipients } from "@/models/fee-recipients";
 import { OrderKind } from "@/orderbook/orders";
 import {
   getPaymentSplitFromDb,
@@ -8,8 +8,6 @@ import {
   supportsPaymentSplits,
   updatePaymentSplitBalance,
 } from "@/utils/payment-splits";
-
-const orderbookFeeEnabled = config.chainId === 11155111;
 
 export const FEE_RECIPIENT = "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e";
 
@@ -34,11 +32,6 @@ export const attachOrderbookFee = async (
   },
   apiKey = ""
 ) => {
-  // Only if enabled
-  if (!orderbookFeeEnabled) {
-    return;
-  }
-
   // Only native orders
   if (params.orderbook != "reservoir") {
     return;
@@ -81,9 +74,19 @@ export const attachOrderbookFee = async (
       // Override
       params.feeRecipient = [paymentSplit.address];
       params.fee = [String(params.fee.map(Number).reduce((a, b) => a + b) + feeBps)];
+
+      // Mark the fee as marketplace fee
+      await FeeRecipients.getInstance().then((feeRecipients) =>
+        feeRecipients.create(paymentSplit.address, "marketplace")
+      );
     } else {
       params.fee.push(String(feeBps));
       params.feeRecipient.push(FEE_RECIPIENT);
+
+      // Mark the fee as marketplace fee
+      await FeeRecipients.getInstance().then((feeRecipients) =>
+        feeRecipients.create(FEE_RECIPIENT, "marketplace")
+      );
     }
   }
 };
@@ -98,11 +101,6 @@ export const validateOrderbookFee = async (
   apiKey = "",
   isReservoir?: boolean
 ) => {
-  // Only if enabled
-  if (!orderbookFeeEnabled) {
-    return;
-  }
-
   // Only native orders
   if (!isReservoir) {
     return;

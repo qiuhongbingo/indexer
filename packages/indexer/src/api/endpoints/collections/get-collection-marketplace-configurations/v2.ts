@@ -317,6 +317,19 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
                 Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId]
               ),
             },
+            mintify: {
+              orderKind: "mintify",
+              enabled: Boolean(Sdk.Mintify.Addresses.Exchange[config.chainId]),
+              customFeesSupported: true,
+              collectionBidSupported:
+                Number(collectionResult.token_count) <= config.maxTokenSetSize,
+              supportedBidCurrencies,
+              partialOrderSupported: true,
+              traitBidSupported: true,
+              oracleEnabled: Boolean(
+                Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId]
+              ),
+            },
             "payment-processor": {
               orderKind: "payment-processor",
               enabled: Boolean(Sdk.PaymentProcessor.Addresses.Exchange[config.chainId]),
@@ -398,43 +411,39 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
       // Handle Blur
       if (Sdk.Blur.Addresses.Beth[config.chainId]) {
         const royalties = await getOrUpdateBlurRoyalties(contract);
-        if (royalties) {
-          marketplaces.push({
-            name: "Blur",
-            domain: "blur.io",
-            imageUrl: `https://${getSubDomain()}.reservoir.tools/redirect/sources/blur.io/logo/v2`,
-            fee: {
-              bps: 0,
+        marketplaces.push({
+          name: "Blur",
+          domain: "blur.io",
+          imageUrl: `https://${getSubDomain()}.reservoir.tools/redirect/sources/blur.io/logo/v2`,
+          fee: {
+            bps: 0,
+          },
+          royalties: royalties
+            ? {
+                minBps: royalties.minimumRoyaltyBps,
+                // If the maximum royalty is not available for Blur, use the OpenSea one
+                maxBps:
+                  royalties.maximumRoyaltyBps ??
+                  marketplaces[marketplaces.length - 1].royalties?.maxBps,
+              }
+            : undefined,
+          orderbook: "blur",
+          exchanges: {
+            blur: {
+              orderKind: "blur",
+              enabled: false,
+              customFeesSupported: false,
+              minimumPrecision: "0.01",
+              minimumBidExpiry: 10 * 24 * 60 * 60,
+              supportedBidCurrencies: [
+                convertCurrencyToToken(await getCurrency(Sdk.Blur.Addresses.Beth[config.chainId])),
+              ],
+              partialOrderSupported: true,
+              traitBidSupported: false,
+              oracleEnabled: false,
             },
-            royalties: royalties
-              ? {
-                  minBps: royalties.minimumRoyaltyBps,
-                  // If the maximum royalty is not available for Blur, use the OpenSea one
-                  maxBps:
-                    royalties.maximumRoyaltyBps ??
-                    marketplaces[marketplaces.length - 1].royalties?.maxBps,
-                }
-              : undefined,
-            orderbook: "blur",
-            exchanges: {
-              blur: {
-                orderKind: "blur",
-                enabled: false,
-                customFeesSupported: false,
-                minimumPrecision: "0.01",
-                minimumBidExpiry: 10 * 24 * 60 * 60,
-                supportedBidCurrencies: [
-                  convertCurrencyToToken(
-                    await getCurrency(Sdk.Blur.Addresses.Beth[config.chainId])
-                  ),
-                ],
-                partialOrderSupported: true,
-                traitBidSupported: false,
-                oracleEnabled: false,
-              },
-            },
-          });
-        }
+          },
+        });
       }
 
       for await (const marketplace of marketplaces) {
@@ -450,6 +459,10 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
           }
           case 5: {
             supportedOrderbooks = ["reservoir", "opensea", "looks-rare", "x2y2"];
+            break;
+          }
+          case 81457: {
+            supportedOrderbooks = ["reservoir", "blur"];
             break;
           }
           case 10:
@@ -496,6 +509,11 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
 
                 case "seaport-v1.6": {
                   operators = [Sdk.SeaportV16.Addresses.Exchange[config.chainId], openseaConduit];
+                  break;
+                }
+
+                case "mintify": {
+                  operators = [Sdk.Mintify.Addresses.Exchange[config.chainId], openseaConduit];
                   break;
                 }
 

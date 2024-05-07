@@ -80,9 +80,9 @@ export async function extractRoyalties(
   const royaltyFeeOnTop: Royalty[] = [];
 
   const { txHash } = fillEvent.baseEventParams;
-  const { tokenId, contract, currency, price } = fillEvent;
+  const { tokenId, contract, currency } = fillEvent;
 
-  const currencyPrice = fillEvent.currencyPrice ?? price;
+  const currencyPrice = bn(fillEvent.currencyPrice ?? fillEvent.price).mul(bn(fillEvent.amount));
 
   // Fetch the current transaction's trace
   let txTrace: TransactionTrace | undefined;
@@ -569,7 +569,7 @@ export async function extractRoyalties(
         if (matchRangePayment && isReliable && hasMultiple) {
           royalty.bps = bn(matchRangePayment.amount)
             .mul(PRECISION_BASE)
-            .div(fillEvent.currencyPrice ?? fillEvent.price)
+            .div(currencyPrice)
             .toNumber();
         }
 
@@ -610,10 +610,7 @@ export async function extractRoyalties(
             (c) => c.recipient.toLowerCase() === address.toLowerCase()
           );
           if (feeItem) {
-            bps = bn(feeItem.amount)
-              .mul(PRECISION_BASE)
-              .div(fillEvent.currencyPrice ?? fillEvent.price)
-              .toNumber();
+            bps = bn(feeItem.amount).mul(PRECISION_BASE).div(currencyPrice).toNumber();
           } else {
             // Skip if not the in the fees
             continue;
@@ -683,10 +680,7 @@ export async function extractRoyalties(
         if (isInPayment) {
           const royalty = {
             recipient: missingInStateFee.recipient,
-            bps: bn(missingInStateFee.amount)
-              .mul(PRECISION_BASE)
-              .div(fillEvent.currencyPrice ?? fillEvent.price)
-              .toNumber(),
+            bps: bn(missingInStateFee.amount).mul(PRECISION_BASE).div(currencyPrice).toNumber(),
           };
 
           royaltyFeeBreakdown.push(royalty);

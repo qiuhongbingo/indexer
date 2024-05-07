@@ -101,7 +101,11 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
             return;
           } else if (![690, 17069].includes(config.chainId)) {
             metadata[0].imageUrl = null;
+            metadata[0].imageOriginalUrl = undefined;
           }
+        } else if (metadata[0].mediaUrl?.startsWith("data:")) {
+          metadata[0].mediaUrl = null;
+          metadata[0].animationOriginalUrl = undefined;
         }
 
         // if missing imageMimeType/mediaMimeTyp, we fallback to simplehash

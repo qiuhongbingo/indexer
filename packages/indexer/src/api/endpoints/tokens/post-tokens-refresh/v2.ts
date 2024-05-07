@@ -120,7 +120,7 @@ export const postTokensRefreshV2Options: RouteOptions = {
         }
 
         if (payload.liquidityOnly) {
-          return { message: "Request accepted" };
+          return { results: tokenRefreshResult };
         }
 
         // Non-liquidity checks (not cheap)

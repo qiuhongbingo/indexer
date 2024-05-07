@@ -83,6 +83,8 @@ export class FillUpdatesJob extends AbstractRabbitMqJobHandler {
             UPDATE tokens SET
               last_${orderSide}_timestamp = $/timestamp/,
               last_${orderSide}_value = $/price/,
+              last_sale_timestamp = $/timestamp/,
+              last_sale_value = $/price/,
               updated_at = now()
             WHERE contract = $/contract/
               AND token_id = $/tokenId/

@@ -95,6 +95,10 @@ export type GenericOrderInfo =
   | ({
       kind: "caviar-v1";
       info: orders.caviarV1.OrderInfo;
+    } & CommonOrderInfo)
+  | ({
+      kind: "mintify";
+      info: orders.mintify.OrderInfo;
     } & CommonOrderInfo);
 
 export const processOrder = async (job: AbstractRabbitMqJobHandler, payload: GenericOrderInfo) => {

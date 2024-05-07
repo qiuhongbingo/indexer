@@ -1562,6 +1562,12 @@ export const setupRoutes = (server: Server) => {
     options: transactionsEndpoints.getTransactionSyncedV1Options,
   });
 
+  server.route({
+    method: "GET",
+    path: "/transactions/synced/v2",
+    options: transactionsEndpoints.getTransactionSyncedV2Options,
+  });
+
   // Transfers
 
   server.route({

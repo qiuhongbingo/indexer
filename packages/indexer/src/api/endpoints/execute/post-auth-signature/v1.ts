@@ -65,7 +65,7 @@ export const postAuthSignatureV1Options: RouteOptions = {
               `${config.orderFetcherBaseUrl}/api/blur-auth?authChallenge=${JSON.stringify({
                 ...authChallenge,
                 signature: query.signature,
-              })}`
+              })}&chainId=${config.chainId}`
             )
             .then((response) => response.data);
 

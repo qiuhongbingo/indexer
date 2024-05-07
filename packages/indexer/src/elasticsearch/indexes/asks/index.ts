@@ -460,6 +460,12 @@ export const searchTokenAsks = async (
           },
         },
         {
+          "order.isReservoir": {
+            order: "desc",
+            missing: "0",
+          },
+        },
+        {
           contract: {
             order,
           },

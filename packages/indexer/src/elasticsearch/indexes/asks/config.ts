@@ -94,6 +94,7 @@ export const CONFIG_DEFAULT = {
             },
           },
           isDynamic: { type: "boolean" },
+          isReservoir: { type: "boolean" },
           rawData: { type: "flattened" },
           missingRoyalties: { type: "flattened" },
         },

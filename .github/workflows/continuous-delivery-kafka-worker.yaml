@@ -249,6 +249,11 @@ jobs:
           ./utils/version_update_batch.sh indexer-degen ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-degen.yaml
 
+          ./utils/version_update_batch.sh indexer-sei-testnet ${{ github.sha }} \
+            ./prod/platform/indexer-kafka-worker-sei-testnet.yaml
+
+          ./utils/version_update_batch.sh indexer-xai ${{ github.sha }} \
+            ./prod/platform/indexer-kafka-worker-xai.yaml
       - name: Post to Slack
         if: ${{ always() }}
         id: slack-deploy-prod

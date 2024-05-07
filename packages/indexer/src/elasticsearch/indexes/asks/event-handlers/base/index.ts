@@ -52,6 +52,7 @@ export abstract class BaseAskEventHandler {
       order_valid_until: Number(data.order_valid_until),
       order_kind: data.order_kind,
       order_dynamic: data.order_dynamic,
+      order_is_reservoir: data.order_is_reservoir,
       order_raw_data: data.order_raw_data,
       order_missing_royalties: data.order_missing_royalties,
     } as BuildAskDocumentData;

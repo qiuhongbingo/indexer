@@ -24,4 +24,22 @@ describe("Royalties", () => {
     const job = new FillPostProcessJob();
     await job.process(fillEvents);
   });
+
+  it("orderbook-fee-test", async () => {
+    // Sepolia
+    const { fillEvents } = await getFillEventsFromTx(
+      "0xd9d02e9915cfd5d86964a030afdcd135ca37a5ef4e2ae83f3fba6a1cc124e264"
+    );
+    const job = new FillPostProcessJob();
+    await job.process(fillEvents);
+  });
+
+  it("fill-event-debug", async () => {
+    // Polygon
+    const { fillEvents } = await getFillEventsFromTx(
+      "0x4b24e19df5444e2c51fe8170deaac4ba9c201357b9c0e50b61e36a13c8b2a9aa"
+    );
+    const job = new FillPostProcessJob();
+    await job.process(fillEvents);
+  });
 });

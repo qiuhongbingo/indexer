@@ -446,31 +446,28 @@ async function formatCollections(
             : null;
       }
 
-      let imageUrl = metadata?.imageUrl;
+      let imageUrl = metadata.metadata?.imageUrl;
+      const sampleImages = _.filter(
+        metadata?.sample_images,
+        (image) => !_.isNull(image) && _.startsWith(image, "http")
+      );
 
       if (imageUrl) {
         imageUrl = Assets.getResizedImageUrl(imageUrl, ImageSize.small, metadata.image_version);
-      } else if (metadata?.sample_images?.length) {
-        const sampleImages = _.filter(
-          metadata?.sample_images,
-          (image) => !_.isNull(image) && _.startsWith(image, "http")
+      } else if (sampleImages.length) {
+        imageUrl = Assets.getResizedImageUrl(
+          sampleImages[0],
+          ImageSize.small,
+          metadata.image_version
         );
-
-        if (sampleImages.length) {
-          imageUrl = Assets.getResizedImageUrl(
-            sampleImages[0],
-            ImageSize.small,
-            metadata.image_version
-          );
-        }
       }
 
       return {
         ...response,
         image: imageUrl,
         sampleImages:
-          metadata?.sample_images && metadata?.sample_images?.length > 0
-            ? Assets.getResizedImageURLs(metadata?.sample_images, undefined, metadata.image_version)
+          sampleImages.length > 0
+            ? Assets.getResizedImageURLs(sampleImages, undefined, metadata.image_version)
             : [],
         isSpam: Number(metadata.is_spam) > 0,
         openseaVerificationStatus: metadata?.metadata?.openseaVerificationStatus || null,

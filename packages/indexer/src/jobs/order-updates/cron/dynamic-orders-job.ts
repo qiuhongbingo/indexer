@@ -98,7 +98,14 @@ export default class OrderUpdatesDynamicOrderJob extends AbstractRabbitMqJobHand
       } of dynamicOrders) {
         if (
           !_.isNull(raw_data) &&
-          ["alienswap", "seaport", "seaport-v1.4", "seaport-v1.5", "seaport-v1.6"].includes(kind)
+          [
+            "alienswap",
+            "seaport",
+            "seaport-v1.4",
+            "seaport-v1.5",
+            "seaport-v1.6",
+            "mintify",
+          ].includes(kind)
         ) {
           const order = new Sdk.SeaportV11.Order(config.chainId, raw_data);
           const newCurrencyPrice = order.getMatchingPrice().toString();

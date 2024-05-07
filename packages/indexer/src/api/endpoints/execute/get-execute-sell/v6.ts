@@ -485,7 +485,9 @@ export const getExecuteSellV6Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(
