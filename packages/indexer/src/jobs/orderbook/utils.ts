@@ -3,6 +3,7 @@ import _ from "lodash";
 import { logger } from "@/common/logger";
 import { AbstractRabbitMqJobHandler } from "@/jobs/abstract-rabbit-mq-job-handler";
 import * as orders from "@/orderbook/orders";
+import { config } from "@/config/index";
 
 type CommonOrderInfo = {
   delayBeforeProcessing?: number;
@@ -215,6 +216,18 @@ export const processOrder = async (job: AbstractRabbitMqJobHandler, payload: Gen
   } catch (error) {
     logger.error(job.queueName, `Failed to process order ${JSON.stringify(payload)}: ${error}`);
     throw error;
+  }
+
+  if (kind === "blur-bid" || kind === "blur-listing") {
+    if (config.chainId === 81457) {
+      logger.info(
+        "blur-debug",
+        JSON.stringify({
+          result,
+          info,
+        })
+      );
+    }
   }
 
   if (_.random(100) <= 50) {
