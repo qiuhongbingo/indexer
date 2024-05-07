@@ -157,7 +157,6 @@ export const config = {
 
   blurWsApiKey: process.env.BLUR_WS_API_KEY,
   blurWsUrl: process.env.BLUR_WS_URL,
-  blurWsListingsUrl: process.env.BLUR_LISTINGS_WS_URL,
 
   orderFetcherBaseUrl: String(process.env.ORDER_FETCHER_BASE_URL),
 
