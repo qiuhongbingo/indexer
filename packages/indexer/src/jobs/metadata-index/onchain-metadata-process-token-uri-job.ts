@@ -114,6 +114,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           );
 
           metadata[0].mediaUrl = null;
+          metadata[0].animationOriginalUrl = undefined;
         }
 
         // if missing imageMimeType/mediaMimeTyp, we fallback to simplehash
