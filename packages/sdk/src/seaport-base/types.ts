@@ -129,6 +129,7 @@ export type OpenseaPartialOrder = {
   contract: string;
   tokenId: string;
   unitPrice?: string;
+  zone?: string;
 };
 
 export type OkxPartialOrder = {

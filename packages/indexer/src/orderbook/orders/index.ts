@@ -435,6 +435,7 @@ export const generateListingDetailsV6 = async (
             contract: token.contract,
             tokenId: token.tokenId,
             id: order.id,
+            zone: order.rawData.zone,
           } as Sdk.SeaportBase.Types.OpenseaPartialOrder,
         };
       } else {
