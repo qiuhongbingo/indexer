@@ -36,6 +36,9 @@ export const Router: ChainIdToAddress = {
   [Network.Garnet]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.Redstone]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.Amoy]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.Degen]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.SeiTestnet]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.Xai]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
 };
 
 // Approval proxy
@@ -72,6 +75,9 @@ export const ApprovalProxy: ChainIdToAddress = {
   [Network.Garnet]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
   [Network.Redstone]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
   [Network.Amoy]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
+  [Network.Degen]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
+  [Network.SeiTestnet]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
+  [Network.Xai]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
 };
 
 // Permit proxy
@@ -140,6 +146,8 @@ export const MintModule: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Garnet]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Redstone]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.Degen]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.Xai]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
 };
 
 export const DittoModule: ChainIdToAddress = {
@@ -209,6 +217,7 @@ export const SeaportV15Module: ChainIdToAddress = {
   [Network.ApexTestnet]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Garnet]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Redstone]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
+  [Network.Degen]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
 };
 
 export const AlienswapModule: ChainIdToAddress = {
@@ -322,4 +331,11 @@ export const SeaportV16Module: ChainIdToAddress = {
   [Network.Bsc]: "0xd8f24f5f0382e197c1e87ad82b357209383470cf",
   [Network.Zora]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
   [Network.Blast]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+  [Network.Xai]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+};
+
+export const MintifyModule = {
+  [Network.EthereumSepolia]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
+  [Network.BaseSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
+  [Network.BlastSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
 };

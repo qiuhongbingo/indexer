@@ -57,4 +57,7 @@ export const logger = {
   info: log("info"),
   warn: log("warn"),
   debug: log("debug"),
+  log(level: "error" | "info" | "warn" | "debug", component: string, message: string) {
+    return logger[level](component, message);
+  },
 };

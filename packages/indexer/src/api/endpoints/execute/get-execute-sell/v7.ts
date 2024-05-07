@@ -43,7 +43,7 @@ export const getExecuteSellV7Options: RouteOptions = {
   description: "Sell Tokens",
   notes:
     "Use this API to accept bids. We recommend using the SDK over this API as the SDK will iterate through the steps and return callbacks. Please mark `excludeEOA` as `true` to exclude Blur orders.",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   timeout: {
     server: 40 * 1000,
   },
@@ -80,6 +80,7 @@ export const getExecuteSellV7Options: RouteOptions = {
                   "seaport-v1.4",
                   "seaport-v1.5",
                   "seaport-v1.6",
+                  "mintify",
                   "x2y2",
                   "rarible",
                   "sudoswap",
@@ -1181,7 +1182,9 @@ export const getExecuteSellV7Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(

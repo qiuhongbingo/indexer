@@ -37,7 +37,7 @@ const version = "v4";
 export const getExecuteListV4Options: RouteOptions = {
   description: "Create ask (listing)",
   notes: "Generate a listing and submit it to multiple marketplaces",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

@@ -28,7 +28,7 @@ const version = "v6";
 
 export const getExecuteSellV6Options: RouteOptions = {
   description: "Sell tokens (accept bids)",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   timeout: {
     server: 40 * 1000,
   },
@@ -485,7 +485,9 @@ export const getExecuteSellV6Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(

@@ -18,7 +18,7 @@ export const getFlaggedTokensChangesV1Options: RouteOptions = {
   description: "Flagged Tokens",
   notes:
     "This API return the recent flagged/un-flagged tokens across all collections sorted by change time",
-  tags: ["api", "Tokens"],
+  tags: ["api", "Tokens", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 10,

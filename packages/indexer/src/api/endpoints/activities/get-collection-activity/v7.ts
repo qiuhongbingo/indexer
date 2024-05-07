@@ -37,7 +37,7 @@ export const getCollectionActivityV7Options: RouteOptions = {
   description: "Collection activity",
   notes:
     "This API can be used to build a feed for a collection including sales, asks, transfers, mints, bids, cancelled bids, and cancelled asks types.",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   timeout: {
     server: 20 * 1000,
   },

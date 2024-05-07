@@ -75,6 +75,7 @@ export class AskCreatedEventHandler extends BaseAskEventHandler {
               orders.taker AS "order_taker",
               orders.kind AS "order_kind",
               orders.dynamic AS "order_dynamic",
+              orders.is_reservoir AS "order_is_reservoir",
               orders.raw_data AS "order_raw_data",
               orders.missing_royalties AS "order_missing_royalties",
               DATE_PART('epoch', LOWER(orders.valid_between)) AS "order_valid_from",

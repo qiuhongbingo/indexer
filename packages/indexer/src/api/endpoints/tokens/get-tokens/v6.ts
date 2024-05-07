@@ -45,7 +45,7 @@ export const getTokensV6Options: RouteOptions = {
   description: "Tokens",
   notes:
     "Get a list of tokens with full metadata. This is useful for showing a single token page, or scenarios that require more metadata.",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 9,
@@ -1819,6 +1819,7 @@ export const getListedTokensFromES = async (query: any, attributeFloorAskPriceAs
     limit: query.limit,
     continuation: query.continuation,
     sources: query.sources,
+    sortBy: query.sortBy,
     sortDirection: query.sortDirection,
   });
 

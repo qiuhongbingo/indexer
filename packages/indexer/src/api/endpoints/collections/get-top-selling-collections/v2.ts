@@ -30,7 +30,7 @@ export const getTopSellingCollectionsV2Options: RouteOptions = {
   },
   description: "Top selling collections",
   notes: "Get top selling and minting collections",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,

@@ -16,7 +16,7 @@ const version = "v1";
 export const getCollectionBidsV1Options: RouteOptions = {
   description: "Collection Bids (offers)",
   notes: "Get a list of bids (offers), filtered by collection.",
-  tags: ["api", "Collections"],
+  tags: ["api", "Collections", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 5,
@@ -79,7 +79,7 @@ export const getCollectionBidsV1Options: RouteOptions = {
     (query as any).collectionId = request.params.collectionId;
 
     try {
-      const criteriaBuildQuery = Orders.buildCriteriaQuery(
+      const criteriaBuildQuery = Orders.buildCriteriaQueryV2(
         "orders",
         "token_set_id",
         query.includeCriteriaMetadata,
@@ -153,6 +153,7 @@ export const getCollectionBidsV1Options: RouteOptions = {
       const conditions: string[] = [
         `orders.side = 'buy'`,
         `orders.fillability_status = 'fillable' AND orders.approval_status = 'approved'`,
+        `orders.taker = '\\x0000000000000000000000000000000000000000' OR orders.taker IS NULL`,
       ];
 
       const [contract] = query.collectionId.split(":");
@@ -286,6 +287,7 @@ export const getCollectionBidsV1Options: RouteOptions = {
             includeRawData: query.includeRawData,
             includeDepth: query.includeDepth,
             displayCurrency: query.displayCurrency,
+            resizeImageUrl: query.includeCriteriaMetadata,
           }
         )
       );

@@ -50,6 +50,7 @@ import * as onChainData from "@/utils/on-chain-data";
 import { getEphemeralPermitId, getEphemeralPermit, saveEphemeralPermit } from "@/utils/permits";
 import { getPreSignatureId, getPreSignature, savePreSignature } from "@/utils/pre-signatures";
 import { getUSDAndCurrencyPrices } from "@/utils/prices";
+import { isOrderNativeOffChainCancellable } from "@/utils/offchain-cancel";
 
 const version = "v7";
 
@@ -57,7 +58,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
   description: "Buy Tokens",
   notes:
     "Use this API to fill listings. We recommend using the SDK over this API as the SDK will iterate through the steps and return callbacks. Please mark `excludeEOA` as `true` to exclude Blur orders.",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   timeout: {
     server: 40 * 1000,
   },
@@ -87,6 +88,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                   "seaport-v1.4",
                   "seaport-v1.5",
                   "seaport-v1.6",
+                  "mintify",
                   "x2y2",
                   "rarible",
                   "sudoswap",
@@ -285,6 +287,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
           // TODO: Remove, only kept for backwards-compatibility reasons
           fromChainId: Joi.number().description("Chain id buying from"),
           gasCost: Joi.string().pattern(regex.number),
+          isNativeOffChainCancellable: Joi.boolean().allow(null),
         })
       ),
       maxQuantities: Joi.array().items(
@@ -351,6 +354,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
         // TODO: To remove, only kept for backwards-compatibility reasons
         gasCost?: string;
         fromChainId?: number;
+        isNativeOffChainCancellable: boolean | null;
       }[] = [];
 
       const key = request.headers["x-api-key"];
@@ -407,6 +411,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
           rawData: object;
           builtInFees: { kind: string; recipient: string; bps: number }[];
           additionalFees?: Sdk.RouterV6.Types.Fee[];
+          isNativeOffChainCancellable: boolean | null;
         },
         token: {
           kind: "erc721" | "erc1155";
@@ -495,6 +500,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
               rawAmount,
             };
           }),
+          isNativeOffChainCancellable: order.isNativeOffChainCancellable,
           feesOnTop: [
             // For now, the only additional fees are the normalized royalties
             ...additionalFees.map((f) => ({
@@ -685,6 +691,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                   rawData: {},
                   builtInFees: [],
                   additionalFees: [],
+                  isNativeOffChainCancellable: null,
                 },
                 {
                   kind: collectionData.token_kind,
@@ -720,6 +727,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                 currency: Sdk.Common.Addresses.Native[config.chainId],
                 rawData: order.data,
                 builtInFees: [],
+                isNativeOffChainCancellable: isOrderNativeOffChainCancellable(order.data),
               },
               {
                 kind: "erc721",
@@ -866,6 +874,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
               rawData: result.raw_data,
               builtInFees: result.fee_breakdown,
               additionalFees: result.missing_royalties,
+              isNativeOffChainCancellable: isOrderNativeOffChainCancellable(result.raw_data),
             },
             {
               kind: result.token_kind,
@@ -961,6 +970,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                           rawData: {},
                           builtInFees: [],
                           additionalFees: [],
+                          isNativeOffChainCancellable: null,
                         },
                         {
                           kind: collectionData.token_kind,
@@ -1192,6 +1202,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                           rawData: {},
                           builtInFees: [],
                           additionalFees: [],
+                          isNativeOffChainCancellable: null,
                         },
                         {
                           kind: collectionData.token_kind,
@@ -1375,6 +1386,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
                   rawData: result.raw_data,
                   builtInFees: result.fee_breakdown,
                   additionalFees: result.missing_royalties,
+                  isNativeOffChainCancellable: isOrderNativeOffChainCancellable(result.raw_data),
                 },
                 {
                   kind: result.token_kind,
@@ -1568,13 +1580,16 @@ export const getExecuteBuyV7Options: RouteOptions = {
           source: payload.source,
         };
 
-        const { requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
+        const { txData, requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
           .post(`${config.crossChainSolverBaseUrl}/intents/quote`, data, {
-            headers: {
-              origin: request.headers["origin"],
-            },
+            headers: request.headers["origin"]
+              ? {
+                  origin: request.headers["origin"],
+                }
+              : undefined,
           })
           .then((response) => ({
+            txData: response.data.txData,
             requestId: response.data.requestId,
             shortRequestId: response.data.shortRequestId,
             price: response.data.price,
@@ -1596,6 +1611,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
         }
 
         return {
+          txData,
           requestId,
           shortRequestId,
           request: data.request,
@@ -2023,10 +2039,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
           status: "incomplete",
           data: {
             from: payload.taker,
-            to: data.solver.address,
-            data: data.shortRequestId,
-            value: bn(cost).toString(),
-            gasLimit: 22000,
+            ...data.txData,
             chainId: payload.currencyChainId,
           },
           check: {
@@ -2071,7 +2084,9 @@ export const getExecuteBuyV7Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(
@@ -2278,36 +2293,39 @@ export const getExecuteBuyV7Options: RouteOptions = {
         // - all minted tokens have the taker as the final owner (eg. nothing gets stuck in the router / module)
 
         let safeToUse = true;
-        for (const { txData, approvals } of mintsResult.txs) {
-          // ERC20 mints (which will have a corresponding approval) need to be minted directly
-          if (approvals.length) {
-            safeToUse = false;
-            continue;
-          }
+        if (mintsResult.viaRouter) {
+          for (const { txData, approvals } of mintsResult.txs) {
+            // ERC20 mints (which will have a corresponding approval) need to be minted directly
+            if (approvals.length) {
+              safeToUse = false;
+              continue;
+            }
 
-          const events = await getNFTTransferEvents(txData);
-          if (!events.length) {
-            // At least one successful mint
-            safeToUse = false;
-          } else {
-            // Every token landed in the taker's wallet
-            const uniqueTokens = [
-              ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
-            ].map((t) => t.split(":"));
-            for (const [contract, tokenId] of uniqueTokens) {
-              if (
-                !events.find(
-                  (e) => e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
-                )
-              ) {
-                safeToUse = false;
-                break;
+            const events = await getNFTTransferEvents(txData);
+            if (!events.length) {
+              // At least one successful mint
+              safeToUse = false;
+            } else {
+              // Every token landed in the taker's wallet
+              const uniqueTokens = [
+                ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
+              ].map((t) => t.split(":"));
+              for (const [contract, tokenId] of uniqueTokens) {
+                if (
+                  !events.find(
+                    (e) =>
+                      e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
+                  )
+                ) {
+                  safeToUse = false;
+                  break;
+                }
               }
             }
           }
         }
 
-        if (!safeToUse) {
+        if (mintsResult.viaRouter && !safeToUse) {
           if (payload.relayer) {
             throw Boom.badRequest("Relayer not supported for requested mints");
           }

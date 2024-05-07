@@ -35,6 +35,7 @@ export const postOrdersV1Options: RouteOptions = {
               "seaport-v1.4",
               "seaport-v1.5",
               "seaport-v1.6",
+              "mintify",
               "element",
               "rarible",
               "manifold",

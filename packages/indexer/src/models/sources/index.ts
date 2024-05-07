@@ -680,6 +680,36 @@ export class Sources {
 
         return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
       }
+    } else if (config.chainId == 666666666) {
+      if (sourceEntity.metadata.tokenUrlDegen && contract && tokenId) {
+        sourceEntity.metadata.url = _.replace(
+          sourceEntity.metadata.tokenUrlDegen,
+          "${contract}",
+          contract
+        );
+
+        return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
+      }
+    } else if (config.chainId == 713715) {
+      if (sourceEntity.metadata.tokenUrlSeiTestnet && contract && tokenId) {
+        sourceEntity.metadata.url = _.replace(
+          sourceEntity.metadata.tokenUrlSeiTestnet,
+          "${contract}",
+          contract
+        );
+
+        return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
+      }
+    } else if (config.chainId == 660279) {
+      if (sourceEntity.metadata.tokenUrlXai && contract && tokenId) {
+        sourceEntity.metadata.url = _.replace(
+          sourceEntity.metadata.tokenUrlXai,
+          "${contract}",
+          contract
+        );
+
+        return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
+      }
     } else {
       if (sourceEntity.metadata.tokenUrlGoerli && contract && tokenId) {
         sourceEntity.metadata.url = _.replace(

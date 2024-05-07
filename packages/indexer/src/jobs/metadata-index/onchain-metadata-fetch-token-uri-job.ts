@@ -107,6 +107,9 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
               contract: result.contract,
               error: result.error,
               reason: "No uri found",
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                result.contract
+              ),
             })
           );
 
@@ -134,6 +137,8 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
                     message: `Skip Fallback Error. contract=${result.contract}, tokenId=${result.tokenId}, uri=${result.uri}, error=${error}`,
                     result,
                     error,
+                    debugMetadataIndexingCollection:
+                      config.debugMetadataIndexingCollections.includes(result.contract),
                   })
                 );
               }
@@ -158,11 +163,17 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
 
       if (tokensToProcess.length) {
         for (const tokenToProcess of tokensToProcess) {
-          logger.debug(
+          logger.log(
+            config.debugMetadataIndexingCollections.includes(tokenToProcess.contract)
+              ? "info"
+              : "debug",
             this.queueName,
             JSON.stringify({
               topic: "tokenMetadataIndexing",
               message: `onchainMetadataProcessTokenUriJob. contract=${tokenToProcess.contract}, tokenId=${tokenToProcess.tokenId}, uri=${tokenToProcess.uri}, error=${tokenToProcess.error}`,
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                tokenToProcess.contract
+              ),
             })
           );
         }

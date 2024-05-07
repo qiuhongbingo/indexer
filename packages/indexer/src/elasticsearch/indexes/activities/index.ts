@@ -13,7 +13,7 @@ import { SortResults } from "@elastic/elasticsearch/lib/api/typesWithBodyKey";
 import { logger } from "@/common/logger";
 import { CollectionsEntity } from "@/models/collections/collections-entity";
 
-import { acquireLock, redis } from "@/common/redis";
+import { acquireLock } from "@/common/redis";
 import {
   ActivityDocument,
   ActivityType,
@@ -330,7 +330,7 @@ export const getTopSellingCollections = async (params: {
         must_not: [
           {
             terms: {
-              "collection.id": trendingExcludedContracts,
+              contract: trendingExcludedContracts,
             },
           },
         ],
@@ -456,6 +456,11 @@ export const getTrendingMints = async (params: {
               term: {
                 ["event.collectionIsMinting"]: true,
               },
+            },
+          ],
+          must_not: [
+            {
+              term: { "collection.isSpam": true },
             },
           ],
         },
@@ -726,9 +731,6 @@ export const getTopSellingCollectionsV2 = async (params: {
   const { startTime, fillType, limit, sortBy } = params;
 
   const { trendingExcludedContracts } = getNetworkSettings();
-  const spamCollectionsCache = await redis.get("active-spam-collection-ids");
-  const spamCollections = spamCollectionsCache ? JSON.parse(spamCollectionsCache) : [];
-  const excludedCollections = spamCollections.concat(trendingExcludedContracts || []);
 
   const salesQuery = {
     bool: {
@@ -755,11 +757,16 @@ export const getTopSellingCollectionsV2 = async (params: {
             "event.washTradingScore": 1,
           },
         },
-        ...(excludedCollections.length > 0
+        {
+          term: {
+            "collection.isSpam": true,
+          },
+        },
+        ...(trendingExcludedContracts.length > 0
           ? [
               {
                 terms: {
-                  "collection.id": excludedCollections,
+                  "collection.id": trendingExcludedContracts,
                 },
               },
             ]

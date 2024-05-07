@@ -80,12 +80,16 @@ export abstract class AbstractBaseMetadataProvider {
     // extend metadata
     const extendedMetadata = await Promise.all(
       allMetadata.map(async (metadata) => {
-        logger.debug(
+        logger.log(
+          config.debugMetadataIndexingCollections.includes(metadata.contract) ? "info" : "debug",
           "getTokensMetadata",
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `_getTokensMetadata. contract=${metadata.contract}, tokenId=${metadata.tokenId}, method=${this.method}`,
             metadata: JSON.stringify(metadata),
+            debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+              metadata.contract
+            ),
           })
         );
 
@@ -114,13 +118,19 @@ export abstract class AbstractBaseMetadataProvider {
               metadata.tokenId
             );
 
-            logger.debug(
+            logger.log(
+              config.debugMetadataIndexingCollections.includes(metadata.contract)
+                ? "info"
+                : "debug",
               "getTokensMetadata",
               JSON.stringify({
                 topic: "tokenMetadataIndexing",
                 message: `_getImageMimeType. contract=${metadata.contract}, tokenId=${metadata.tokenId}, method=${this.method}, imageMimeType=${metadata.imageMimeType}`,
                 metadata: JSON.stringify(metadata),
                 _getImageMimeTypeStartLatency: Date.now() - _getImageMimeTypeStart,
+                debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                  metadata.contract
+                ),
               })
             );
 
@@ -136,6 +146,9 @@ export abstract class AbstractBaseMetadataProvider {
                   message: `Missing image mime type. contract=${metadata.contract}, tokenId=${metadata.tokenId}, imageUrl=${metadata.imageUrl}`,
                   metadata: JSON.stringify(metadata),
                   method: this.method,
+                  debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                    metadata.contract
+                  ),
                 })
               );
             }
@@ -163,6 +176,9 @@ export abstract class AbstractBaseMetadataProvider {
                   metadata: JSON.stringify(metadata),
                   method: this.method,
                   _getImageMimeTypeStartLatency: Date.now() - _getImageMimeTypeStart,
+                  debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                    metadata.contract
+                  ),
                 })
               );
             }
@@ -277,6 +293,8 @@ export abstract class AbstractBaseMetadataProvider {
                     message: `Fallback Error. contract=${contract}, tokenId=${tokenId}, url=${_url}, ipfsGatewayUrl=${ipfsGatewayUrl}, error=${error}, fallbackError=${fallbackError}`,
                     error,
                     fallbackError,
+                    debugMetadataIndexingCollection:
+                      config.debugMetadataIndexingCollections.includes(contract),
                   })
                 );
               });
@@ -287,6 +305,8 @@ export abstract class AbstractBaseMetadataProvider {
                 topic: "tokenMetadataIndexing",
                 message: `Error. contract=${contract}, tokenId=${tokenId}, url=${_url}, error=${error}`,
                 error,
+                debugMetadataIndexingCollection:
+                  config.debugMetadataIndexingCollections.includes(contract),
               })
             );
           }

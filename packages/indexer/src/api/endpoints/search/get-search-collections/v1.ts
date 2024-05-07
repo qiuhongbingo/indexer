@@ -21,7 +21,7 @@ export const getSearchCollectionsV1Options: RouteOptions = {
     expiresIn: 10000,
   },
   description: "Search collections",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 3,

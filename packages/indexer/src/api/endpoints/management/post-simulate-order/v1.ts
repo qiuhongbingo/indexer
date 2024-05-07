@@ -28,7 +28,7 @@ const version = "v1";
 
 export const postSimulateOrderV1Options: RouteOptions = {
   description: "Simulate any given order",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,
@@ -213,7 +213,7 @@ export const postSimulateOrderV1Options: RouteOptions = {
 
         const blurPrice = await axios
           .get(
-            `${config.orderFetcherBaseUrl}/api/blur-token?contract=${contract}&tokenId=${tokenId}`
+            `${config.orderFetcherBaseUrl}/api/blur-token?contract=${contract}&tokenId=${tokenId}&chainId=${config.chainId}`
           )
           .then((response) =>
             response.data.blurPrice
@@ -327,7 +327,9 @@ export const postSimulateOrderV1Options: RouteOptions = {
           let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
           if (!blurAuthChallenge) {
             blurAuthChallenge = (await axios
-              .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${taker}`)
+              .get(
+                `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${taker}&chainId=${config.chainId}`
+              )
               .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
             await b.saveAuthChallenge(blurAuthChallengeId, blurAuthChallenge, 60);

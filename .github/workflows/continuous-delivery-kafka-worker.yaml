@@ -189,9 +189,6 @@ jobs:
           ./utils/version_update_batch.sh indexer-mainnet ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-mainnet.yaml
 
-          ./utils/version_update_batch.sh indexer-mumbai ${{ github.sha }} \
-            ./prod/platform/indexer-kafka-worker-mumbai.yaml
-
           ./utils/version_update_batch.sh indexer-opbnb ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-opbnb.yaml
 
@@ -236,19 +233,27 @@ jobs:
 
           ./utils/version_update_batch.sh indexer-apex-testnet ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-apex-testnet.yaml
-          
+
           ./utils/version_update_batch.sh indexer-berachain-testnet ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-berachain-testnet.yaml
-          
+
           ./utils/version_update_batch.sh indexer-garnet ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-garnet.yaml
-          
+
           ./utils/version_update_batch.sh indexer-redstone ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-redstone.yaml
 
           ./utils/version_update_batch.sh indexer-amoy ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-amoy.yaml
 
+          ./utils/version_update_batch.sh indexer-degen ${{ github.sha }} \
+            ./prod/platform/indexer-kafka-worker-degen.yaml
+
+          ./utils/version_update_batch.sh indexer-sei-testnet ${{ github.sha }} \
+            ./prod/platform/indexer-kafka-worker-sei-testnet.yaml
+
+          ./utils/version_update_batch.sh indexer-xai ${{ github.sha }} \
+            ./prod/platform/indexer-kafka-worker-xai.yaml
       - name: Post to Slack
         if: ${{ always() }}
         id: slack-deploy-prod

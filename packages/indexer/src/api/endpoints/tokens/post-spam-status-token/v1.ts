@@ -19,7 +19,7 @@ const version = "v1";
 export const postSpamStatusTokenV1Options: RouteOptions = {
   description: "Update the tokens spam status",
   notes: "This API can be used by allowed API keys to update the spam status of a token.",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,

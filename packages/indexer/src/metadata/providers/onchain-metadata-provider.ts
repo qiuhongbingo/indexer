@@ -40,7 +40,6 @@ const erc1155Interface = new ethers.utils.Interface([
 
 export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
   method = "onchain";
-  disableWarnLogging = true;
 
   // get metadata methods
 
@@ -60,7 +59,8 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
 
           const getTokenMetadataFromURILatency = Date.now() - getTokenMetadataFromURIStart;
 
-          logger.debug(
+          logger.log(
+            config.debugMetadataIndexingCollections.includes(token.contract) ? "info" : "debug",
             "_getTokensMetadata",
             JSON.stringify({
               topic: "tokenMetadataIndexing",
@@ -68,6 +68,10 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
               metadata: JSON.stringify(metadata),
               getTokenMetadataFromURILatency,
               error,
+              isSuccess: !!metadata,
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                token.contract
+              ),
             })
           );
 
@@ -102,7 +106,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
         return this.parseToken(token);
       });
     } catch (error) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(tokens[0].contract)) {
         logger.warn(
           "onchain-fetcher",
           JSON.stringify({
@@ -190,10 +194,19 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
     const [batch, error] = await this.sendBatch(encodedTokens);
 
     if (error) {
-      if (!this.disableWarnLogging) {
+      if (
+        config.debugMetadataIndexingCollections.some((collection) =>
+          tokenData.map((token) => token.contract).includes(collection)
+        )
+      ) {
         logger.warn(
           "onchain-fetcher",
-          `fetchTokens sendBatch error. error: ${JSON.stringify(error)}`
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `fetchTokens sendBatch error. errorStatus=${error.status}`,
+            error,
+            debugMetadataIndexingCollection: true,
+          })
         );
       }
 
@@ -243,17 +256,18 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
             uri,
           };
         } catch (error) {
-          if (!this.disableWarnLogging) {
+          if (config.debugMetadataIndexingCollections.includes(idToToken[token.id].contract)) {
             logger.warn(
               "onchain-fetcher",
               JSON.stringify({
-                topic: "fetchTokensError",
-                message: `Could not fetch tokenURI.  contract=${
+                topic: "tokenMetadataIndexing",
+                message: `_getTokensMetadataUri. Could not fetch tokenURI.  contract=${
                   idToToken[token.id].contract
                 }, tokenId=${idToToken[token.id].tokenId}, error=${error}`,
                 contract: idToToken[token.id].contract,
                 tokenId: idToToken[token.id].tokenId,
                 error,
+                debugMetadataIndexingCollection: true,
               })
             );
           }
@@ -304,14 +318,15 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
         name: collectionName,
       });
     } catch (error) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(contract)) {
         logger.warn(
           "onchain-fetcher",
           JSON.stringify({
-            topic: "fetchCollectionError",
-            message: `Could not fetch collection.  contract=${contract}, error=${error}`,
+            topic: "tokenMetadataIndexing",
+            message: `_getCollectionMetadata. Could not fetch collection.  contract=${contract}, error=${error}`,
             contract,
             error,
+            debugMetadataIndexingCollection: true,
           })
         );
       }
@@ -354,7 +369,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       });
     }
 
-    return {
+    const parsedMetadata = {
       contract: metadata.contract,
       slug: null,
       tokenURI: metadata.uri,
@@ -383,6 +398,21 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       })),
       decimals: metadata?.decimals ? parseInt(metadata.decimals) : undefined,
     };
+
+    if (config.debugMetadataIndexingCollections.includes(metadata.contract)) {
+      logger.info(
+        "onchain-fetcher",
+        JSON.stringify({
+          topic: "tokenMetadataIndexing",
+          message: `_parseToken. contract=${metadata.contract}, tokenId=${metadata.tokenId}`,
+          debugMetadataIndexingCollection: true,
+          metadata: JSON.stringify(metadata),
+          parsedMetadata: JSON.stringify(parsedMetadata),
+        })
+      );
+    }
+
+    return parsedMetadata;
   }
 
   parseCollection(metadata: any): CollectionMetadata {
@@ -452,10 +482,14 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
         return "ERC1155";
       }
     } catch (error) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(contractAddress)) {
         logger.error(
           "onchain-fetcher",
-          `detectTokenStandard error. contractAddress:${contractAddress}, error:${error}`
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `detectTokenStandard error. contractAddress=${contractAddress}, error=${error}`,
+            debugMetadataIndexingCollection: true,
+          })
         );
       }
     }
@@ -485,10 +519,14 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
         contract: token.contract,
       };
     } catch (error) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(token.contract)) {
         logger.warn(
           "onchain-fetcher",
-          `encodeTokenERC721 error. contractAddress:${token.contract}, tokenId:${token.tokenId}, error:${error}`
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `encodeTokenERC721 error. contractAddress=${token.contract}, tokenId=${token.tokenId}, error=${error}`,
+            debugMetadataIndexingCollection: true,
+          })
         );
       }
 
@@ -518,10 +556,14 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
         contract: token.contract,
       };
     } catch (error) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(token.contract)) {
         logger.warn(
           "onchain-fetcher",
-          `encodeTokenERC1155 error. contractAddress:${token.contract}, tokenId:${token.tokenId}, error:${error}`
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `encodeTokenERC1155 error. contractAddress=${token.contract}, tokenId=${token.tokenId}, error=${error}`,
+            debugMetadataIndexingCollection: true,
+          })
         );
       }
 
@@ -543,10 +585,14 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       const name = await contract.name();
       return name;
     } catch (e) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(contractAddress)) {
         logger.warn(
           "onchain-fetcher",
-          `getContractName error. contractAddress:${contractAddress}, error:${e}`
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `getContractName error. contractAddress=${contractAddress}, error=${e}`,
+            debugMetadataIndexingCollection: true,
+          })
         );
       }
 
@@ -583,10 +629,14 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
 
       return json;
     } catch (e) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(contractAddress)) {
         logger.warn(
           "onchain-fetcher",
-          `getContractURI error. contractAddress:${contractAddress}, error:${e}`
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `getContractURI error. contractAddress:${contractAddress}, error:${e}`,
+            debugMetadataIndexingCollection: true,
+          })
         );
       }
 
@@ -637,9 +687,13 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       const json = JSON.parse(body);
       return [json, null];
     } catch (e: any) {
-      if (!this.disableWarnLogging) {
-        logger.warn("onchain-fetcher", `sendBatch error. error:${JSON.stringify(e)}`);
-      }
+      logger.warn(
+        "onchain-fetcher",
+        JSON.stringify({
+          topic: "tokenMetadataIndexing",
+          message: `sendBatch error. error:${JSON.stringify(e)}`,
+        })
+      );
 
       return [
         null,
@@ -730,15 +784,17 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
         .then((res) => handleTokenUriResponse(contract, tokenId, res))
         .catch((error) => handleTokenUriErrorResponse(contract, tokenId, error));
     } catch (error) {
-      if (!this.disableWarnLogging) {
+      if (config.debugMetadataIndexingCollections.includes(contract)) {
         logger.warn(
           "onchain-fetcher",
           JSON.stringify({
+            topic: "tokenMetadataIndexing",
             message: `getTokenMetadataFromURI error. contract=${contract}, tokenId=${tokenId}`,
             contract,
             tokenId,
             uri,
             error,
+            debugMetadataIndexingCollection: true,
           })
         );
       }

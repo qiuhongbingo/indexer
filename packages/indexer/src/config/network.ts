@@ -111,6 +111,15 @@ export const getNetworkName = () => {
     case 690:
       return "redstone";
 
+    case 666666666:
+      return "degen";
+
+    case 713715:
+      return "sei-testnet";
+
+    case 660279:
+      return "xai";
+
     default:
       return "unknown";
   }
@@ -2012,6 +2021,111 @@ export const getNetworkSettings = (): NetworkSettings => {
                   'ETH',
                   18,
                   '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Degen
+    case 666666666: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: true,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        coingecko: {
+          networkId: "degen",
+        },
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Degen',
+                  'DEGEN',
+                  18,
+                  '{"coingeckoCurrencyId": "degen-base", "image": "https://assets.coingecko.com/coins/images/34515/large/android-chrome-512x512.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Sei Testnet
+    case 713715: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: true,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        coingecko: {
+          networkId: "sei-network",
+        },
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Sei',
+                  'SEI',
+                  18,
+                  '{"coingeckoCurrencyId": "sei-network", "image": "https://assets.coingecko.com/coins/images/28205/large/Sei_Logo_-_Transparent.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Xai
+    case 660279: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: false,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        coingecko: {
+          networkId: "xai",
+        },
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Xai',
+                  'XAI',
+                  18,
+                  '{"coingeckoCurrencyId": "xai-blockchain", "image": "https://assets.coingecko.com/coins/images/34258/large/2024-01-09_16.31.28.jpg"}'
                 ) ON CONFLICT DO NOTHING
               `
             ),

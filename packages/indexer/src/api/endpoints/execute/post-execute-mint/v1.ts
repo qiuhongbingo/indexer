@@ -35,7 +35,7 @@ export const postExecuteMintV1Options: RouteOptions = {
   description: "Mint Tokens",
   notes:
     "Use this API to mint tokens. We recommend using the SDK over this API as the SDK will iterate through the steps and return callbacks.",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   timeout: {
     server: 40 * 1000,
   },
@@ -830,13 +830,16 @@ export const postExecuteMintV1Options: RouteOptions = {
           source: payload.source,
         };
 
-        const { requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
+        const { txData, requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
           .post(`${config.crossChainSolverBaseUrl}/intents/quote`, data, {
-            headers: {
-              origin: request.headers["origin"],
-            },
+            headers: request.headers["origin"]
+              ? {
+                  origin: request.headers["origin"],
+                }
+              : undefined,
           })
           .then((response) => ({
+            txData: response.data.txData,
             requestId: response.data.requestId,
             shortRequestId: response.data.shortRequestId,
             price: response.data.price,
@@ -858,6 +861,7 @@ export const postExecuteMintV1Options: RouteOptions = {
         }
 
         return {
+          txData,
           requestId,
           shortRequestId,
           request: data.request,
@@ -1001,10 +1005,7 @@ export const postExecuteMintV1Options: RouteOptions = {
           status: "incomplete",
           data: {
             from: payload.taker,
-            to: data.solver.address,
-            data: data.shortRequestId,
-            value: bn(cost).toString(),
-            gasLimit: 22000,
+            ...data.txData,
             chainId: payload.currencyChainId,
           },
           check: {
@@ -1060,30 +1061,32 @@ export const postExecuteMintV1Options: RouteOptions = {
       const perfTime1 = performance.now();
 
       let safeToUse = true;
-      for (const { txData, approvals } of mintsResult.txs) {
-        // ERC20 mints (which will have a corresponding approval) need to be minted directly
-        if (approvals.length) {
-          safeToUse = false;
-          continue;
-        }
+      if (mintsResult.viaRouter) {
+        for (const { txData, approvals } of mintsResult.txs) {
+          // ERC20 mints (which will have a corresponding approval) need to be minted directly
+          if (approvals.length) {
+            safeToUse = false;
+            continue;
+          }
 
-        const events = await getNFTTransferEvents(txData);
-        if (!events.length) {
-          // At least one successful mint
-          safeToUse = false;
-        } else {
-          // Every token landed in the taker's wallet
-          const uniqueTokens = [
-            ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
-          ].map((t) => t.split(":"));
-          for (const [contract, tokenId] of uniqueTokens) {
-            if (
-              !events.find(
-                (e) => e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
-              )
-            ) {
-              safeToUse = false;
-              break;
+          const events = await getNFTTransferEvents(txData);
+          if (!events.length) {
+            // At least one successful mint
+            safeToUse = false;
+          } else {
+            // Every token landed in the taker's wallet
+            const uniqueTokens = [
+              ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
+            ].map((t) => t.split(":"));
+            for (const [contract, tokenId] of uniqueTokens) {
+              if (
+                !events.find(
+                  (e) => e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
+                )
+              ) {
+                safeToUse = false;
+                break;
+              }
             }
           }
         }
@@ -1103,7 +1106,7 @@ export const postExecuteMintV1Options: RouteOptions = {
         );
       }
 
-      if (!safeToUse) {
+      if (mintsResult.viaRouter && !safeToUse) {
         if (payload.relayer) {
           throw Boom.badRequest("Relayer not supported for requested mints");
         }

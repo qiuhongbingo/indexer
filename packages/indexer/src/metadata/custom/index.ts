@@ -7,6 +7,7 @@ import * as bridgeToBase from "./bridge-to-base";
 import * as mintTest from "./mint-test";
 import * as azuki from "./azuki";
 import * as veeFriends from "./vee-friends";
+import * as tsuruOnBase from "./tsuru-on-base";
 
 const customCollection: { [key: string]: any } = {};
 const custom: { [key: string]: any } = {};
@@ -56,3 +57,6 @@ customTokenURI["137,0xa81ac7a8b848ad22e80a1078b5a47f646c1c4510"] = azuki;
 
 // Vee Friends
 customTokenURI["11155111,0x901f7cfc8a99a5978a766ddc1c790a6623f3940b"] = veeFriends;
+
+// Tsuru On Base
+custom["8453,0xc7cd9b38cc75296e9246aabad6fc58ff979eb08e"] = tsuruOnBase;

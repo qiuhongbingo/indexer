@@ -44,7 +44,7 @@ export type NewApiKeyResponse = {
 
 export class ApiKeyManager {
   public static defaultRevShareBps = 3000;
-  public static defaultOrderbookFeeBps = 50;
+  public static defaultOrderbookFeeBps = 0;
 
   private static apiKeys: Map<string, ApiKeyEntity> = new Map();
 

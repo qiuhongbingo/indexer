@@ -36,12 +36,14 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
     const { contract, tokenId, uri } = payload;
     const retryCount = Number(this.rabbitMqMessage?.retryCount);
 
-    logger.debug(
+    logger.log(
+      config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
       this.queueName,
       JSON.stringify({
         topic: "tokenMetadataIndexing",
-        message: `Start. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+        message: `Start. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}, retryCount=${retryCount}`,
         payload,
+        debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(contract),
       })
     );
 
@@ -53,13 +55,16 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
       ]);
 
       if (metadata.length) {
-        logger.debug(
+        logger.log(
+          config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
           this.queueName,
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `getTokensMetadata. contract=${contract}, tokenId=${tokenId}, uri=${uri}`,
             payload,
             metadata: JSON.stringify(metadata),
+            debugMetadataIndexingCollection:
+              config.debugMetadataIndexingCollections.includes(contract),
           })
         );
 
@@ -70,6 +75,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
               JSON.stringify({
                 topic: "tokenMetadataIndexing",
                 message: `Fallback - Image Encoding. contract=${contract}, tokenId=${tokenId}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+                debugMetadataIndexingCollection:
+                  config.debugMetadataIndexingCollections.includes(contract),
               })
             );
 
@@ -95,6 +102,19 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           } else if (![690, 17069].includes(config.chainId)) {
             metadata[0].imageUrl = null;
           }
+        } else if (metadata[0].mediaUrl?.startsWith("data:")) {
+          logger.warn(
+            this.queueName,
+            JSON.stringify({
+              topic: "tokenMetadataIndexingDebug",
+              message: `Invalid Media Encoding. contract=${contract}, tokenId=${tokenId}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+              debugMetadataIndexingCollection:
+                config.debugMetadataIndexingCollections.includes(contract),
+            })
+          );
+
+          metadata[0].mediaUrl = null;
+          metadata[0].animationOriginalUrl = undefined;
         }
 
         // if missing imageMimeType/mediaMimeTyp, we fallback to simplehash
@@ -111,6 +131,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
                 contract,
                 metadata: JSON.stringify(metadata[0]),
                 reason: "Missing Mime Type",
+                debugMetadataIndexingCollection:
+                  config.debugMetadataIndexingCollections.includes(contract),
               })
             );
 
@@ -149,6 +171,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
                 message: `Fallback - GIF. contract=${contract}, tokenId=${tokenId}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
                 contract,
                 reason: "GIF",
+                debugMetadataIndexingCollection:
+                  config.debugMetadataIndexingCollections.includes(contract),
               })
             );
 
@@ -174,12 +198,15 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           }
         }
 
-        logger.debug(
+        logger.log(
+          config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
           this.queueName,
           JSON.stringify({
             topic: "tokenMetadataIndexing",
             message: `metadataIndexWriteJob. contract=${contract}, tokenId=${tokenId}, uri=${uri}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
             metadata: JSON.stringify(metadata),
+            debugMetadataIndexingCollection:
+              config.debugMetadataIndexingCollections.includes(contract),
           })
         );
 
@@ -230,6 +257,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
               message: `Not found Error - Error Parsing TokenId. contract=${contract}, tokenId=${tokenId}, uri=${uri}`,
               payload,
               error,
+              debugMetadataIndexingCollection:
+                config.debugMetadataIndexingCollections.includes(contract),
             })
           );
         }
@@ -256,6 +285,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
             contract,
             tokenId,
             error,
+            debugMetadataIndexingCollection:
+              config.debugMetadataIndexingCollections.includes(contract),
           })
         );
       }
@@ -273,12 +304,15 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
     }
 
     if (!config.fallbackMetadataIndexingMethod) {
-      logger.debug(
+      logger.log(
+        config.debugMetadataIndexingCollections.includes(contract) ? "info" : "debug",
         this.queueName,
         JSON.stringify({
           topic: "tokenMetadataIndexing",
           message: `No Fallback. contract=${contract}, tokenId=${tokenId}, uri=${uri}, error=${fallbackError}`,
           payload,
+          debugMetadataIndexingCollection:
+            config.debugMetadataIndexingCollections.includes(contract),
         })
       );
 
@@ -292,6 +326,8 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
           topic: "tokenMetadataIndexing",
           message: `Skip Fallback. contract=${contract}, tokenId=${tokenId}, uri=${uri}`,
           payload,
+          debugMetadataIndexingCollection:
+            config.debugMetadataIndexingCollections.includes(contract),
         })
       );
 
@@ -308,6 +344,7 @@ export default class OnchainMetadataProcessTokenUriJob extends AbstractRabbitMqJ
         error: fallbackError,
         retryCount,
         maxRetriesReached: retryCount >= this.maxRetries,
+        debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(contract),
       })
     );
 

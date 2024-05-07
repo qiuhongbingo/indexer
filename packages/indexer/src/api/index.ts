@@ -199,8 +199,7 @@ export const start = async (): Promise<void> => {
 
       try {
         rateLimitRule = rateLimitRules.getRateLimitObject(
-          request.route.path,
-          request.route.method,
+          request,
           tier,
           apiKey?.key,
           new Map(Object.entries(_.merge(request.payload, request.query, request.params)))
@@ -361,6 +360,11 @@ export const start = async (): Promise<void> => {
       // Count the API usage, to prevent any latency on the request no need to wait and ignore errors
       if (request.pre.metrics && statusCode >= 100 && statusCode < 500) {
         request.pre.metrics.statusCode = statusCode;
+
+        // If this is a marketplace api
+        // if (request.route.settings.tags && request.route.settings.tags.includes("marketplace")) {
+        //   request.pre.metrics.points = 0;
+        // }
 
         try {
           countApiUsageJob.addToQueue(request.pre.metrics).catch();

@@ -8,7 +8,7 @@ import { redb } from "@/common/db";
 import * as Sdk from "@reservoir0x/sdk";
 import { config } from "@/config/index";
 import { getStartTime, Period } from "@/models/top-selling-collections/top-selling-collections";
-import { chunk, flatMap } from "lodash";
+import _, { chunk, flatMap } from "lodash";
 import { redis } from "@/common/redis";
 
 const REDIS_EXPIRATION = 60 * 60 * 48; // 48 hours
@@ -32,7 +32,7 @@ export const getTrendingCollectionsV1Options: RouteOptions = {
   },
   description: "Top Trending Collections",
   notes: "Get trending selling/minting collections",
-  tags: ["api", "Collections"],
+  tags: ["api", "Collections", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 3,
@@ -446,13 +446,28 @@ async function formatCollections(
             : null;
       }
 
+      let imageUrl = metadata?.imageUrl;
+
+      if (imageUrl) {
+        imageUrl = Assets.getResizedImageUrl(imageUrl, ImageSize.small, metadata.image_version);
+      } else if (metadata?.sample_images?.length) {
+        const sampleImages = _.filter(
+          metadata?.sample_images,
+          (image) => !_.isNull(image) && _.startsWith(image, "http")
+        );
+
+        if (sampleImages.length) {
+          imageUrl = Assets.getResizedImageUrl(
+            sampleImages[0],
+            ImageSize.small,
+            metadata.image_version
+          );
+        }
+      }
+
       return {
         ...response,
-        image: Assets.getResizedImageUrl(
-          metadata?.metadata?.imageUrl,
-          ImageSize.small,
-          metadata.image_version
-        ),
+        image: imageUrl,
         sampleImages:
           metadata?.sample_images && metadata?.sample_images?.length > 0
             ? Assets.getResizedImageURLs(metadata?.sample_images, undefined, metadata.image_version)

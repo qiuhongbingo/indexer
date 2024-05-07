@@ -44,7 +44,7 @@ export const getTokensV7Options: RouteOptions = {
   description: "Tokens",
   notes:
     "Get a list of tokens with full metadata. This is useful for showing a single token page, or scenarios that require more metadata.",
-  tags: ["api", "Tokens"],
+  tags: ["api", "Tokens", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 9,
@@ -172,12 +172,18 @@ export const getTokensV7Options: RouteOptions = {
           "Allowed only with collection and tokens filtering!\n-1 = All tokens (default)\n0 = Non flagged tokens\n1 = Flagged tokens"
         ),
       sortBy: Joi.string()
-        .valid("floorAskPrice", "tokenId", "rarity", "updatedAt")
+        .valid("floorAskPrice", "tokenId", "rarity", "updatedAt", "listedAt")
         .default("floorAskPrice")
         .description(
-          "Order the items are returned in the response. Options are `floorAskPrice`, `tokenId`, `rarity`, and `updatedAt`. No rarity rank for collections over 100k."
+          "Order the items are returned in the response. Options are `floorAskPrice`, `tokenId`, `rarity`, `listedAt` and  `updatedAt`. No rarity rank for collections over 100k."
         ),
-      sortDirection: Joi.string().lowercase().valid("asc", "desc"),
+      sortDirection: Joi.string()
+        .lowercase()
+        .when("sortBy", {
+          is: "listedAt",
+          then: Joi.valid("asc", "desc").default("desc"),
+          otherwise: Joi.valid("asc", "desc").default("asc"),
+        }),
       currencies: Joi.alternatives().try(
         Joi.array()
           .max(50)
@@ -412,8 +418,8 @@ export const getTokensV7Options: RouteOptions = {
 
     let enableElasticsearchAsks =
       config.enableElasticsearchAsks &&
-      query.sortBy === "floorAskPrice" &&
-      query.sortDirection !== "desc" &&
+      ((query.sortBy === "floorAskPrice" && query.sortDirection !== "desc") ||
+        query.sortBy === "listedAt") &&
       !["tokenName", "tokenSetId"].some((filter) => query[filter]);
 
     if (enableElasticsearchAsks && query.continuation) {

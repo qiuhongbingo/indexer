@@ -17,12 +17,16 @@ export type OrderRevalidationsJobPayload =
       };
     }
   | {
-      by: "operator";
+      by: "operator-or-zone";
       data: {
         origin: string;
         contract: string;
         blacklistedOperators?: string[];
         whitelistedOperators?: string[];
+        // Relevant for invalidating orders with stale zones (the only use-case for this
+        // at the moment is collections that switched to using the OS royalty-enforcing,
+        // this will result in previous orders using no zone being unfillable)
+        whitelistedZones?: string[];
         createdAtContinutation?: string;
         status: "inactive";
       };
@@ -70,12 +74,17 @@ export default class OrderRevalidationsJob extends AbstractRabbitMqJobHandler {
           break;
         }
 
-        case "operator": {
-          const { contract, blacklistedOperators, whitelistedOperators, createdAtContinutation } =
-            data;
+        case "operator-or-zone": {
+          const {
+            contract,
+            blacklistedOperators,
+            whitelistedOperators,
+            whitelistedZones,
+            createdAtContinutation,
+          } = data;
 
           // Process the same contract at most once per 5 minutes
-          const lockKey = `order-revalidations:operator:${contract}:${data.origin}:${createdAtContinutation}`;
+          const lockKey = `order-revalidations:operator-or-zone:${contract}:${data.origin}:${createdAtContinutation}`;
           const lock = await redis.get(lockKey);
           if (lock) {
             return;
@@ -83,7 +92,7 @@ export default class OrderRevalidationsJob extends AbstractRabbitMqJobHandler {
 
           await redis.set(lockKey, "locked", "EX", 5 * 60);
 
-          if (!blacklistedOperators && !whitelistedOperators) {
+          if (!blacklistedOperators && !whitelistedOperators && !whitelistedZones) {
             return;
           }
 
@@ -130,6 +139,14 @@ export default class OrderRevalidationsJob extends AbstractRabbitMqJobHandler {
                       ? "AND orders.conduit <> ALL(ARRAY[$/whitelistedOperators:list/]::BYTEA[])"
                       : ""
                   }
+                  ${
+                    whitelistedZones
+                      ? `
+                        AND orders.raw_data->>'zone' IS NOT NULL
+                        AND orders.raw_data->>'zone'::TEXT <> ALL(ARRAY[$/whitelistedZones:list/]::TEXT[])
+                      `
+                      : ""
+                  }
                 RETURNING
                   x.id,
                   (SELECT y.created_at FROM y) AS created_at
@@ -140,6 +157,7 @@ export default class OrderRevalidationsJob extends AbstractRabbitMqJobHandler {
                 limit,
                 blacklistedOperators: blacklistedOperators?.map((o) => toBuffer(o)),
                 whitelistedOperators: whitelistedOperators?.map((o) => toBuffer(o)),
+                whitelistedZones,
                 createdAt: createdAtContinutation,
               }
             );
