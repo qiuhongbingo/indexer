@@ -228,7 +228,7 @@ export class Router {
         provider
       ),
       mintifyModule: new Contract(
-        Addresses.MintModule[chainId] ?? AddressZero,
+        Addresses.MintifyModule[chainId] ?? AddressZero,
         MintifyModuleAbi,
         provider
       ),
