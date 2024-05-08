@@ -200,7 +200,7 @@ const config: HardhatUserConfig = {
     degen: getNetworkConfig(666666666),
     ancient8: getNetworkConfig(888888888),
     xai: getNetworkConfig(660279),
-    skaleNebula: getNetworkConfig(1482601649),
+    nebula: getNetworkConfig(1482601649),
     // Testnets
     mantleTestnet: getNetworkConfig(5001),
     apexTestnet: getNetworkConfig(70800),
@@ -237,7 +237,7 @@ const config: HardhatUserConfig = {
       garnet: "0x",
       redstone: "0x",
       xai: "0x",
-      skaleNebula: "0x",
+      nebula: "0x",
       // Testnets
       mantleTestnet: "0x",
       lineaTestnet: process.env.ETHERSCAN_API_KEY_LINEA_TESTNET ?? "",
