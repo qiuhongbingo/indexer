@@ -26,8 +26,6 @@ export class FillUpdatesJob extends AbstractRabbitMqJobHandler {
     const { orderId, orderSide, contract, tokenId, amount, price, timestamp, maker, taker } =
       payload;
 
-    logger.info(this.queueName, `Handle fill info ${JSON.stringify(payload)}`);
-
     try {
       if (orderId) {
         const result = await idb.oneOrNone(
