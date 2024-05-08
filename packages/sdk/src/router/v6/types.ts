@@ -1,6 +1,7 @@
 import { BigNumberish } from "@ethersproject/bignumber";
-import { SwapInfo } from "./swap/index";
+
 import { Permit } from "./permit";
+import { SwapInfo } from "./swap/index";
 import * as Sdk from "../../index";
 import { TxData } from "../../utils";
 
