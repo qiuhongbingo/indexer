@@ -62,7 +62,7 @@ export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
     );
 
     if (results.length == limit) {
-      await this.addToQueue();
+      await this.addToQueue(1000);
     }
   }
 
