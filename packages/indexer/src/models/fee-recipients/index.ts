@@ -1,6 +1,7 @@
 import _ from "lodash";
 
 import { idb, redb } from "@/common/db";
+import { logger } from "@/common/logger";
 import { redis } from "@/common/redis";
 import { fromBuffer, toBuffer } from "@/common/utils";
 import {
@@ -9,9 +10,10 @@ import {
   FeeRecipientEntityParams,
 } from "@/models/fee-recipients/fee-recipient-entity";
 import { Sources } from "@/models/sources";
+import { PubSub } from "@/pubsub/index";
+import { Channel } from "@/pubsub/channels";
 
 import { default as entitiesFromJson } from "@/models/fee-recipients/feeRecipients.json";
-import { logger } from "@/common/logger";
 
 export class FeeRecipients {
   private static instance: FeeRecipients;
@@ -187,6 +189,10 @@ export class FeeRecipients {
 
     // Reload the cache
     await FeeRecipients.instance.loadData(true);
+
+    await PubSub.publish(Channel.FeeRecipientsUpdated, `New fee-recipient ${address}:${kind}`);
+    logger.info("fee-recipients", `New fee-recipient '${address}:${kind}' was added`);
+
     return new FeeRecipientEntity(entity);
   }
 
