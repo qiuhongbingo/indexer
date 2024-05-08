@@ -8,16 +8,16 @@ import { logger } from "@/common/logger";
 import { redis } from "@/common/redis";
 import { regex } from "@/common/utils";
 import { config } from "@/config/index";
+import { fetchSourceInfoJob } from "@/jobs/sources/fetch-source-info-job";
 import {
   SourcesEntity,
   SourcesEntityParams,
   SourcesMetadata,
 } from "@/models/sources/sources-entity";
+import { PubSub } from "@/pubsub/index";
 import { Channel } from "@/pubsub/channels";
 
-import { default as sourcesFromJson } from "./sources.json";
-import { fetchSourceInfoJob } from "@/jobs/sources/fetch-source-info-job";
-import { PubSub } from "@/pubsub/index";
+import { default as sourcesFromJson } from "@/models/sources/sources.json";
 
 export class Sources {
   private static instance: Sources;

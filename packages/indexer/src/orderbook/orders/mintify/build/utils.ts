@@ -18,12 +18,7 @@ export const getConduitKeyWithDefault = (conduitKey?: string) => {
   // - opensea conduit
   // - reservoir conduit
   // - no conduit (exchange address)
-  return (
-    conduitKey ??
-    Sdk.SeaportBase.Addresses.OpenseaConduitKey[config.chainId] ??
-    Sdk.SeaportBase.Addresses.ReservoirConduitKey[config.chainId] ??
-    HashZero
-  );
+  return conduitKey ?? Sdk.SeaportBase.Addresses.ReservoirConduitKey[config.chainId] ?? HashZero;
 };
 
 export const getBuildInfo = async (
@@ -58,7 +53,7 @@ export const getBuildInfo = async (
   // No zone by default
   let zone = AddressZero;
   if (options.useOffChainCancellation) {
-    zone = Sdk.SeaportBase.Addresses.ReservoirCancellationZone[config.chainId];
+    zone = Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId];
   }
 
   // Generate the salt

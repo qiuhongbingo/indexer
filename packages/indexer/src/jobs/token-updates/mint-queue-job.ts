@@ -6,7 +6,6 @@ import { recalcTokenCountQueueJob } from "@/jobs/collection-updates/recalc-token
 import { acquireLock } from "@/common/redis";
 import { config } from "@/config/index";
 import { getNetworkSettings } from "@/config/network";
-import { tokenRefreshCacheJob } from "@/jobs/token-updates/token-refresh-cache-job";
 import _ from "lodash";
 import { fetchCollectionMetadataJob } from "@/jobs/token-updates/fetch-collection-metadata-job";
 import { metadataIndexFetchJob } from "@/jobs/metadata-index/metadata-fetch-job";
@@ -222,9 +221,6 @@ export default class MintQueueJob extends AbstractRabbitMqJobHandler {
           }
         );
       }
-
-      // Set any cached information (eg. floor sell)
-      await tokenRefreshCacheJob.addToQueue({ contract, tokenId });
     } catch (error) {
       logger.error(
         this.queueName,

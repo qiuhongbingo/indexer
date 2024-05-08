@@ -95,7 +95,10 @@ export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
 
       logger.info(
         this.queueName,
-        `Backfilled ${results.length} tokens.  limit=${limit}, cursor=${JSON.stringify(cursor)}`
+        JSON.stringify({
+          message: `Backfilled ${results.length} tokens.  limit=${limit}`,
+          cursor,
+        })
       );
 
       if (results.length == limit) {
