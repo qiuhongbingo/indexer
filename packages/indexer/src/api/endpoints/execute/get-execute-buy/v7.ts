@@ -49,7 +49,7 @@ import { checkAddressIsBlockedByOFAC } from "@/utils/ofac";
 import * as onChainData from "@/utils/on-chain-data";
 import { getEphemeralPermitId, getEphemeralPermit, saveEphemeralPermit } from "@/utils/permits";
 import { getPreSignatureId, getPreSignature, savePreSignature } from "@/utils/pre-signatures";
-import { getUSDAndCurrencyPrices } from "@/utils/prices";
+import { getUSDAndCurrencyPrices, validateSwapPrice } from "@/utils/prices";
 import { isOrderNativeOffChainCancellable } from "@/utils/offchain-cancel";
 
 const version = "v7";
@@ -2261,7 +2261,15 @@ export const getExecuteBuyV7Options: RouteOptions = {
         throw getExecuteError(error.message, errors);
       }
 
-      const { txs, success } = result;
+      const { txs, success, swaps } = result;
+
+      // Check the swap price
+      try {
+        validateSwapPrice(path, swaps ?? []);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        throw getExecuteError(error.message, errors);
+      }
 
       // Add any mint transactions
       if (mintDetails.length) {
