@@ -9,6 +9,7 @@ import Joi from "joi";
 import { logger } from "@/common/logger";
 import { config } from "@/config/index";
 import * as orders from "@/orderbook/orders";
+import { ApiKeyManager } from "@/models/api-keys";
 
 import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
 import { orderbookPostOrderExternalOpenseaJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-opensea-job";
@@ -85,6 +86,17 @@ export const postOrderV2Options: RouteOptions = {
 
       // Only relevant for non-flagged tokens bids
       const isNonFlagged = payload.isNonFlagged;
+
+      // Source restrictions
+      if (source) {
+        const isRestricted = await ApiKeyManager.isRestrictedSource(
+          source,
+          request.headers["x-api-key"]
+        );
+        if (isRestricted) {
+          throw Boom.unauthorized("Restricted source");
+        }
+      }
 
       const signature = query.signature ?? order.data.signature;
       if (signature) {

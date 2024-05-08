@@ -13,6 +13,7 @@ import { regex } from "@/common/utils";
 import { config } from "@/config/index";
 import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
 import * as orders from "@/orderbook/orders";
+import { ApiKeyManager } from "@/models/api-keys";
 
 import { orderbookPostOrderExternalOpenseaJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-opensea-job";
 import { orderbookPostOrderExternalJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-job";
@@ -180,6 +181,17 @@ export const postOrderV4Options: RouteOptions = {
           // Permits
           const permitId = payload.permitId;
           const permitIndex = payload.permitIndex;
+
+          // Source restrictions
+          if (source) {
+            const isRestricted = await ApiKeyManager.isRestrictedSource(
+              source,
+              request.headers["x-api-key"]
+            );
+            if (isRestricted) {
+              throw Boom.unauthorized("Restricted source");
+            }
+          }
 
           const signature = query.signature ?? order.data.signature;
           if (signature) {

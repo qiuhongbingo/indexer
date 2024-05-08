@@ -24,6 +24,7 @@ import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { AllChainsPubSub, PubSub } from "@/pubsub/index";
 import { OrderKind } from "@/orderbook/orders";
 import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
+import { Sources } from "@/models/sources";
 
 export type ApiKeyRecord = {
   appName: string;
@@ -537,5 +538,21 @@ export class ApiKeyManager {
       .catch(() => {
         // Skip on any errors
       });
+  }
+
+  public static async isRestrictedSource(source: string, key: string) {
+    try {
+      const sources = await Sources.getInstance();
+      const sourceObject = sources.getByDomain(source);
+      if (sourceObject && sourceObject.metadata?.allowedApiKeys?.length) {
+        const apiKey = await ApiKeyManager.getApiKey(key);
+        if (!apiKey || !sourceObject.metadata.allowedApiKeys.includes(apiKey.key)) {
+          return true;
+        }
+      }
+    } catch {
+      // Skip any errors
+    }
+    return false;
   }
 }
