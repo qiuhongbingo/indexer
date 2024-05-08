@@ -362,9 +362,9 @@ export const start = async (): Promise<void> => {
         request.pre.metrics.statusCode = statusCode;
 
         // If this is a marketplace api
-        // if (request.route.settings.tags && request.route.settings.tags.includes("marketplace")) {
-        //   request.pre.metrics.points = 0;
-        // }
+        if (request.route.settings.tags && request.route.settings.tags.includes("marketplace")) {
+          request.pre.metrics.points = 0;
+        }
 
         try {
           countApiUsageJob.addToQueue(request.pre.metrics).catch();

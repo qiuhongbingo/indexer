@@ -89,6 +89,7 @@ export const ConduitController: ChainIdToAddress = {
   [Network.Xai]: "0x00000000f9490004c11cef243f5400493c00ad63",
   [Network.Zksync]: "0x4c68886e1db29168a6672e614412191591aca502",
   [Network.Zora]: "0x00000000f9490004c11cef243f5400493c00ad63",
+  [Network.Nebula]: "0x2a72eb8cf0233a3dc6198683c83b1078de6fa2b0",
 };
 
 // https://github.com/ProjectOpenSea/seaport/blob/0a8e82ce7262b5ce0e67fa98a2131fd4c47c84e9/contracts/conduit/ConduitController.sol#L493

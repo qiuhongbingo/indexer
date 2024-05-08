@@ -27,10 +27,11 @@ export const Exchange: ChainIdToAddress = {
   [Network.Apex]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Blast]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.AstarZkevm]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
-  [Network.ApexTestnet]: "0x613D3c588F6B8f89302b463F8F19f7241B2857E2",
+  [Network.ApexTestnet]: "0x613d3c588f6b8f89302b463f8f19f7241b2857e2",
   [Network.BerachainTestnet]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Garnet]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Redstone]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Amoy]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Degen]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
+  [Network.Nebula]: "0x822b4c4713433c6b88547845850a39343bf0957e",
 };

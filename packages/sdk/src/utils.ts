@@ -145,6 +145,7 @@ export enum Network {
   AstarZkevm = 3776,
   Degen = 666666666,
   Xai = 660279,
+  Nebula = 1482601649,
   // Testnets
   EthereumGoerli = 5,
   MantleTestnet = 5001,

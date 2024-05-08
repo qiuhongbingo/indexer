@@ -467,6 +467,7 @@ export const extractByTx = async (
   if (
     [
       "0x84bb1e42", // `claim`
+      "0xd37c353b", // `lazyClaim`
     ].some((bytes4) => tx.data.startsWith(bytes4))
   ) {
     return extractByCollectionERC721(collection);

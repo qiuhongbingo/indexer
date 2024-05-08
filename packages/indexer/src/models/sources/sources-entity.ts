@@ -53,6 +53,7 @@ export type SourcesMetadata = {
   tokenUrlDegen?: string;
   tokenUrlSeiTestnet?: string;
   tokenUrlXai?: string;
+  tokenUrlNebula?: string;
 };
 
 export class SourcesEntity {
