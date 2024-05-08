@@ -8,11 +8,10 @@ import Joi from "joi";
 
 import { logger } from "@/common/logger";
 import { config } from "@/config/index";
-import * as orders from "@/orderbook/orders";
-import { ApiKeyManager } from "@/models/api-keys";
-
-import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
 import { orderbookPostOrderExternalOpenseaJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-opensea-job";
+import { ApiKeyManager } from "@/models/api-keys";
+import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
+import * as orders from "@/orderbook/orders";
 
 const version = "v2";
 

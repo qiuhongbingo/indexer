@@ -10,12 +10,11 @@ import { idb } from "@/common/db";
 import { logger } from "@/common/logger";
 import { regex } from "@/common/utils";
 import { config } from "@/config/index";
-import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
-import * as orders from "@/orderbook/orders";
-import { ApiKeyManager } from "@/models/api-keys";
-
 import { orderbookPostOrderExternalOpenseaJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-opensea-job";
 import { orderbookPostOrderExternalJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-job";
+import { ApiKeyManager } from "@/models/api-keys";
+import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
+import * as orders from "@/orderbook/orders";
 
 const version = "v3";
 
