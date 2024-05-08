@@ -35,7 +35,7 @@ type ReplacementCall = {
 };
 
 const getCancellationZone = (kind: OffChainCancellableOrderKind) => {
-  if (kind === "seaport-v1.6") {
+  if (kind === "seaport-v1.6" || kind === "mintify") {
     return Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId];
   }
   return Sdk.SeaportBase.Addresses.ReservoirCancellationZone[config.chainId];
