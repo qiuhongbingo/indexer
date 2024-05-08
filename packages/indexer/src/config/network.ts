@@ -120,6 +120,9 @@ export const getNetworkName = () => {
     case 660279:
       return "xai";
 
+    case 1482601649:
+      return "nebula";
+
     default:
       return "unknown";
   }
@@ -2126,6 +2129,38 @@ export const getNetworkSettings = (): NetworkSettings => {
                   'XAI',
                   18,
                   '{"coingeckoCurrencyId": "xai-blockchain", "image": "https://assets.coingecko.com/coins/images/34258/large/2024-01-09_16.31.28.jpg"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Nebula
+    case 1482601649: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: true,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x7f73b66d4e6e67bcdeaf277b9962addcdabbfc4d',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
                 ) ON CONFLICT DO NOTHING
               `
             ),

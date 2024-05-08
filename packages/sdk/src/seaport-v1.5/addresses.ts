@@ -33,5 +33,5 @@ export const Exchange: ChainIdToAddress = {
   [Network.Redstone]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Amoy]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
   [Network.Degen]: "0x00000000000000adc04c56bf30ac9d3c0aaf14dc",
-  [Network.SkaleNebula]: "0x822b4c4713433c6b88547845850a39343bf0957e",
+  [Network.Nebula]: "0x822b4c4713433c6b88547845850a39343bf0957e",
 };

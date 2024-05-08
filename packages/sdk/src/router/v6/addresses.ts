@@ -39,7 +39,7 @@ export const Router: ChainIdToAddress = {
   [Network.Degen]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.SeiTestnet]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.Xai]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
-  [Network.SkaleNebula]: "0x856523801f13fb8ca62e597ac8b738d40d0df38e",
+  [Network.Nebula]: "0x856523801f13fb8ca62e597ac8b738d40d0df38e",
 };
 
 // Approval proxy
@@ -219,7 +219,7 @@ export const SeaportV15Module: ChainIdToAddress = {
   [Network.Garnet]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Redstone]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Degen]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
-  [Network.SkaleNebula]: "0x385df8cbc196f5f780367f3cdc96af072a916f7e",
+  [Network.Nebula]: "0x385df8cbc196f5f780367f3cdc96af072a916f7e",
 };
 
 export const AlienswapModule: ChainIdToAddress = {

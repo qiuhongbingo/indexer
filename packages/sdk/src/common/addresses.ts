@@ -40,6 +40,7 @@ export const Native: ChainIdToAddress = {
   [Network.Degen]: AddressZero,
   [Network.SeiTestnet]: AddressZero,
   [Network.Xai]: AddressZero,
+  [Network.Nebula]: "0xab01bad2c86e24d371a13ed6367bdca819589c5d",
 };
 
 // Wrapped native currency
@@ -80,6 +81,7 @@ export const WNative: ChainIdToAddress = {
   [Network.Degen]: "0xeb54dacb4c2ccb64f8074eceea33b5ebb38e5387",
   [Network.Xai]: "0x3fb787101dc6be47cfe18aeee15404dcc842e6af",
   [Network.SeiTestnet]: "0x48a9b22b80f566e88f0f1dcc90ea15a8a3bae8a4",
+  [Network.Nebula]: "0xab01bad2c86e24d371a13ed6367bdca819589c5d",
 };
 
 export const Usdc: ChainIdToAddressList = {
