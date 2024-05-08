@@ -1,7 +1,6 @@
 import { idb } from "@/common/db";
 
 import { AbstractRabbitMqJobHandler } from "@/jobs/abstract-rabbit-mq-job-handler";
-import { RabbitMQMessage } from "@/common/rabbit-mq";
 import { redis } from "@/common/redis";
 import { logger } from "@/common/logger";
 import _ from "lodash";
@@ -63,21 +62,7 @@ export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
     );
 
     if (results.length == limit) {
-      return {
-        addToQueue: true,
-      };
-    }
-    return { addToQueue: false };
-  }
-
-  public async onCompleted(
-    rabbitMqMessage: RabbitMQMessage,
-    processResult: {
-      addToQueue: boolean;
-    }
-  ) {
-    if (processResult.addToQueue) {
-      await this.addToQueue(1 * 1000);
+      await this.addToQueue();
     }
   }
 
