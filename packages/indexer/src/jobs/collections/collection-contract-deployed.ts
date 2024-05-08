@@ -78,6 +78,22 @@ export class CollectionNewContractDeployedJob extends AbstractRabbitMqJobHandler
     const contractMetadata = await onchainMetadataProvider._getCollectionMetadata(contract);
     const contractOwner = await getContractOwner(contract);
 
+    logger.debug(
+      this.queueName,
+      JSON.stringify({
+        message: `Create contract. contract=${contract}`,
+        data: {
+          kind: collectionKind.toLowerCase(),
+          symbol: symbol || null,
+          name: name || null,
+          deployed_at: payload.blockTimestamp || null,
+          metadata: rawMetadata || null,
+          deployer: deployer || null,
+          owner: contractOwner || null,
+        },
+      })
+    );
+
     await Promise.all([
       idb.none(
         `
