@@ -484,11 +484,7 @@ export const validateSwapPrice = async (
               : bn(item.totalRawPrice).mul(currencyInUnit).div(item.buyInRawQuote!);
 
             diff = swapPrice.sub(itemPrice).mul(1000).div(itemPrice).toNumber();
-          } catch {
-            // Skip errors
-          }
 
-          if (diff > slippageLimit) {
             logger.info(
               "prices-debug",
               JSON.stringify({
@@ -496,9 +492,16 @@ export const validateSwapPrice = async (
                 path,
                 swap,
                 item,
+                swapPrice: swapPrice.toString(),
+                itemPrice: itemPrice.toString(),
                 diff,
               })
             );
+          } catch {
+            // Skip errors
+          }
+
+          if (diff > slippageLimit) {
             // throw new Error("Could not generate a good-enough swap route");
           }
         }
