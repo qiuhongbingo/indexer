@@ -2,7 +2,7 @@ import { logger } from "@/common/logger";
 import { RateLimitRules } from "@/models/rate-limit-rules";
 import { AllChainsChannel } from "@/pubsub/channels";
 
-export class RateLimitDeletedEvent {
+export class RateLimitDeletedAllChainsEvent {
   public static async handleEvent(message: string) {
     const parsedMessage = JSON.parse(message);
     await RateLimitRules.deleteByCorrelationId(parsedMessage.correlationId);
