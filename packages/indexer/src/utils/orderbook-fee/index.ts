@@ -13,6 +13,7 @@ export const FEE_RECIPIENT = "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e";
 
 export const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
   "alienswap",
+  "mintify",
   "payment-processor",
   "payment-processor-v2",
   "seaport-v1.4",
