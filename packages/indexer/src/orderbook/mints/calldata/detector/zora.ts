@@ -345,11 +345,17 @@ export const extractByCollectionERC1155 = async (
             baseProvider
           );
 
-          const [saleConfig, tokenInfo, mintFee] = await Promise.all([
+          const [saleConfig, tokenInfo] = await Promise.all([
             fixedSale.sale(collection, tokenId),
             c.getTokenInfo(tokenId),
-            c.mintFee(),
           ]);
+
+          let mintFee = bn(0);
+          try {
+            mintFee = await c.mintFee();
+          } catch {
+            // Skip errors
+          }
 
           const price = saleConfig.pricePerToken.add(mintFee).toString();
           results.push({

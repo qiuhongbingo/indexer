@@ -488,9 +488,6 @@ export const validateSwapPrice = async (
             logger.info(
               "prices-debug",
               JSON.stringify({
-                swaps,
-                path,
-                swap,
                 item,
                 swapPrice: swapPrice.toString(),
                 itemPrice: itemPrice.toString(),
