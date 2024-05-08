@@ -1,26 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import _ from "lodash";
+import { Boom } from "@hapi/boom";
 import Hapi, { Request } from "@hapi/hapi";
+import axios from "axios";
+import _ from "lodash";
+import flat from "flat";
+import getUuidByString from "uuid-by-string";
 
 import { idb, pgp, redb } from "@/common/db";
 import { logger } from "@/common/logger";
 import { redis } from "@/common/redis";
+import tracer from "@/common/tracer";
+import { fromBuffer, regex } from "@/common/utils";
+import { config } from "@/config/index";
+import { getNetworkName, getSubDomain } from "@/config/network";
+import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import {
   ApiKeyEntity,
   ApiKeyPermission,
   ApiKeyUpdateParams,
 } from "@/models/api-keys/api-key-entity";
-import getUuidByString from "uuid-by-string";
+import { Sources } from "@/models/sources";
 import { AllChainsChannel, Channel } from "@/pubsub/channels";
-import axios from "axios";
-import { getNetworkName, getSubDomain } from "@/config/network";
-import { config } from "@/config/index";
-import { Boom } from "@hapi/boom";
-import tracer from "@/common/tracer";
-import flat from "flat";
-import { fromBuffer, regex } from "@/common/utils";
-import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { AllChainsPubSub, PubSub } from "@/pubsub/index";
 import { OrderKind } from "@/orderbook/orders";
 import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
@@ -537,5 +538,22 @@ export class ApiKeyManager {
       .catch(() => {
         // Skip on any errors
       });
+  }
+
+  public static async isRestrictedSource(source: string, key: string) {
+    try {
+      const sources = await Sources.getInstance();
+      const sourceObject = sources.getByDomain(source);
+      if (sourceObject && sourceObject.metadata?.allowedApiKeys?.length) {
+        const apiKey = await ApiKeyManager.getApiKey(key);
+        if (!apiKey || !sourceObject.metadata.allowedApiKeys.includes(apiKey.key)) {
+          return true;
+        }
+      }
+    } catch {
+      // Skip any errors
+    }
+
+    return false;
   }
 }
