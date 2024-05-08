@@ -50,7 +50,8 @@ export class BackfillTokensLastSaleJob extends AbstractRabbitMqJobHandler {
             fill_events_2.price,
             extract(epoch from fill_events_2.created_at) created_ts
           FROM fill_events_2
-          WHERE order_kind != 'mint'
+          JOIN tokens ON fill_events_2.contract = tokens.contract AND fill_events_2.token_id = tokens.token_id
+          WHERE order_kind != 'mint' AND tokens.last_sale_value IS NULL
           ${continuationFilter}
           ORDER BY fill_events_2.created_at DESC, fill_events_2.tx_hash DESC, fill_events_2.log_index DESC, fill_events_2.batch_index DESC
           LIMIT $/limit/
