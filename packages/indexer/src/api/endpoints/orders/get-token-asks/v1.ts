@@ -23,7 +23,7 @@ const version = "v1";
 export const getTokenAsksV1Options: RouteOptions = {
   description: "Token Asks (listings)",
   notes: "Get a list of asks (listings), filtered by token.",
-  tags: ["api", "Tokens"],
+  tags: ["api", "Tokens", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 5,

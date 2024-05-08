@@ -25,7 +25,7 @@ const version = "v1";
 export const getUserAsksV1Options: RouteOptions = {
   description: "User Asks (listings)",
   notes: "Get a list of asks (listings), filtered by maker.",
-  tags: ["api", "Accounts"],
+  tags: ["api", "Accounts", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 5,
