@@ -54,7 +54,7 @@ custom["999,0xe6a65c982ffa589a934fa93ab59e6e9646f25763"] = mintTest;
 customTokenURI["137,0xc1c2144b3e4e22f4205545e965f52ebc77a1c952"] = azuki;
 customTokenURI["137,0xa45b6fb131e9fae666898a64be132e1a78fb7394"] = azuki;
 customTokenURI["137,0xa81ac7a8b848ad22e80a1078b5a47f646c1c4510"] = azuki;
-customTokenURI["137,0xf13e1eD539CBbB305F2a460fAd81519B7748b0a9"] = azuki;
+customTokenURI["137,0xf13e1ed539cbbb305f2a460fad81519b7748b0a9"] = azuki;
 
 // Vee Friends
 customTokenURI["11155111,0x901f7cfc8a99a5978a766ddc1c790a6623f3940b"] = veeFriends;
