@@ -1,10 +1,9 @@
 import { AddressZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
-import { generateMerkleTree } from "@reservoir0x/sdk/dist/common/helpers/merkle";
 import _ from "lodash";
 import pLimit from "p-limit";
 
-import { idb, pgp, ridb } from "@/common/db";
+import { idb, pgp } from "@/common/db";
 import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 import { bn, now, toBuffer } from "@/common/utils";
@@ -22,11 +21,7 @@ import { SourcesEntity } from "@/models/sources/sources-entity";
 import { topBidsCache } from "@/models/top-bids-caching";
 import { DbOrder, OrderMetadata, generateSchemaHash } from "@/orderbook/orders/utils";
 import { offChainCheck } from "@/orderbook/orders/seaport-base/check";
-import {
-  OpenseaOrderParams,
-  getCollection,
-  getCollectionFloorAskValue,
-} from "@/orderbook/orders/seaport-base/utils";
+import { getCollectionFloorAskValue } from "@/orderbook/orders/seaport-base/utils";
 import * as tokenSet from "@/orderbook/token-sets";
 import { getCurrency } from "@/utils/currencies";
 import * as erc721c from "@/utils/erc721c";
@@ -39,10 +34,6 @@ import * as royalties from "@/utils/royalties";
 export type OrderInfo = {
   orderParams: Sdk.SeaportBase.Types.OrderComponents;
   metadata: OrderMetadata;
-  isReservoir?: boolean;
-  isOpenSea?: boolean;
-  openSeaOrderParams?: OpenseaOrderParams;
-  isOkx?: boolean;
 };
 
 type SaveResult = {
@@ -63,11 +54,7 @@ export const save = async (
 
   const handleOrder = async (
     orderParams: Sdk.SeaportBase.Types.OrderComponents,
-    metadata: OrderMetadata,
-    isReservoir?: boolean,
-    isOpenSea?: boolean,
-    openSeaOrderParams?: OpenseaOrderParams,
-    isOkx?: boolean
+    metadata: OrderMetadata
   ) => {
     try {
       const order = new Sdk.Mintify.Order(config.chainId, orderParams);
@@ -144,7 +131,7 @@ export const save = async (
           [
             {
               kind: "mintify",
-              info: { orderParams, metadata, isReservoir, isOpenSea, openSeaOrderParams, isOkx },
+              info: { orderParams, metadata },
               validateBidValue,
               ingestMethod,
               ingestDelay: startTime - currentTime + 5,
@@ -185,8 +172,7 @@ export const save = async (
           Sdk.SeaportBase.Addresses.OpenSeaCustomTransferValidator[config.chainId];
         if (
           osCustomTransferValidator &&
-          erc721cConfigV2.transferValidator === osCustomTransferValidator &&
-          !isOpenSea
+          erc721cConfigV2.transferValidator === osCustomTransferValidator
         ) {
           return results.push({
             id,
@@ -219,7 +205,7 @@ export const save = async (
             // No zone
             AddressZero,
             // Cancellation zone
-            Sdk.SeaportBase.Addresses.ReservoirCancellationZone[config.chainId],
+            Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId],
           ].includes(order.params.zone)
         ) {
           return results.push({
@@ -239,31 +225,13 @@ export const save = async (
         });
       }
 
-      if (
-        order.params.zone === Sdk.SeaportBase.Addresses.OkxV16CancellationZone[config.chainId] &&
-        !isOkx
-      ) {
-        return results.push({
-          id,
-          status: "unsupported-zone",
-        });
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (isOkx && !(orderParams as any).okxOrderId) {
-        return results.push({
-          id,
-          status: "missing-okx-order-id",
-        });
-      }
-
       // Make sure no zero signatures are allowed
       if (order.params.signature && /^0x0+$/g.test(order.params.signature)) {
         order.params.signature = undefined;
       }
 
       // Check: order has a valid signature
-      if (metadata.fromOnChain || ((isOpenSea || isOkx) && !order.params.signature)) {
+      if (metadata.fromOnChain) {
         // Skip if:
         // - the order was validated on-chain
         // - the order is coming from OpenSea / Okx and it doesn't have a signature
@@ -317,152 +285,64 @@ export const save = async (
 
       // Check and save: associated token set
       let tokenSetId: string | undefined;
-      let schemaHash: string | undefined;
+      const schemaHash = metadata.schemaHash ?? generateSchemaHash(metadata.schema);
+      switch (order.params.kind) {
+        case "single-token": {
+          const typedInfo = info as typeof info & { tokenId: string };
+          const tokenId = typedInfo.tokenId;
 
-      if (openSeaOrderParams && openSeaOrderParams.kind !== "single-token") {
-        const collection = await getCollection(openSeaOrderParams);
-        if (!collection) {
-          return results.push({
-            id,
-            status: "unknown-collection",
-          });
-        }
-
-        schemaHash = generateSchemaHash();
-
-        switch (openSeaOrderParams.kind) {
-          case "contract-wide": {
-            const ts = await tokenSet.dynamicCollectionNonFlagged.save({
-              collection: collection.id,
-            });
-            if (ts) {
-              tokenSetId = ts.id;
-              schemaHash = ts.schemaHash;
-            }
-
-            // Mark the order as being partial in order to force filling through the order-fetcher service
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (order.params as any).partial = true;
-
-            break;
-          }
-
-          case "token-list": {
-            const schema = {
-              kind: "attribute",
-              data: {
-                collection: collection.id,
-                attributes: [
-                  {
-                    key: openSeaOrderParams.attributeKey,
-                    value: openSeaOrderParams.attributeValue,
-                  },
-                ],
-              },
-            };
-
-            schemaHash = generateSchemaHash(schema);
-
-            // Fetch all tokens matching the attributes
-            const tokens = await ridb.manyOrNone(
-              `
-                SELECT token_attributes.token_id
-                FROM token_attributes
-                WHERE token_attributes.collection_id = $/collection/
-                  AND token_attributes.key = $/key/
-                  AND token_attributes.value = $/value/
-                ORDER BY token_attributes.token_id
-              `,
-              {
-                collection: collection.id,
-                key: openSeaOrderParams.attributeKey,
-                value: openSeaOrderParams.attributeValue,
-              }
-            );
-
-            if (tokens.length) {
-              const tokensIds = tokens.map((r) => r.token_id);
-              const merkleTree = generateMerkleTree(tokensIds);
-
-              tokenSetId = `list:${info.contract}:${merkleTree.getHexRoot()}`;
-
-              await tokenSet.tokenList.save([
-                {
-                  id: tokenSetId,
-                  schema,
-                  schemaHash: generateSchemaHash(schema),
-                  items: {
-                    contract: info.contract,
-                    tokenIds: tokensIds,
-                  },
-                } as tokenSet.tokenList.TokenSet,
-              ]);
-            }
-
-            break;
-          }
-        }
-      } else {
-        schemaHash = metadata.schemaHash ?? generateSchemaHash(metadata.schema);
-
-        switch (order.params.kind) {
-          case "single-token": {
-            const typedInfo = info as typeof info & { tokenId: string };
-            const tokenId = typedInfo.tokenId;
-
-            tokenSetId = `token:${info.contract}:${tokenId}`;
-            if (tokenId) {
-              await tokenSet.singleToken.save([
-                {
-                  id: tokenSetId,
-                  schemaHash,
-                  contract: info.contract,
-                  tokenId,
-                },
-              ]);
-            }
-
-            break;
-          }
-
-          case "contract-wide": {
-            tokenSetId = `contract:${info.contract}`;
-            await tokenSet.contractWide.save([
+          tokenSetId = `token:${info.contract}:${tokenId}`;
+          if (tokenId) {
+            await tokenSet.singleToken.save([
               {
                 id: tokenSetId,
                 schemaHash,
                 contract: info.contract,
+                tokenId,
+              },
+            ]);
+          }
+
+          break;
+        }
+
+        case "contract-wide": {
+          tokenSetId = `contract:${info.contract}`;
+          await tokenSet.contractWide.save([
+            {
+              id: tokenSetId,
+              schemaHash,
+              contract: info.contract,
+            },
+          ]);
+
+          break;
+        }
+
+        case "token-list": {
+          const typedInfo = info as typeof info & { merkleRoot: string };
+          const merkleRoot = typedInfo.merkleRoot;
+
+          if (merkleRoot) {
+            tokenSetId = `list:${info.contract}:${bn(merkleRoot).toHexString()}`;
+
+            const ts = await tokenSet.tokenList.save([
+              {
+                id: tokenSetId,
+                schemaHash,
+                schema: metadata.schema,
               },
             ]);
 
-            break;
+            logger.info(
+              "orders-mintify-save",
+              `TokenList. orderId=${id}, tokenSetId=${tokenSetId}, schemaHash=${schemaHash}, metadata=${JSON.stringify(
+                metadata
+              )}, ts=${JSON.stringify(ts)}`
+            );
           }
 
-          case "token-list": {
-            const typedInfo = info as typeof info & { merkleRoot: string };
-            const merkleRoot = typedInfo.merkleRoot;
-
-            if (merkleRoot) {
-              tokenSetId = `list:${info.contract}:${bn(merkleRoot).toHexString()}`;
-
-              const ts = await tokenSet.tokenList.save([
-                {
-                  id: tokenSetId,
-                  schemaHash,
-                  schema: metadata.schema,
-                },
-              ]);
-
-              logger.info(
-                "orders-mintify-save",
-                `TokenList. orderId=${id}, tokenSetId=${tokenSetId}, schemaHash=${schemaHash}, metadata=${JSON.stringify(
-                  metadata
-                )}, ts=${JSON.stringify(ts)}`
-              );
-            }
-
-            break;
-          }
+          break;
         }
       }
 
@@ -501,12 +381,6 @@ export const save = async (
       }
 
       // Handle: royalties
-      const openSeaFeeRecipients = [
-        "0x5b3256965e7c3cf26e11fcaf296dfc8807c01073",
-        "0x8de9c5a032463c561423387a9648c5c7bcc5bc90",
-        "0x0000a26b00c1f0df003000390027140000faa719",
-      ];
-
       let openSeaRoyalties: royalties.Royalty[];
       if (order.params.kind === "single-token") {
         openSeaRoyalties = await royalties.getRoyalties(info.contract, info.tokenId, "", true);
@@ -528,26 +402,12 @@ export const save = async (
               .toNumber();
         feeBps += bps;
 
-        let kind: "marketplace" | "royalty" = feeRecipients.getByAddress(
+        const kind: "marketplace" | "royalty" = feeRecipients.getByAddress(
           recipient.toLowerCase(),
           "marketplace"
         )
           ? "marketplace"
           : "royalty";
-
-        // For opensea orders only the known addresses can be marketplace and all other can be only royalty
-        if (
-          isOpenSea &&
-          kind === "marketplace" &&
-          !_.includes(openSeaFeeRecipients, recipient.toLowerCase())
-        ) {
-          logger.info(
-            "orders-mintify-save",
-            `orderId=${id}, ${recipient.toLowerCase()} forced to be a royalty`
-          );
-
-          kind = "royalty";
-        }
 
         // Check for unknown fees
         knownFee =
@@ -570,7 +430,7 @@ export const save = async (
 
       // Validate the potential inclusion of an orderbook fee
       try {
-        await validateOrderbookFee("mintify", feeBreakdown, metadata.apiKey, isReservoir);
+        await validateOrderbookFee("mintify", feeBreakdown, metadata.apiKey, true);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         return results.push({
@@ -629,29 +489,11 @@ export const save = async (
         }
       }
 
-      if (isOpenSea) {
-        source = await sources.getOrInsert("opensea.io");
-      } else if (isOkx) {
-        source = await sources.getOrInsert("okx.com");
-      }
-
       // If the order is native, override any default source
-      if (isReservoir) {
-        if (metadata.source) {
-          // If we can detect the marketplace (only OpenSea for now) do not override
-          if (
-            _.isEmpty(
-              _.intersection(
-                feeBreakdown.map(({ recipient }) => recipient),
-                openSeaFeeRecipients
-              )
-            )
-          ) {
-            source = await sources.getOrInsert(metadata.source);
-          }
-        } else {
-          source = undefined;
-        }
+      if (metadata.source) {
+        source = await sources.getOrInsert(metadata.source);
+      } else {
+        source = undefined;
       }
 
       // Handle: price conversion
@@ -767,17 +609,6 @@ export const save = async (
         }
       }
 
-      if (!order.params.signature) {
-        // Mark the order as being partial in order to force filling through the order-fetcher service
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (order.params as any).partial = true;
-      }
-
-      if (isOkx) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (order.params as any).okxOrderId = (orderParams as any).okxOrderId;
-      }
-
       // Handle: off-chain cancellation via replacement
       if (
         order.params.zone === Sdk.SeaportBase.Addresses.ReservoirV16CancellationZone[config.chainId]
@@ -831,7 +662,7 @@ export const save = async (
         valid_between: `tstzrange(${validFrom}, ${validTo}, '[]')`,
         nonce: bn(order.params.counter).toString(),
         source_id_int: source?.id,
-        is_reservoir: isReservoir ? isReservoir : null,
+        is_reservoir: true,
         contract: toBuffer(info.contract),
         conduit: toBuffer(
           new Sdk.Mintify.Exchange(config.chainId).deriveConduit(order.params.conduitKey)
@@ -861,7 +692,7 @@ export const save = async (
         unfillable,
       });
 
-      if (!unfillable && isReservoir) {
+      if (!unfillable) {
         await addPendingData([
           JSON.stringify({
             kind: "mintify",
@@ -874,11 +705,7 @@ export const save = async (
         "orders-mintify-save",
         `Failed to handle order (will retry). orderParams=${JSON.stringify(
           orderParams
-        )}, metadata=${JSON.stringify(
-          metadata
-        )}, isReservoir=${isReservoir}, openSeaOrderParams=${JSON.stringify(
-          openSeaOrderParams
-        )}, error=${error}`
+        )}, metadata=${JSON.stringify(metadata)}, error=${error}`
       );
     }
   };
@@ -890,11 +717,7 @@ export const save = async (
       limit(async () =>
         handleOrder(
           orderInfo.orderParams as Sdk.SeaportBase.Types.OrderComponents,
-          orderInfo.metadata,
-          orderInfo.isReservoir,
-          orderInfo.isOpenSea,
-          orderInfo.openSeaOrderParams,
-          orderInfo.isOkx
+          orderInfo.metadata
         )
       )
     )
