@@ -54,6 +54,7 @@ export default class FetchSourceInfoJob extends AbstractRabbitMqJobHandler {
     let tokenUrlDegen;
     let tokenUrlSeiTestnet;
     let tokenUrlXai;
+    let tokenUrlNebula;
 
     if (!_.startsWith(url, "http")) {
       url = `https://${url}`;
@@ -143,6 +144,7 @@ export default class FetchSourceInfoJob extends AbstractRabbitMqJobHandler {
       tokenUrlDegen = this.getTokenUrl(html, url, "degen");
       tokenUrlSeiTestnet = this.getTokenUrl(html, url, "sei-testnet");
       tokenUrlXai = this.getTokenUrl(html, url, "xai");
+      tokenUrlNebula = this.getTokenUrl(html, url, "nebula");
     } catch (error) {
       logger.info(this.queueName, `Get html error. sourceDomain=${sourceDomain}, error=${error}`);
     }
@@ -217,6 +219,7 @@ export default class FetchSourceInfoJob extends AbstractRabbitMqJobHandler {
           tokenUrlDegen,
           tokenUrlSeiTestnet,
           tokenUrlXai,
+          tokenUrlNebula,
         },
       })
     );
@@ -255,6 +258,7 @@ export default class FetchSourceInfoJob extends AbstractRabbitMqJobHandler {
       tokenUrlDegen,
       tokenUrlSeiTestnet,
       tokenUrlXai,
+      tokenUrlNebula,
     });
   }
 

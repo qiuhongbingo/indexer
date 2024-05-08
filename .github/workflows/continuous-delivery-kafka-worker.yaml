@@ -254,6 +254,10 @@ jobs:
 
           ./utils/version_update_batch.sh indexer-xai ${{ github.sha }} \
             ./prod/platform/indexer-kafka-worker-xai.yaml
+          
+          ./utils/version_update_batch.sh indexer-nebula ${{ github.sha }} \
+            ./prod/platform/indexer-kafka-worker-nebula.yaml
+
       - name: Post to Slack
         if: ${{ always() }}
         id: slack-deploy-prod
