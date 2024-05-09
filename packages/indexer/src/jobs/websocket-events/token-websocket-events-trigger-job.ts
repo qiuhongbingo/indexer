@@ -360,7 +360,7 @@ export class TokenWebsocketEventsTriggerJob extends AbstractRabbitMqJobHandler {
           t.is_spam,
           t.description,
           t.image,
-          t.image_version,
+          COALESCE(t.metadata_version, t.image_version) AS image_version,
           (t.metadata ->> 'image_mime_type')::TEXT AS image_mime_type,
           (t.metadata ->> 'media_mime_type')::TEXT AS media_mime_type,
           t.media,

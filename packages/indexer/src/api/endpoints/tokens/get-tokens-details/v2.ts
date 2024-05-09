@@ -142,7 +142,7 @@ export const getTokensDetailsV2Options: RouteOptions = {
           "t"."last_buy_timestamp",
           "t"."last_sell_value",
           "t"."last_sell_timestamp",
-          "t"."image_version",
+          COALESCE("t"."metadata_version", "t"."image_version") AS "image_version",
           (
             SELECT "nb"."owner" FROM "nft_balances" "nb"
             WHERE "nb"."contract" = "t"."contract"

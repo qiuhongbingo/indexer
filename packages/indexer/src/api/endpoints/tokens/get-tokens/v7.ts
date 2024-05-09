@@ -797,7 +797,7 @@ export const getTokensV7Options: RouteOptions = {
           t.metadata,
           t.media,
           t.collection_id,
-          t.image_version,
+          COALESCE(t.metadata_version, t.image_version) AS image_version,
           (t.metadata ->> 'image_mime_type')::TEXT AS image_mime_type,
           (t.metadata ->> 'media_mime_type')::TEXT AS media_mime_type,
           c.image_version AS collection_image_version,
