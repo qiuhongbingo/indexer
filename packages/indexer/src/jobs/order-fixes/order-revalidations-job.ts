@@ -1,6 +1,5 @@
 import { idb } from "@/common/db";
 import { logger } from "@/common/logger";
-import { redis } from "@/common/redis";
 import { toBuffer } from "@/common/utils";
 import { AbstractRabbitMqJobHandler, BackoffStrategy } from "@/jobs/abstract-rabbit-mq-job-handler";
 import {
@@ -82,15 +81,6 @@ export default class OrderRevalidationsJob extends AbstractRabbitMqJobHandler {
             whitelistedZones,
             createdAtContinutation,
           } = data;
-
-          // Process the same contract at most once per 5 minutes
-          const lockKey = `order-revalidations:operator-or-zone:${contract}:${data.origin}:${createdAtContinutation}`;
-          const lock = await redis.get(lockKey);
-          if (lock) {
-            return;
-          }
-
-          await redis.set(lockKey, "locked", "EX", 5 * 60);
 
           if (!blacklistedOperators && !whitelistedOperators && !whitelistedZones) {
             return;
