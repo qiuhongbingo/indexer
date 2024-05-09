@@ -17,6 +17,7 @@ import * as marketplaceFees from "@/utils/marketplace-fees";
 import * as paymentProcessor from "@/utils/payment-processor";
 import * as paymentProcessorV2 from "@/utils/payment-processor-v2";
 import * as onchain from "@/utils/royalties/onchain";
+import { ApiKeyManager } from "@/models/api-keys";
 
 type PaymentToken = {
   address: string;
@@ -40,6 +41,9 @@ type Marketplace = {
   exchanges: Record<
     string,
     {
+      fee?: {
+        bps: number;
+      };
       enabled: boolean;
       paymentTokens?: PaymentToken[];
       traitBidSupported: boolean;
@@ -149,6 +153,7 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
     }),
   },
   handler: async (request: Request) => {
+    const apiKey = await ApiKeyManager.getApiKey(request.headers["x-api-key"], "", "", false);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params = request.params as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -292,6 +297,9 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
           orderbook: "reservoir",
           exchanges: {
             seaport: {
+              fee: {
+                bps: await ApiKeyManager.getOrderbookFee(apiKey?.key ?? "", "seaport-v1.5"),
+              },
               orderKind: "seaport-v1.5",
               enabled: Boolean(Sdk.SeaportV15.Addresses.Exchange[config.chainId]),
               customFeesSupported: true,
@@ -305,6 +313,9 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
               ),
             },
             "seaport-v1.6": {
+              fee: {
+                bps: await ApiKeyManager.getOrderbookFee(apiKey?.key ?? "", "seaport-v1.6"),
+              },
               orderKind: "seaport-v1.6",
               enabled: Boolean(Sdk.SeaportV16.Addresses.Exchange[config.chainId]),
               customFeesSupported: true,
@@ -318,6 +329,9 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
               ),
             },
             mintify: {
+              fee: {
+                bps: await ApiKeyManager.getOrderbookFee(apiKey?.key ?? "", "mintify"),
+              },
               orderKind: "mintify",
               enabled: Boolean(Sdk.Mintify.Addresses.Exchange[config.chainId]),
               customFeesSupported: true,
@@ -331,6 +345,9 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
               ),
             },
             "payment-processor": {
+              fee: {
+                bps: await ApiKeyManager.getOrderbookFee(apiKey?.key ?? "", "payment-processor"),
+              },
               orderKind: "payment-processor",
               enabled: Boolean(Sdk.PaymentProcessor.Addresses.Exchange[config.chainId]),
               customFeesSupported: true,
@@ -343,6 +360,9 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
               oracleEnabled: false,
             },
             "payment-processor-v2": {
+              fee: {
+                bps: await ApiKeyManager.getOrderbookFee(apiKey?.key ?? "", "payment-processor-v2"),
+              },
               orderKind: "payment-processor-v2",
               enabled: Boolean(Sdk.PaymentProcessorV2.Addresses.Exchange[config.chainId]),
               customFeesSupported: true,
