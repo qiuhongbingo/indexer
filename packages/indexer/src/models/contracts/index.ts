@@ -70,7 +70,8 @@ export class Contracts {
           symbol = $/symbol/,
           name = $/name/,
           metadata = $/metadata:json/,
-          owner = $/owner/
+          owner = $/owner/,
+          updated_at = now()
         WHERE contracts.address = $/contract/
       `,
       {
