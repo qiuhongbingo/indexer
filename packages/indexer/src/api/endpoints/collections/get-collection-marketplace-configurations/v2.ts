@@ -112,6 +112,11 @@ export const getCollectionMarketplaceConfigurationsV2Options: RouteOptions = {
             .pattern(
               Joi.string(),
               Joi.object({
+                fee: Joi.object({
+                  bps: Joi.number(),
+                })
+                  .optional()
+                  .description("Orderbook Fee"),
                 orderKind: Joi.string().allow(null),
                 enabled: Joi.boolean(),
                 customFeesSupported: Joi.boolean(),
