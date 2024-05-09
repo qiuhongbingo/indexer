@@ -73,7 +73,6 @@ export class IndexerTokensHandler extends KafkaEventHandler {
               "image",
               "metadata_disabled",
               "image_version",
-              "metadata_version",
               "rarity_rank",
               "rarity_score",
             ].includes(value)

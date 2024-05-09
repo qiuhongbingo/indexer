@@ -280,7 +280,7 @@ export const getStatsV1Options: RouteOptions = {
               "t"."floor_sell_id",
               "t"."floor_sell_value",
               "t"."floor_sell_maker",
-              COALESCE("t"."metadata_version", "t"."image_version") AS "image_version",
+              "t"."image_version",
               date_part('epoch', lower("os"."valid_between")) AS "floor_sell_valid_from",
               coalesce(
                 nullif(date_part('epoch', upper("os"."valid_between")), 'Infinity'),

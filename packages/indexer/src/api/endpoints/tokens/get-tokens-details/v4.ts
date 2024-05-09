@@ -206,7 +206,7 @@ export const getTokensDetailsV4Options: RouteOptions = {
           "t"."last_buy_timestamp",
           "t"."last_sell_value",
           "t"."last_sell_timestamp",
-          COALESCE("t"."metadata_version", "t"."image_version") AS "image_version",
+          "t"."image_version",
           ("c".metadata ->> 'imageUrl')::TEXT AS "collection_image",
           (
             SELECT "nb"."owner" FROM "nft_balances" "nb"

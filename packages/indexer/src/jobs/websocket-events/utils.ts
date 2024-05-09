@@ -20,7 +20,7 @@ export async function getTokenMetadata(tokenId: string, contract: string) {
     SELECT
       tokens.name,
       tokens.image,
-      COALESCE(tokens.metadata_version, tokens.image_version) AS image_version,
+      tokens.image_version,
       (tokens.metadata ->> 'image_mime_type')::TEXT AS image_mime_type,
       tokens.collection_id,
       collections.name AS collection_name

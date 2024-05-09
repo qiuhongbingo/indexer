@@ -180,7 +180,7 @@ export const getTokensV4Options: RouteOptions = {
           "t"."rarity_rank",
           "t"."is_flagged",
           "t"."last_flag_update",
-          COALESCE("t"."metadata_version", "t"."image_version") AS "image_version",
+          "t"."image_version",
           (
             SELECT owner
             FROM "nft_balances" "nb"

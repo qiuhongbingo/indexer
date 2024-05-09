@@ -614,7 +614,7 @@ export const getCollectionsV5Options: RouteOptions = {
              tokens.token_id AS floor_sell_token_id,
              tokens.name AS floor_sell_token_name,
              tokens.image AS floor_sell_token_image,
-             COALESCE(tokens.metadata_version, tokens.image_version) AS floor_sell_token_image_version,
+             tokens.image_version AS floor_sell_token_image_version,
              orders.currency AS floor_sell_currency,
              ${
                query.normalizeRoyalties

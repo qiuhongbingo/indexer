@@ -64,7 +64,7 @@ export class ActivitiesTokenCache {
             tokens.token_id,
             tokens.name,
             tokens.image,
-            COALESCE(tokens.metadata_version, tokens.image_version) AS image_version,
+            tokens.image_version,
             (tokens.metadata ->> 'image_mime_type')::TEXT AS image_mime_type,
             tokens.metadata_disabled,
             tokens.rarity_score,

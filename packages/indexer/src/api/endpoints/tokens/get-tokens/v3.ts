@@ -115,7 +115,7 @@ export const getTokensV3Options: RouteOptions = {
           "c"."slug",
           "t"."floor_sell_value",
           "t"."top_buy_value",
-          COALESCE("t"."metadata_version", "t"."image_version") AS "image_version"
+          "t"."image_version"
         FROM "tokens" "t"
         JOIN "collections" "c"
           ON "t"."collection_id" = "c"."id"
