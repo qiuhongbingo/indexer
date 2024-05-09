@@ -48,7 +48,7 @@ export default class CollectionResyncBurnedTokensJob extends AbstractRabbitMqJob
       collection,
       contract: toBuffer(contract),
       tokenId: fromTokenId,
-      mintAddresses: getNetworkSettings().mintAddresses.map((address) => toBuffer(address)),
+      burnAddresses: getNetworkSettings().burnAddresses.map((address) => toBuffer(address)),
       limit,
     });
 
