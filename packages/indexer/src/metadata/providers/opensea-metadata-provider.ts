@@ -102,7 +102,7 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
           headers,
         })
         .then((response) => response.data)
-        .catch((error) => this.handleError(error));
+        .catch((error) => this.handleError(error, "_getTokensMetadata"));
 
       tokensMetadata.push(data.nft);
     }
@@ -139,18 +139,7 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
         headers,
       })
       .then((response) => response.data)
-      .catch((error) => {
-        logger.error(
-          "opensea-fetcher",
-          JSON.stringify({
-            message: `_getTokenFlagStatus error. contract:${contract}, tokenId:${tokenId}, error:${error}`,
-            url,
-            error,
-          })
-        );
-
-        this.handleError(error);
-      });
+      .catch((error) => this.handleError(error, "_getTokenFlagStatus"));
 
     return {
       data: {
@@ -196,18 +185,9 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
         headers,
       })
       .then((response) => response.data)
-      .catch((error) => {
-        logger.error(
-          "opensea-fetcher",
-          JSON.stringify({
-            message: `_getTokensFlagStatusByCollectionPaginationViaSlug error. slug:${slug}, continuation:${continuation}, error:${error}`,
-            url,
-            error,
-          })
-        );
-
-        this.handleError(error);
-      });
+      .catch((error) =>
+        this.handleError(error, "_getTokensFlagStatusByCollectionPaginationViaSlug")
+      );
 
     return {
       data: data.nfts.map((asset: any) => ({
@@ -254,19 +234,9 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
         headers,
       })
       .then((response) => response.data)
-      .catch((error) => {
-        logger.error(
-          "opensea-fetcher",
-          JSON.stringify({
-            message: `_getTokensFlagStatusByCollectionPaginationViaContract error. contract:${contract}, continuation:${continuation}, error:${error}`,
-            url,
-            errorResponseStatus: error.response?.status,
-            errorResponseData: error.response?.data,
-          })
-        );
-
-        this.handleError(error);
-      });
+      .catch((error) =>
+        this.handleError(error, "_getTokensFlagStatusByCollectionPaginationViaContract")
+      );
 
     return {
       data: data.nfts.map((asset: any) => ({
@@ -278,7 +248,7 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
     };
   }
 
-  handleError(error: any) {
+  handleError(error: any, context?: string) {
     if (error.response?.status === 400) {
       if (error.response.data.errors?.includes("not found")) {
         throw new CollectionNotFoundError(error.response.data.errors);
@@ -293,6 +263,15 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
           // Skip on any errors
         }
       }
+
+      logger.warn(
+        "opensea-fetcher",
+        JSON.stringify({
+          message: `requestWasThrottledError. context=${context}, message=${error.message}, status=${error.response?.status}, url=${error.config?.url}, delay=${delay}`,
+          context,
+          error,
+        })
+      );
 
       throw new RequestWasThrottledError(error.response.statusText, delay);
     }
