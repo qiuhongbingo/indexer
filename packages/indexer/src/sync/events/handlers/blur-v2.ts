@@ -208,7 +208,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
             });
 
             onChainData.fillInfos.push({
-              context: `${orderId}-${baseEventParams.txHash}-${baseEventParams.logIndex}`,
+              context: `${orderId}-${baseEventParams.txHash}-${baseEventParams.logIndex + i}`,
               orderId: orderId,
               orderSide,
               contract: collection.toLowerCase(),
