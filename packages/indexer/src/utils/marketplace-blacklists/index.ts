@@ -85,6 +85,7 @@ export const isBlockedByCustomLogic = async (
         "0x572e33ffa523865791ab1c26b42a86ac244df784",
         "0x7daec605e9e2a1717326eedfd660601e2753a057",
         "0xe75ef1ec029c71c9db0f968e389331609312aa22",
+        "0x0cfb5d82be2b949e8fa73a656df91821e2ad99fd",
       ].includes(contract) &&
       (operators.includes(BLUR) || operators.includes(OPENSEA))
     ) {
