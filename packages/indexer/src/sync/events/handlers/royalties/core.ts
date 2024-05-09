@@ -541,128 +541,145 @@ export async function extractRoyalties(
       const inFeeBreakdown = (orderInfo?.feeBreakdown ?? []).find((c) => c.recipient === address);
 
       if (feeRecipientPlatform) {
-        // Make sure current fee address in every order
-        let protocolFeeSum = sameProtocolTotalPrice;
-        if (linkedOrder) {
-          protocolFeeSum = sameProtocolFills.reduce((total, item) => {
-            const matchOrder = parsedOrders.find(
-              (c) => c.contract === item.event.contract && c.tokenId === item.event.tokenId
-            );
-            if (
-              matchOrder &&
-              matchOrder.fees.find((c) => c.recipient.toLowerCase() === address.toLowerCase())
-            ) {
-              return total.add(
-                bn(item.event.currencyPrice ?? item.event.price).mul(bn(item.event.amount))
+        try {
+          // Make sure current fee address in every order
+          let protocolFeeSum = sameProtocolTotalPrice;
+          if (linkedOrder) {
+            protocolFeeSum = sameProtocolFills.reduce((total, item) => {
+              const matchOrder = parsedOrders.find(
+                (c) => c.contract === item.event.contract && c.tokenId === item.event.tokenId
               );
-            } else {
-              return total;
-            }
-          }, bn(0));
-        }
-
-        // This is a marketplace fee payment
-        // Reset the bps
-        royalty.bps = bn(balanceChange).mul(PRECISION_BASE).div(protocolFeeSum).toNumber();
-
-        // Calculate by matched payment amount in split payments
-        if (matchRangePayment && isReliable && hasMultiple) {
-          royalty.bps = bn(matchRangePayment.amount)
-            .mul(PRECISION_BASE)
-            .div(currencyPrice)
-            .toNumber();
-        }
-
-        const recipientIsEligible = !notRoyaltyRecipients.has(address);
-        if (recipientIsEligible) marketplaceFeeBreakdown.push(royalty);
-      } else {
-        // For different collection with same fee recipient
-        const sameRecipientDetails = sameProtocolDetails.filter((d) => d.recipient === address);
-        const shareSameRecipient = sameRecipientDetails.length === sameProtocolFills.length;
-
-        // Make sure current fee address in every order
-        let bps: number = bn(balanceChange)
-          .mul(PRECISION_BASE)
-          .div(sameContractTotalPrice)
-          .toNumber();
-
-        // Simple case where there is a single sale via the router
-        if (isSingleSaleViaRouter) {
-          bps = royalty.bps;
-        }
-
-        if (shareSameRecipient) {
-          const configBPS = sameRecipientDetails[0].bps;
-          const newBps = bn(balanceChange)
-            .mul(PRECISION_BASE)
-            .div(sameProtocolTotalPrice)
-            .toNumber();
-          // Make sure the bps is same with the config
-          const isValid = configBPS === newBps;
-          if (isValid) {
-            bps = newBps;
+              if (
+                matchOrder &&
+                matchOrder.fees.find((c) => c.recipient.toLowerCase() === address.toLowerCase())
+              ) {
+                return total.add(
+                  bn(item.event.currencyPrice ?? item.event.price).mul(bn(item.event.amount))
+                );
+              } else {
+                return total;
+              }
+            }, bn(0));
           }
-        }
 
-        // Re-calculate the bps based on the fee amount in the order
-        if (linkedOrder) {
-          const feeItem = linkedOrder.fees.find(
-            (c) => c.recipient.toLowerCase() === address.toLowerCase()
-          );
-          if (feeItem) {
-            bps = bn(feeItem.amount).mul(PRECISION_BASE).div(currencyPrice).toNumber();
-          } else {
-            // Skip if not the in the fees
-            continue;
-          }
-        }
-
-        // Conditions:
-        // - royalty percentage between 0% and 15% (both exclusive)
-        // - royalty recipient is not a known platform fee recipient
-        // - royalty recipient is a valid royalty recipient
-        const notInOtherDef = !sameContractFillsWithRoyaltyData.find((_) =>
-          _.royalties.find((c) => c.find((d) => d.recipient === address))
-        );
-
-        const excludeOtherRecipients = shareSameRecipient ? true : notInOtherDef;
-        const matchFee = feeRecipient.getByAddress(address, "marketplace");
-
-        const inRoyaltyRecipient = royalties.find((c) => c.find((d) => d.recipient === address));
-
-        let outOfLimit = bps > BPS_LIMIT;
-
-        if (inFeeBreakdown && outOfLimit) {
-          outOfLimit = false;
-        }
-
-        const recipientIsEligible =
-          bps > 0 &&
-          !outOfLimit &&
-          !matchFee &&
-          excludeOtherRecipients &&
-          (!notRoyaltyRecipients.has(address) || inRoyaltyRecipient);
-
-        // For multiple sales, we should check if the current payment is
-        // in the range of payments associated to the current fill event
-        let isInRange =
-          hasMultiple && !shareSameRecipient
-            ? currentFillEvent?.relatedPayments.find(
-                (c) => c.to.toLowerCase() === address.toLowerCase()
-              )
-            : true;
-
-        // Match with the order's fee breakdown
-        if (!isInRange) {
-          isInRange = Boolean(inFeeBreakdown);
-        }
-
-        // For now we exclude AMMs which don't pay royalties
-        const isAMM = ["sudoswap", "nftx"].includes(fillEvent.orderKind);
-        if (recipientIsEligible && !isAMM && isInRange) {
+          // This is a marketplace fee payment
           // Reset the bps
-          royalty.bps = bps;
-          royaltyFeeBreakdown.push(royalty);
+          royalty.bps = bn(balanceChange).mul(PRECISION_BASE).div(protocolFeeSum).toNumber();
+
+          // Calculate by matched payment amount in split payments
+          if (matchRangePayment && isReliable && hasMultiple) {
+            royalty.bps = bn(matchRangePayment.amount)
+              .mul(PRECISION_BASE)
+              .div(currencyPrice)
+              .toNumber();
+          }
+
+          const recipientIsEligible = !notRoyaltyRecipients.has(address);
+          if (recipientIsEligible) marketplaceFeeBreakdown.push(royalty);
+        } catch (err) {
+          throw new Error(`caclute marketplace error ${err}`);
+        }
+      } else {
+        try {
+          // For different collection with same fee recipient
+          const sameRecipientDetails = sameProtocolDetails.filter((d) => d.recipient === address);
+          const shareSameRecipient = sameRecipientDetails.length === sameProtocolFills.length;
+
+          // Make sure current fee address in every order
+          let bps: number = bn(balanceChange)
+            .mul(PRECISION_BASE)
+            .div(sameContractTotalPrice)
+            .toNumber();
+
+          // Simple case where there is a single sale via the router
+          if (isSingleSaleViaRouter) {
+            bps = royalty.bps;
+          }
+
+          if (shareSameRecipient) {
+            const configBPS = sameRecipientDetails[0].bps;
+            const newBps = bn(balanceChange)
+              .mul(PRECISION_BASE)
+              .div(sameProtocolTotalPrice)
+              .toNumber();
+            // Make sure the bps is same with the config
+            const isValid = configBPS === newBps;
+            if (isValid) {
+              bps = newBps;
+            }
+          }
+
+          // Conditions:
+          // - royalty percentage between 0% and 15% (both exclusive)
+          // - royalty recipient is not a known platform fee recipient
+          // - royalty recipient is a valid royalty recipient
+          const notInOtherDef = !sameContractFillsWithRoyaltyData.find((_) =>
+            _.royalties.find((c) => c.find((d) => d.recipient === address))
+          );
+
+          const excludeOtherRecipients = shareSameRecipient ? true : notInOtherDef;
+          const matchFee = feeRecipient.getByAddress(address, "marketplace");
+
+          const inRoyaltyRecipient = royalties.find((c) => c.find((d) => d.recipient === address));
+
+          let outOfLimit = bps > BPS_LIMIT;
+
+          if (inFeeBreakdown && outOfLimit) {
+            outOfLimit = false;
+          }
+
+          let recipientIsEligible =
+            bps > 0 &&
+            !outOfLimit &&
+            !matchFee &&
+            excludeOtherRecipients &&
+            (!notRoyaltyRecipients.has(address) || inRoyaltyRecipient);
+
+          // Re-calculate the bps based on the fee amount in the order
+          if (linkedOrder) {
+            try {
+              const feeItem = linkedOrder.fees.find(
+                (c) => c.recipient.toLowerCase() === address.toLowerCase()
+              );
+
+              if (feeItem) {
+                const currentFeeAmount = bn(feeItem.amount)
+                  .div(linkedOrder.amount)
+                  .mul(fillEvent.amount);
+                bps = bn(currentFeeAmount).mul(PRECISION_BASE).div(currencyPrice).toNumber();
+                recipientIsEligible = true;
+              } else {
+                // Skip if not the in the fees
+                continue;
+              }
+            } catch (err) {
+              throw new Error(`caclute-royalty-linked-order-error ${err}`);
+            }
+          }
+
+          // For multiple sales, we should check if the current payment is
+          // in the range of payments associated to the current fill event
+          let isInRange =
+            hasMultiple && !shareSameRecipient
+              ? currentFillEvent?.relatedPayments.find(
+                  (c) => c.to.toLowerCase() === address.toLowerCase()
+                )
+              : true;
+
+          // Match with the order's fee breakdown
+          if (!isInRange) {
+            isInRange = Boolean(inFeeBreakdown);
+          }
+
+          // For now we exclude AMMs which don't pay royalties
+          const isAMM = ["sudoswap", "nftx"].includes(fillEvent.orderKind);
+          if (recipientIsEligible && !isAMM && isInRange) {
+            // Reset the bps
+            royalty.bps = bps;
+            royaltyFeeBreakdown.push(royalty);
+          }
+        } catch (err) {
+          throw new Error(`caclute-royalty-error ${err}`);
         }
       }
     }
