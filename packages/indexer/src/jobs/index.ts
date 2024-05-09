@@ -201,7 +201,7 @@ import { resyncAttributeCacheJob } from "@/jobs/update-attribute/resync-attribut
 import { refreshDynamicTokenSetJob } from "@/jobs/token-set-updates/refresh-dynamic-token-set-job";
 import { fixOwnershipJob } from "@/jobs/backfill/fix-ownership";
 import { distributeFeesJob } from "@/jobs/orderbook/distribute-fees-job";
-import { collectionResyncBurnedTokensJob } from "@/jobs/collection-updates/collection-reclac-supply-job";
+import { collectionResyncBurnedTokensJob } from "@/jobs/collection-updates/collection-resync-burned-tokens-job";
 
 export const allJobQueues = [
   backfillWrongNftBalances.queue,
