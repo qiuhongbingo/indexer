@@ -149,6 +149,7 @@ export const MintModule: ChainIdToAddress = {
   [Network.Redstone]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Degen]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Xai]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.SeiTestnet]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
 };
 
 export const DittoModule: ChainIdToAddress = {
@@ -334,6 +335,7 @@ export const SeaportV16Module: ChainIdToAddress = {
   [Network.Zora]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
   [Network.Blast]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
   [Network.Xai]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+  [Network.SeiTestnet]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
 };
 
 export const MintifyModule: ChainIdToAddress = {

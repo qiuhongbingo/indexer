@@ -50,6 +50,7 @@ export const ReservoirConduitKey: ChainIdToAddress = {
   [Network.Scroll]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
   [Network.Xai]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
   [Network.Zora]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
+  [Network.SeiTestnet]: "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e000000000000000000000000",
 };
 
 export const ConduitController: ChainIdToAddress = {
@@ -225,6 +226,7 @@ export const ReservoirCancellationZone: ChainIdToAddress = {
   [Network.Scroll]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
   [Network.Xai]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
   [Network.Zora]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
+  [Network.SeiTestnet]: "0x80a5f08f89e55ddeceedfe76612fb87fd8180f80",
 };
 
 export const ReservoirV16CancellationZone: ChainIdToAddress = {
