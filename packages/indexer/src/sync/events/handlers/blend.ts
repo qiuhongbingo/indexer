@@ -169,6 +169,19 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
           baseEventParams,
         });
 
+        onChainData.fillInfos.push({
+          context: `${orderId}-${baseEventParams.txHash}-${baseEventParams.logIndex}`,
+          orderId: orderId,
+          orderSide: "sell",
+          contract: lien.collection.toLowerCase(),
+          tokenId: lien.tokenId.toString(),
+          amount: "1",
+          price: priceData.nativePrice,
+          timestamp: baseEventParams.timestamp,
+          maker,
+          taker,
+        });
+
         trades.order.set(`${txHash}-${exchangeAddress}`, tradeRank + 1);
 
         break;

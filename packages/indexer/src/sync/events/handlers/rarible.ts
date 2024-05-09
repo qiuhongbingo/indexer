@@ -313,7 +313,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
         });
 
         onChainData.fillInfos.push({
-          context: `${orderId}-${baseEventParams.txHash}`,
+          context: `${orderId}-${baseEventParams.txHash}-${baseEventParams.logIndex}`,
           orderId,
           orderSide: side,
           contract,
