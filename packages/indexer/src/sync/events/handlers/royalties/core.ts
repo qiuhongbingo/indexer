@@ -604,19 +604,6 @@ export async function extractRoyalties(
           }
         }
 
-        // Re-calculate the bps based on the fee amount in the order
-        if (linkedOrder) {
-          const feeItem = linkedOrder.fees.find(
-            (c) => c.recipient.toLowerCase() === address.toLowerCase()
-          );
-          if (feeItem) {
-            bps = bn(feeItem.amount).mul(PRECISION_BASE).div(currencyPrice).toNumber();
-          } else {
-            // Skip if not the in the fees
-            continue;
-          }
-        }
-
         // Conditions:
         // - royalty percentage between 0% and 15% (both exclusive)
         // - royalty recipient is not a known platform fee recipient
@@ -636,12 +623,34 @@ export async function extractRoyalties(
           outOfLimit = false;
         }
 
-        const recipientIsEligible =
+        let recipientIsEligible =
           bps > 0 &&
           !outOfLimit &&
           !matchFee &&
           excludeOtherRecipients &&
           (!notRoyaltyRecipients.has(address) || inRoyaltyRecipient);
+
+        // Re-calculate the bps based on the fee amount in the order
+        if (linkedOrder) {
+          try {
+            const feeItem = linkedOrder.fees.find(
+              (c) => c.recipient.toLowerCase() === address.toLowerCase()
+            );
+
+            if (feeItem) {
+              const currentFeeAmount = bn(feeItem.amount)
+                .div(linkedOrder.amount)
+                .mul(fillEvent.amount);
+              bps = bn(currentFeeAmount).mul(PRECISION_BASE).div(currencyPrice).toNumber();
+              recipientIsEligible = true;
+            } else {
+              // Skip if not the in the fees
+              continue;
+            }
+          } catch (err) {
+            throw new Error(`caclute-royalty-linked-order-error ${err}`);
+          }
+        }
 
         // For multiple sales, we should check if the current payment is
         // in the range of payments associated to the current fill event
