@@ -38,19 +38,6 @@ export class CollectionNewContractDeployedJob extends AbstractRabbitMqJobHandler
     const { contract } = payload;
     let deployer = payload.deployer || null;
 
-    if (config.debugMetadataIndexingCollections.includes(contract)) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexing",
-          message: `Start. contract=${contract}`,
-          contract,
-          payload,
-          debugMetadataIndexingCollection: true,
-        })
-      );
-    }
-
     if (!contract) {
       logger.error(this.queueName, `Missing contract`);
       return;
@@ -58,18 +45,6 @@ export class CollectionNewContractDeployedJob extends AbstractRabbitMqJobHandler
 
     if (!deployer) {
       deployer = await getContractDeployer(contract);
-    }
-
-    if (config.debugMetadataIndexingCollections.includes(contract)) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexing",
-          message: `deployer. contract=${contract}, deployer=${deployer}`,
-          contract,
-          debugMetadataIndexingCollection: true,
-        })
-      );
     }
 
     if (deployer && BLACKLISTED_DEPLOYERS.includes(deployer)) {
@@ -83,18 +58,6 @@ export class CollectionNewContractDeployedJob extends AbstractRabbitMqJobHandler
     // get the type of the collection, either ERC721 or ERC1155. if it's not one of those, we don't care
     // get this from the contract itself
     const collectionKind = await detectTokenStandard(contract);
-
-    if (config.debugMetadataIndexingCollections.includes(contract)) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexing",
-          message: `collectionKind. contract=${contract}, deployer=${deployer}, collectionKind=${collectionKind}`,
-          contract,
-          debugMetadataIndexingCollection: true,
-        })
-      );
-    }
 
     switch (collectionKind) {
       case "ERC721":
