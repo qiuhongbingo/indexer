@@ -149,6 +149,7 @@ export const MintModule: ChainIdToAddress = {
   [Network.Redstone]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Degen]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Xai]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.SeiTestnet]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
 };
 
 export const DittoModule: ChainIdToAddress = {
@@ -334,9 +335,13 @@ export const SeaportV16Module: ChainIdToAddress = {
   [Network.Zora]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
   [Network.Blast]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
   [Network.Xai]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+  [Network.SeiTestnet]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
 };
 
 export const MintifyModule: ChainIdToAddress = {
+  [Network.Ethereum]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
+  [Network.Base]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
+  [Network.Blast]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
   [Network.EthereumSepolia]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
   [Network.BaseSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
   [Network.BlastSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",

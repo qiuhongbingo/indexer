@@ -61,6 +61,7 @@ jobs:
           tags: |
             ghcr.io/reservoirprotocol/indexer:latest
             ghcr.io/reservoirprotocol/indexer:${{ github.sha }}
+            ghcr.io/reservoirprotocol/indexer:${{ github.ref_name }}-${{ github.sha }}
           # ghcr.io/reservoirprotocol/indexer:${{ steps.semantic.outputs.new_release_version }}
           # build-args: |
           #   VERSION=${{ steps.semantic.outputs.new_release_version }}
@@ -329,7 +330,7 @@ jobs:
             ./prod/platform/indexer-api-xai.yaml \
             ./prod/platform/indexer-worker-xai.yaml \
             ./prod/platform/indexer-worker-master-xai.yaml
-          
+
           ./utils/version_update_batch.sh indexer-nebula ${{ github.sha }} \
             ./prod/platform/indexer-api-nebula.yaml \
             ./prod/platform/indexer-worker-nebula.yaml \

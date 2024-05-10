@@ -13,6 +13,7 @@ import {
 import { onchainMetadataProvider } from "@/metadata/providers/onchain-metadata-provider";
 import * as royalties from "@/utils/royalties";
 import * as onchain from "@/utils/royalties/onchain";
+import { config } from "@/config/index";
 
 export type CollectionContractDeployed = {
   contract: string;
@@ -78,21 +79,26 @@ export class CollectionNewContractDeployedJob extends AbstractRabbitMqJobHandler
     const contractMetadata = await onchainMetadataProvider._getCollectionMetadata(contract);
     const contractOwner = await getContractOwner(contract);
 
-    logger.debug(
-      this.queueName,
-      JSON.stringify({
-        message: `Create contract. contract=${contract}`,
-        data: {
-          kind: collectionKind.toLowerCase(),
-          symbol: symbol || null,
-          name: name || null,
-          deployed_at: payload.blockTimestamp || null,
-          metadata: rawMetadata || null,
-          deployer: deployer || null,
-          owner: contractOwner || null,
-        },
-      })
-    );
+    if (config.debugMetadataIndexingCollections.includes(contract)) {
+      logger.info(
+        this.queueName,
+        JSON.stringify({
+          topic: "tokenMetadataIndexing",
+          message: `Update. contract=${contract}`,
+          contract,
+          data: {
+            kind: collectionKind.toLowerCase(),
+            symbol: symbol || null,
+            name: name || null,
+            deployed_at: payload.blockTimestamp || null,
+            metadata: rawMetadata || null,
+            deployer: deployer || null,
+            owner: contractOwner || null,
+          },
+          debugMetadataIndexingCollection: true,
+        })
+      );
+    }
 
     await Promise.all([
       idb.none(
@@ -116,7 +122,15 @@ export class CollectionNewContractDeployedJob extends AbstractRabbitMqJobHandler
             $/deployer/,
             $/owner/
           )
-          ON CONFLICT DO NOTHING
+          ON CONFLICT (address)
+          DO UPDATE SET
+            symbol = COALESCE(EXCLUDED.symbol, contracts.symbol),
+            name = COALESCE(EXCLUDED.name, contracts.name),
+            deployed_at = COALESCE(EXCLUDED.deployed_at, contracts.deployed_at),
+            metadata = COALESCE(EXCLUDED.metadata, contracts.metadata),
+            deployer = COALESCE(EXCLUDED.deployer, contracts.deployer),
+            owner = COALESCE(EXCLUDED.owner, contracts.owner),
+            updated_at = now()
         `,
         {
           address: toBuffer(contract),
@@ -148,7 +162,7 @@ export class CollectionNewContractDeployedJob extends AbstractRabbitMqJobHandler
                 '(,)'::numrange,
                 $/tokenSetId/,
                 $/metadata:json/
-              ) ON CONFLICT DO NOTHING
+              ) ON CONFLICT (id) DO UPDATE SET creator = EXCLUDED.creator, updated_at = NOW() WHERE collections.creator IS NULL
             `,
             {
               id: contract,

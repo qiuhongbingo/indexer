@@ -206,6 +206,19 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
                 logIndex: baseEventParams.logIndex + i,
               },
             });
+
+            onChainData.fillInfos.push({
+              context: `${orderId}-${baseEventParams.txHash}-${baseEventParams.logIndex + i}`,
+              orderId: orderId,
+              orderSide,
+              contract: collection.toLowerCase(),
+              tokenId: tokenId.toString(),
+              amount: amount.toString(),
+              price: priceData.nativePrice,
+              timestamp: baseEventParams.timestamp,
+              maker,
+              taker,
+            });
           }
         }
 
