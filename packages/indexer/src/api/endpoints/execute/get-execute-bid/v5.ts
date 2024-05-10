@@ -2008,7 +2008,7 @@ export const getExecuteBidV5Options: RouteOptions = {
             }
           } catch (error: any) {
             return errors.push({
-              message: JSON.stringify(error),
+              message: error.response?.data ? JSON.stringify(error.response.data) : error.message,
               orderIndex: i,
             });
           }
