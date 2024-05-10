@@ -2251,7 +2251,7 @@ export const getExecuteBuyV7Options: RouteOptions = {
           onError: async (kind, error, data) => {
             errors.push({
               orderId: data.orderId,
-              message: JSON.stringify(error),
+              message: error.response?.data ? JSON.stringify(error.response.data) : error.message,
             });
             await fillErrorCallback(kind, error, data);
           },

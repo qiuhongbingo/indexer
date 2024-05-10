@@ -131,7 +131,7 @@ export const regex = {
   bytes: /^0x[a-fA-F0-9]*$/,
   token: /^0x[a-fA-F0-9]{40}:[0-9]+$/,
   fee: /^0x[a-fA-F0-9]{40}:[0-9]+$/,
-  number: /^[0-9]+$/,
+  number: /^-?[0-9]+$/,
   unixTimestamp: /^[0-9]{10}$/,
 };
 
