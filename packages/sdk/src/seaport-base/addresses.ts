@@ -242,6 +242,7 @@ export const ReservoirV16CancellationZone: ChainIdToAddress = {
   [Network.Optimism]: "0x2d1a340cd83434243d090931afabf95b7d3078b0",
   [Network.Polygon]: "0x2d1a340cd83434243d090931afabf95b7d3078b0",
   [Network.Zora]: "0x088d937f241702de1d8379e7667826a3bbcb6da3",
+  [Network.Blast]: "0x088d937f241702de1d8379e7667826a3bbcb6da3",
 };
 
 export const OkxCancellationZone: ChainIdToAddress = {
