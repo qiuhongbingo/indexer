@@ -1508,23 +1508,7 @@ export const getExecuteSellV7Options: RouteOptions = {
       const executionsBuffer = new ExecutionsBuffer();
       for (const item of path) {
         const txData = txs.find((tx) => tx.orderIds.includes(item.orderId))?.txData;
-
-        let orderId = item.orderId;
-        if (txData && item.source === "blur.io") {
-          // Blur bids don't have the correct order id so we have to override it
-          const orders = await new Sdk.Blur.Exchange(config.chainId).getMatchedOrdersFromCalldata(
-            baseProvider,
-            txData!.data
-          );
-
-          const index = orders.findIndex(
-            ({ sell }) =>
-              sell.params.collection === item.contract && sell.params.tokenId === item.tokenId
-          );
-          if (index !== -1) {
-            orderId = orders[index].buy.hash();
-          }
-        }
+        const orderId = item.orderId;
 
         executionsBuffer.addFromRequest(request, {
           side: "sell",
