@@ -107,8 +107,8 @@ describe("Mints - Zora", () => {
         "0x0000000000000000000000000000000000000001",
         1
       );
-      expect(data.txData.data.includes("0x1d7df191")).toBe(true);
       // console.log("data", data);
+      expect(data.txData.data.includes("0x9dbb844d")).toBe(true);
       //     const result = await simulateCollectionMint(collectionMint);
       //     expect(result).toBe(true);
     }
