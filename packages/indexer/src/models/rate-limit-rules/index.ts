@@ -357,7 +357,7 @@ export class RateLimitRules {
           continue;
         }
 
-        if (verifyTag && rule.options.tag && apiTags.includes(rule.options.tag)) {
+        if (verifyTag && rule.options.tag && !apiTags.includes(rule.options.tag)) {
           continue;
         }
 
@@ -367,7 +367,7 @@ export class RateLimitRules {
     }
 
     // No matching rule found, return default rules
-    return this.getTierDefaultRule(tier);
+    return this.getTierDefaultRule(tier, apiTags);
   }
 
   public isPayloadMatchRulePayload(rule: RateLimitRuleEntity, payload: Map<string, string>) {
@@ -386,10 +386,16 @@ export class RateLimitRules {
     return true;
   }
 
-  public getTierDefaultRule(tier: number) {
+  public getTierDefaultRule(tier: number, apiTags: string[] = []) {
     // No matching rule found, return default rules
     const defaultRules = this.rulesEntities.get("/") || [];
     for (const rule of defaultRules) {
+      const verifyTag = !_.isEmpty(rule.options.tag);
+
+      if (verifyTag && rule.options.tag && !apiTags.includes(rule.options.tag)) {
+        continue;
+      }
+
       if (rule.tier === tier) {
         return rule;
       }
