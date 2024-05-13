@@ -176,21 +176,14 @@ import { onchainMetadataFetchTokenUriJob } from "@/jobs/metadata-index/onchain-m
 import { onchainMetadataProcessTokenUriJob } from "@/jobs/metadata-index/onchain-metadata-process-token-uri-job";
 import { updateUserCollectionsJob } from "@/jobs/nft-balance-updates/update-user-collections-job";
 import { resyncUserCollectionsJob } from "@/jobs/nft-balance-updates/reynsc-user-collections-job";
-import { backfillUserCollectionsJob } from "@/jobs/backfill/backfill-user-collections";
 import { tokenReassignedUserCollectionsJob } from "@/jobs/nft-balance-updates/token-reassigned-user-collections-job";
-import { backfillTransactionsDatesJob } from "@/jobs/backfill/backfill-transactions-dates";
-import { backfillActiveUserCollectionsJob } from "@/jobs/backfill/backfill-active-user-collections";
-import { backfillAirdropsJob } from "./backfill/backfill-airdrops";
-import { backfillTransferSpamJob } from "./backfill/backfill-transfer-burst-spam";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { collectionCheckSpamJob } from "@/jobs/collections-refresh/collections-check-spam-job";
-import { backfillNftBalancesDatesJob } from "@/jobs/backfill/backfill-nft-balances-dates";
 import { pendingTxsJob } from "@/jobs/pending-txs/pending-txs-job";
 import { updateUserCollectionsSpamJob } from "@/jobs/nft-balance-updates/update-user-collections-spam-job";
 import { updateNftBalancesSpamJob } from "@/jobs/nft-balance-updates/update-nft-balances-spam-job";
 import { pendingTxWebsocketEventsTriggerQueueJob } from "@/jobs/websocket-events/pending-tx-websocket-events-trigger-job";
 import { fixTokensMissingCollectionJob } from "@/jobs/token-updates/fix-tokens-missing-collection";
-import { backfillTokensWithMissingCollectionJob } from "@/jobs/backfill/backfill-tokens-with-missing-collection-job";
 import { backfillTokensLastSaleJob } from "@/jobs/backfill/backfill-tokens-last-sale-job";
 
 import { recalcOnSaleCountQueueJob } from "@/jobs/collection-updates/recalc-on-sale-count-queue-job";
@@ -360,21 +353,14 @@ export class RabbitMqJobsConsumer {
       backfillCollectionsElasticsearchJob,
       updateUserCollectionsJob,
       resyncUserCollectionsJob,
-      backfillUserCollectionsJob,
       tokenReassignedUserCollectionsJob,
-      backfillTransactionsDatesJob,
-      backfillActiveUserCollectionsJob,
-      backfillAirdropsJob,
-      backfillTransferSpamJob,
       syncApiKeysJob,
       collectionCheckSpamJob,
-      backfillNftBalancesDatesJob,
       pendingTxsJob,
       updateUserCollectionsSpamJob,
       updateNftBalancesSpamJob,
       pendingTxWebsocketEventsTriggerQueueJob,
       fixTokensMissingCollectionJob,
-      backfillTokensWithMissingCollectionJob,
       backfillTokensLastSaleJob,
       recalcOnSaleCountQueueJob,
       burnedTokenJob,
