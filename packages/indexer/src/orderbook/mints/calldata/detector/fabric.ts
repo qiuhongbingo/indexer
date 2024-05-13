@@ -3,7 +3,6 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Contract } from "@ethersproject/contracts";
 import * as Sdk from "@reservoir0x/sdk";
 
-import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 import { config } from "@/config/index";
 import { Transaction } from "@/models/transactions";
@@ -80,7 +79,7 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
       maxMintsPerWallet: toSafeNumber(1),
     });
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   // Update the status of each collection mint

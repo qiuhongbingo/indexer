@@ -1,6 +1,5 @@
 import axios from "axios";
 
-import { logger } from "@/common/logger";
 import { redis } from "@/common/redis";
 import {
   CollectionMint,
@@ -53,8 +52,6 @@ export const extractByCollectionMint = async (
     collectionMint.allowlistId = merkleRoot;
     collectionMint.stage = "lanyard-claim";
     collectionMint.kind = "allowlist";
-
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, collectionMint }));
 
     // results.push(collectionMint);
   } catch {

@@ -4,7 +4,6 @@ import { Contract } from "@ethersproject/contracts";
 import * as Sdk from "@reservoir0x/sdk";
 import axios from "axios";
 
-import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 import { redis } from "@/common/redis";
 import { bn } from "@/common/utils";
@@ -370,7 +369,7 @@ export const extractByCollectionERC721 = async (
           });
         }
       } catch (error) {
-        logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+        // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
       }
     }
   }
@@ -668,7 +667,7 @@ export const extractByCollectionERC1155 = async (
         }
       }
     } catch (error) {
-      logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+      // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
     }
   }
 

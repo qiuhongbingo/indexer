@@ -44,7 +44,7 @@ export class TokenFlagStatusSyncJob extends AbstractRabbitMqJobHandler {
                 logger.warn(
                   this.queueName,
                   JSON.stringify({
-                    message: `Too Many Requests. error=${error}`,
+                    message: `Too Many Requests. error=${error}, delay=${error.delay}`,
                     tokensToGetFlagStatusForChunk,
                     error,
                   })

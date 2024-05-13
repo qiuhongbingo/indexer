@@ -146,13 +146,15 @@ export class TokenWebsocketEventsTriggerJob extends AbstractRabbitMqJobHandler {
               data.after.image,
               undefined,
               data.after.image_version,
-              data.after.image_mime_type
+              data.after.image_mime_type,
+              `${contract}:${tokenId}`
             ),
             media: Assets.getResizedImageUrl(
               data.after.media,
               undefined,
               data.after.image_version,
-              data.after.media_mime_type
+              data.after.media_mime_type,
+              `${contract}:${tokenId}`
             ),
             kind: r?.kind,
             isFlagged: Boolean(Number(data.after.is_flagged)),

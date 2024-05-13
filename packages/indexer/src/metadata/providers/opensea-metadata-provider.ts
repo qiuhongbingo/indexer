@@ -270,6 +270,7 @@ class OpenseaMetadataProvider extends AbstractBaseMetadataProvider {
           message: `requestWasThrottledError. context=${context}, message=${error.message}, status=${error.response?.status}, url=${error.config?.url}, delay=${delay}`,
           context,
           error,
+          requestHeaders: error.config?.headers,
         })
       );
 
