@@ -310,7 +310,8 @@ export class RateLimitRules {
     method: string,
     tier: number,
     apiKey = "",
-    payload: Map<string, string> = new Map()
+    payload: Map<string, string> = new Map(),
+    apiTags: string[] = []
   ) {
     // If no cached regex rules
     if (!this.apiRoutesRegexRulesCache.get(route)) {
@@ -337,6 +338,7 @@ export class RateLimitRules {
         const verifyPayload = !_.isEmpty(rule.payload);
         const verifyMethod = rule.method !== "";
         const verifyTier = !_.isNull(rule.tier);
+        const verifyTag = !_.isEmpty(rule.options.tag);
 
         // Check the rule criteria, if none are not matching the rule is not matching
         if (verifyApiKey && rule.apiKey !== apiKey) {
@@ -352,6 +354,10 @@ export class RateLimitRules {
         }
 
         if (verifyTier && rule.tier !== tier) {
+          continue;
+        }
+
+        if (verifyTag && rule.options.tag && apiTags.includes(rule.options.tag)) {
           continue;
         }
 
@@ -398,12 +404,13 @@ export class RateLimitRules {
   ): { ruleParams: RateLimitRuleEntity; rule: RateLimiterRedis; pointsToConsume: number } | null {
     const route = request.route.path;
     const method = request.route.method;
+    const apiTags = request.route.settings.tags;
 
     if (tier < 0) {
       throw new BlockedKeyError(RateLimitRuleEntity.getRateLimitMessage(apiKey, tier));
     }
 
-    const rule = this.findMostMatchingRule(route, method, tier, apiKey, payload);
+    const rule = this.findMostMatchingRule(route, method, tier, apiKey, payload, apiTags);
 
     if (rule) {
       // If the route is blocked
