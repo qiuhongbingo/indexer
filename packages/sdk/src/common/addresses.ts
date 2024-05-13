@@ -139,21 +139,12 @@ export const Dai: ChainIdToAddress = {
 
 export const RoyaltyEngine: ChainIdToAddress = {
   [Network.Ethereum]: "0x0385603ab55642cb4dd5de3ae9e306809991804f",
-  [Network.EthereumGoerli]: "0xe7c9cb6d966f76f3b5142167088927bf34966a1f",
-  [Network.EthereumSepolia]: "0x8755310f937528173e7c5a106131d79a3601c9d9",
-  [Network.Bsc]: "0xef770dfb6d5620977213f55f99bfd781d04bbe15",
-  [Network.Optimism]: "0xef770dfb6d5620977213f55f99bfd781d04bbe15",
   [Network.Polygon]: "0x28edfcf0be7e86b07493466e7631a213bde8eef2",
+  [Network.Optimism]: "0xef770dfb6d5620977213f55f99bfd781d04bbe15",
+  [Network.Base]: "0xef770dfb6d5620977213f55f99bfd781d04bbe15",
   [Network.Arbitrum]: "0xef770dfb6d5620977213f55f99bfd781d04bbe15",
-  [Network.Mumbai]: "0x60b433ee91680189deb2c94b0b062ea283f6b4dd",
-  [Network.ArbitrumNova]: "0x60b433ee91680189deb2c94b0b062ea283f6b4dd",
-  [Network.Zora]: "0x8755310f937528173e7c5a106131d79a3601c9d9",
-  [Network.Base]: "0x8755310f937528173e7c5a106131d79a3601c9d9",
-  [Network.Linea]: "0x8755310f937528173e7c5a106131d79a3601c9d9",
-  [Network.Avalanche]: "0x60b433ee91680189deb2c94b0b062ea283f6b4dd",
-  [Network.PolygonZkevm]: "0x60b433ee91680189deb2c94b0b062ea283f6b4dd",
-  [Network.Ancient8Testnet]: "0x8755310f937528173e7c5a106131d79a3601c9d9",
-  [Network.Scroll]: "0xc055b6d9fd8146bc76fcd6f944c8669d5279ed95",
+  [Network.Avalanche]: "0xef770dfb6d5620977213f55f99bfd781d04bbe15",
+  [Network.Bsc]: "0xef770dfb6d5620977213f55f99bfd781d04bbe15",
 };
 
 // Uniswap's `SwapRouter02`
