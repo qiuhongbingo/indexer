@@ -378,7 +378,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
 
     const validImagePrefixes = ["http", "data:image"];
 
-    if (!validImagePrefixes.some((prefix) => imageUrl?.startsWith(prefix))) {
+    if (imageUrl && !validImagePrefixes.some((prefix) => imageUrl?.startsWith(prefix))) {
       logger.debug(
         "onchain-fetcher",
         JSON.stringify({

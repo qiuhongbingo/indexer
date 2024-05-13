@@ -28,7 +28,7 @@ export class PendingFlagStatusSyncTokens {
         "pending-flag-status-sync-tokens",
         JSON.stringify({
           topic: "openseaRateLimitDebug",
-          message: `invalidImagePrefix. contract=${tokens[0].contract}, tokenId=${tokens[0].tokenId}, context=${context}`,
+          message: `addToRedis. contract=${tokens[0].contract}, tokenId=${tokens[0].tokenId}, context=${context}`,
           context,
         })
       );
