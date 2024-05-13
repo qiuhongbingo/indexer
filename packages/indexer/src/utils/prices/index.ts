@@ -288,19 +288,14 @@ export const getUSDAndNativePrices = async (
     nonZeroCommunityTokens?: boolean;
   }
 ): Promise<USDAndNativePrices> => {
+  const currency = await getCurrency(currencyAddress);
   let usdPrice: string | undefined;
   let nativePrice: string | undefined;
 
   if (
-    getNetworkSettings().coingecko?.networkId ||
+    currency.metadata?.coingeckoCurrencyId ||
     isTestnetCurrency(currencyAddress) ||
-    isWhitelistedCurrency(currencyAddress) ||
-    // Allow price conversion on Zora which is not supported by Coingecko
-    ([690, 7777777].includes(config.chainId) &&
-      _.includes(
-        [Sdk.Common.Addresses.Native[config.chainId], Sdk.Common.Addresses.WNative[config.chainId]],
-        currencyAddress
-      ))
+    isWhitelistedCurrency(currencyAddress)
   ) {
     const currencyUSDPrice = await getAvailableUSDPrice(
       currencyAddress,
@@ -317,7 +312,6 @@ export const getUSDAndNativePrices = async (
       );
     }
 
-    const currency = await getCurrency(currencyAddress);
     if (currency.decimals !== undefined && currencyUSDPrice) {
       const currencyUnit = bn(10).pow(currency.decimals);
       usdPrice = bn(price).mul(currencyUSDPrice.value).div(currencyUnit).toString();
