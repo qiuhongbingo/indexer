@@ -14,7 +14,7 @@ export type RateLimitRuleOptions = {
   points?: number | undefined;
   pointsToConsume?: number | undefined;
   duration?: number | undefined;
-  tag?: string | undefined;
+  apiTag?: string | undefined;
 };
 
 export type RateLimitRulePayload = {

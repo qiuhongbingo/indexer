@@ -51,7 +51,7 @@ export const postCreateRateLimitRuleOptions: RouteOptions = {
           points: payload.points,
           duration: payload.duration,
           pointsToConsume: payload.pointsToConsume,
-          tag: payload.apiTag,
+          apiTag: payload.apiTag,
         },
         payload.payload || []
       );

@@ -338,7 +338,7 @@ export class RateLimitRules {
         const verifyPayload = !_.isEmpty(rule.payload);
         const verifyMethod = rule.method !== "";
         const verifyTier = !_.isNull(rule.tier);
-        const verifyTag = !_.isEmpty(rule.options.tag);
+        const verifyTag = !_.isEmpty(rule.options.apiTag);
 
         // Check the rule criteria, if none are not matching the rule is not matching
         if (verifyApiKey && rule.apiKey !== apiKey) {
@@ -357,7 +357,7 @@ export class RateLimitRules {
           continue;
         }
 
-        if (verifyTag && rule.options.tag && !apiTags.includes(rule.options.tag)) {
+        if (verifyTag && rule.options.apiTag && !apiTags.includes(rule.options.apiTag)) {
           continue;
         }
 
@@ -390,9 +390,9 @@ export class RateLimitRules {
     // No matching rule found, return default rules
     const defaultRules = this.rulesEntities.get("/") || [];
     for (const rule of defaultRules) {
-      const verifyTag = !_.isEmpty(rule.options.tag);
+      const verifyTag = !_.isEmpty(rule.options.apiTag);
 
-      if (verifyTag && rule.options.tag && !apiTags.includes(rule.options.tag)) {
+      if (verifyTag && rule.options.apiTag && !apiTags.includes(rule.options.apiTag)) {
         continue;
       }
 
