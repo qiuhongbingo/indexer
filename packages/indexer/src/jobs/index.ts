@@ -183,7 +183,6 @@ import { backfillAirdropsJob } from "./backfill/backfill-airdrops";
 import { backfillTransferSpamJob } from "./backfill/backfill-transfer-burst-spam";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { collectionCheckSpamJob } from "@/jobs/collections-refresh/collections-check-spam-job";
-import { backfillNftBalancesDatesJob } from "@/jobs/backfill/backfill-nft-balances-dates";
 import { pendingTxsJob } from "@/jobs/pending-txs/pending-txs-job";
 import { updateUserCollectionsSpamJob } from "@/jobs/nft-balance-updates/update-user-collections-spam-job";
 import { updateNftBalancesSpamJob } from "@/jobs/nft-balance-updates/update-nft-balances-spam-job";
@@ -366,7 +365,6 @@ export class RabbitMqJobsConsumer {
       backfillTransferSpamJob,
       syncApiKeysJob,
       collectionCheckSpamJob,
-      backfillNftBalancesDatesJob,
       pendingTxsJob,
       updateUserCollectionsSpamJob,
       updateNftBalancesSpamJob,
