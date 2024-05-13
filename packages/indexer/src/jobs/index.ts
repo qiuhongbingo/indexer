@@ -177,9 +177,6 @@ import { onchainMetadataProcessTokenUriJob } from "@/jobs/metadata-index/onchain
 import { updateUserCollectionsJob } from "@/jobs/nft-balance-updates/update-user-collections-job";
 import { resyncUserCollectionsJob } from "@/jobs/nft-balance-updates/reynsc-user-collections-job";
 import { tokenReassignedUserCollectionsJob } from "@/jobs/nft-balance-updates/token-reassigned-user-collections-job";
-import { backfillTransactionsDatesJob } from "@/jobs/backfill/backfill-transactions-dates";
-import { backfillActiveUserCollectionsJob } from "@/jobs/backfill/backfill-active-user-collections";
-import { backfillAirdropsJob } from "./backfill/backfill-airdrops";
 import { backfillTransferSpamJob } from "./backfill/backfill-transfer-burst-spam";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { collectionCheckSpamJob } from "@/jobs/collections-refresh/collections-check-spam-job";
@@ -359,9 +356,6 @@ export class RabbitMqJobsConsumer {
       updateUserCollectionsJob,
       resyncUserCollectionsJob,
       tokenReassignedUserCollectionsJob,
-      backfillTransactionsDatesJob,
-      backfillActiveUserCollectionsJob,
-      backfillAirdropsJob,
       backfillTransferSpamJob,
       syncApiKeysJob,
       collectionCheckSpamJob,
