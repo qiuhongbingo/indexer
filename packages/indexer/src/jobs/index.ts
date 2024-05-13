@@ -177,7 +177,6 @@ import { onchainMetadataProcessTokenUriJob } from "@/jobs/metadata-index/onchain
 import { updateUserCollectionsJob } from "@/jobs/nft-balance-updates/update-user-collections-job";
 import { resyncUserCollectionsJob } from "@/jobs/nft-balance-updates/reynsc-user-collections-job";
 import { tokenReassignedUserCollectionsJob } from "@/jobs/nft-balance-updates/token-reassigned-user-collections-job";
-import { backfillTransferSpamJob } from "./backfill/backfill-transfer-burst-spam";
 import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { collectionCheckSpamJob } from "@/jobs/collections-refresh/collections-check-spam-job";
 import { pendingTxsJob } from "@/jobs/pending-txs/pending-txs-job";
@@ -185,7 +184,6 @@ import { updateUserCollectionsSpamJob } from "@/jobs/nft-balance-updates/update-
 import { updateNftBalancesSpamJob } from "@/jobs/nft-balance-updates/update-nft-balances-spam-job";
 import { pendingTxWebsocketEventsTriggerQueueJob } from "@/jobs/websocket-events/pending-tx-websocket-events-trigger-job";
 import { fixTokensMissingCollectionJob } from "@/jobs/token-updates/fix-tokens-missing-collection";
-import { backfillTokensWithMissingCollectionJob } from "@/jobs/backfill/backfill-tokens-with-missing-collection-job";
 import { backfillTokensLastSaleJob } from "@/jobs/backfill/backfill-tokens-last-sale-job";
 
 import { recalcOnSaleCountQueueJob } from "@/jobs/collection-updates/recalc-on-sale-count-queue-job";
@@ -356,7 +354,6 @@ export class RabbitMqJobsConsumer {
       updateUserCollectionsJob,
       resyncUserCollectionsJob,
       tokenReassignedUserCollectionsJob,
-      backfillTransferSpamJob,
       syncApiKeysJob,
       collectionCheckSpamJob,
       pendingTxsJob,
@@ -364,7 +361,6 @@ export class RabbitMqJobsConsumer {
       updateNftBalancesSpamJob,
       pendingTxWebsocketEventsTriggerQueueJob,
       fixTokensMissingCollectionJob,
-      backfillTokensWithMissingCollectionJob,
       backfillTokensLastSaleJob,
       recalcOnSaleCountQueueJob,
       burnedTokenJob,
