@@ -1,4 +1,5 @@
 import { Server } from "@hapi/hapi";
+
 import { config } from "@/config/index";
 
 import * as activitiesEndpoints from "@/api/endpoints/activities";
