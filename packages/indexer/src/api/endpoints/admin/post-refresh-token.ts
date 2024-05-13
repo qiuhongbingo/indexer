@@ -87,7 +87,8 @@ export const postRefreshTokenOptions: RouteOptions = {
             tokenId,
           },
         ],
-        true
+        true,
+        "post-refresh-token"
       );
 
       // Revalidate the token orders

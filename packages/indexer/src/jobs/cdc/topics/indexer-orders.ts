@@ -209,7 +209,8 @@ export class IndexerOrdersHandler extends KafkaEventHandler {
                   tokenId,
                 },
               ],
-              true
+              true,
+              "kafka-event-handler"
             );
           }
         }

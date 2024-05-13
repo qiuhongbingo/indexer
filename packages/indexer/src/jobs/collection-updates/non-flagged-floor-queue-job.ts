@@ -194,7 +194,8 @@ export default class NonFlaggedFloorQueueJob extends AbstractRabbitMqJobHandler 
             tokenId: payload.tokenId,
           },
         ],
-        true
+        true,
+        "non-flagged-floor-queue-job"
       );
     }
   }
