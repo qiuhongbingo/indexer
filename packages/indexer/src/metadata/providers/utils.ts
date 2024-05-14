@@ -25,6 +25,10 @@ export const normalizeLink = (link: string) => {
     return "";
   }
 
+  if (link && link.startsWith("ar://")) {
+    return link.replace("ar://", "https://arweave.net/");
+  }
+
   link = normalizeNftStorageLink(link);
 
   return link?.trim();
