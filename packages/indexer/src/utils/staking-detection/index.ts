@@ -3,6 +3,7 @@ import { whatsabi } from "@shazow/whatsabi";
 import * as qs from "querystring";
 import axios from "axios";
 
+import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 
 const lookupFunctions = async (functions: string[] = [], events: string[] = []) => {
@@ -41,6 +42,14 @@ const lookupFunctions = async (functions: string[] = [], events: string[] = []) 
     };
   } catch (error) {
     // Skip errors
+    logger.info(
+      "staking-detection",
+      JSON.stringify({
+        error,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        stack: (error as any).stack,
+      })
+    );
   }
 
   return {
