@@ -22,6 +22,7 @@ export const postUpdateRateLimitRuleOptions: RouteOptions = {
       pointsToConsume: Joi.number().optional(),
       duration: Joi.number().optional(),
       apiKey: Joi.string().uuid().optional().allow(""),
+      apiTag: Joi.string().optional(),
       method: Joi.string().valid("get", "post", "delete", "put", "").optional(),
       payload: Joi.array()
         .items(
@@ -49,6 +50,7 @@ export const postUpdateRateLimitRuleOptions: RouteOptions = {
           points: payload.points,
           duration: payload.duration,
           pointsToConsume: payload.pointsToConsume,
+          apiTag: payload.apiTag,
         },
         payload: payload.payload,
       });
