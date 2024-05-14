@@ -945,6 +945,7 @@ export const getUserTokensV8Options: RouteOptions = {
 
 export const parseMetadata = (r: any, token_metadata: any) => {
   const metadata: any = {};
+
   if (token_metadata?.image_original_url) {
     metadata.imageOriginal = token_metadata.image_original_url;
   }
@@ -957,8 +958,8 @@ export const parseMetadata = (r: any, token_metadata: any) => {
     metadata.imageMimeType = token_metadata.image_mime_type;
   }
 
-  if (token_metadata?.animation_mime_type) {
-    metadata.mediaMimeType = token_metadata.animation_mime_type;
+  if (token_metadata?.media_mime_type) {
+    metadata.mediaMimeType = token_metadata.media_mime_type;
   }
 
   if (token_metadata?.metadata_original_url) {
