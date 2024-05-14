@@ -302,6 +302,12 @@ export class Collections {
     // Refresh Blur royalties (which get stored separately)
     await updateBlurRoyalties(collection.id, true);
 
+    // Soft-staking detection
+    const hasStakingKeywords = await checkContractHasStakingKeywords(collection.contract);
+    if (hasStakingKeywords) {
+      await redis.set(`has-staking-keywords:${collection.id}`, "1", "EX", 7 * 24 * 3600);
+    }
+
     // Refresh OpenSea marketplace fees
     const openseaFees = collection.openseaFees as royalties.Royalty[] | undefined;
     await marketplaceFees.updateMarketplaceFeeSpec(collection.id, "opensea", openseaFees);
@@ -320,12 +326,6 @@ export class Collections {
       paymentProcessor.getConfigByContract(collection.contract, true),
       paymentProcessorV2.getConfigByContract(collection.contract, true),
     ]);
-
-    // Soft-staking detection
-    const hasStakingKeywords = await checkContractHasStakingKeywords(collection.contract);
-    if (hasStakingKeywords) {
-      await redis.set(`has-staking-keywords:${collection.id}`, "1", "EX", 7 * 24 * 3600);
-    }
   }
 
   public static async update(collectionId: string, fields: CollectionsEntityUpdateParams) {
