@@ -1,11 +1,11 @@
+import { getAddress } from "@ethersproject/address";
+import { whatsabi } from "@shazow/whatsabi";
 import * as qs from "querystring";
 import axios from "axios";
 
-import { whatsabi } from "@shazow/whatsabi";
 import { baseProvider } from "@/common/provider";
-import { getAddress } from "ethers/lib/utils";
 
-async function lookupFunctions(functions: string[] = [], events: string[] = []) {
+const lookupFunctions = async (functions: string[] = [], events: string[] = []) => {
   try {
     const { data } = await axios.get(
       `https://sig.eth.samczsun.com/api/v1/signatures?${qs.stringify({
@@ -40,21 +40,22 @@ async function lookupFunctions(functions: string[] = [], events: string[] = []) 
         .filter((_) => _),
     };
   } catch (error) {
-    // skip errors
+    // Skip errors
   }
 
   return {
     functions: [],
     events: [],
   };
-}
+};
 
-async function getContractSelectors(contract: string): Promise<string[]> {
+const getContractSelectors = async (contract: string): Promise<string[]> => {
   const code = await baseProvider.getCode(contract);
-  const abis = whatsabi.abiFromBytecode(code);
+  const abi = whatsabi.abiFromBytecode(code);
+
   const selectors: string[] = [];
-  abis.forEach((c) => {
-    if (c.type != "event") {
+  abi.forEach((c) => {
+    if (c.type !== "event") {
       selectors.push(c.selector);
     }
   });
@@ -68,20 +69,19 @@ async function getContractSelectors(contract: string): Promise<string[]> {
     const proxyImpl = getAddress(storageValue.slice(26));
     return getContractSelectors(proxyImpl);
   }
+
   return selectors;
-}
+};
 
-export async function getContractInfo(contract: string) {
-  const selectors: string[] = await getContractSelectors(contract);
-  const result = await lookupFunctions(selectors);
-  return result;
-}
+export const getContractInfo = async (contract: string) =>
+  lookupFunctions(await getContractSelectors(contract));
 
-export async function checkCollectionHasStake(collection: string) {
-  const iface = await getContractInfo(collection);
+export const checkContractHasStakingKeywords = async (contract: string) => {
+  const info = await getContractInfo(contract);
+
   const keywords = ["stake", "lock"];
-  const matched = iface.functions.some((c) =>
+  const matched = info.functions.some((c) =>
     keywords.some((keyword) => c.text_signature.toLowerCase().includes(keyword))
   );
   return matched;
-}
+};
