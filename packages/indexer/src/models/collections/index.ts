@@ -305,7 +305,7 @@ export class Collections {
     // Soft-staking detection
     const hasStakingKeywords = await checkContractHasStakingKeywords(collection.contract);
     if (hasStakingKeywords) {
-      await redis.set(`has-staking-keywords:${collection.id}`, "1", "EX", 7 * 24 * 3600);
+      await redis.set(`has-staking-keywords:${collection.contract}`, "1", "EX", 7 * 24 * 3600);
     }
 
     // Refresh OpenSea marketplace fees
