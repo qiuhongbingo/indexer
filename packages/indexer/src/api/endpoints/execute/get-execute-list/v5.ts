@@ -343,6 +343,10 @@ export const getExecuteListV5Options: RouteOptions = {
       throw Boom.unauthorized("Address is blocked by OFAC");
     }
 
+    if (config.blockedMakers.includes(maker)) {
+      throw Boom.unauthorized("Address is blocked");
+    }
+
     try {
       // Set up generic listing steps
       let steps: {
