@@ -78,7 +78,6 @@ export const isBlockedByCustomLogic = async (
       [
         "0x0c86cdc978b7d191f11b36731107e924c699af10",
         "0x4d7d2e237d64d1484660b55c0a4cc092fa5e6716",
-        "0x4b15a9c28034dc83db40cd810001427d3bd7163d",
         "0x2358693f4faec9d658bb97fc9cd8885f62105dc1",
         "0x8f1b132e9fd2b9a2b210baa186bf1ae650adf7ac",
         "0xd4b7d9bb20fa20ddada9ecef8a7355ca983cccb1",
