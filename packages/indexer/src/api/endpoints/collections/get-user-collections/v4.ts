@@ -226,10 +226,10 @@ export const getUserCollectionsV4Options: RouteOptions = {
     let onSaleCount = "";
     let selectOnSaleCount = "";
     if (query.includeOnSaleCount) {
-      selectOnSaleCount = "nb.owner_on_sale_count,";
+      selectOnSaleCount = "COALESCE(nb.owner_on_sale_count, 0) AS owner_on_sale_count,";
       onSaleCount = `
         LEFT JOIN LATERAL (
-          SELECT (
+          SELECT SUM (
             CASE WHEN ot.value IS NOT NULL
             THEN 1
             ELSE 0
