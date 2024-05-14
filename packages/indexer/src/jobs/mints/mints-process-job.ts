@@ -140,7 +140,8 @@ export default class MintsProcessJob extends AbstractRabbitMqJobHandler {
           `
             SELECT
               contracts.kind,
-              collections.contract
+              collections.contract,
+              contracts.metadata
             FROM collections
             LEFT JOIN contracts
               ON collections.contract = contracts.address
@@ -282,6 +283,14 @@ export default class MintsProcessJob extends AbstractRabbitMqJobHandler {
 
             break;
           }
+        }
+
+        // Try to extract via the contract metadata if it's available and everything else was unsuccessful
+        if (!collectionMints.length && contractResult?.metadata?.metadata) {
+          collectionMints = await detector.extractByContractMetadata(
+            data.collection,
+            contractResult?.metadata?.metadata
+          );
         }
 
         // Also refresh (to clean up any old stages)
