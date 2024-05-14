@@ -36,6 +36,10 @@ export const Router: ChainIdToAddress = {
   [Network.Garnet]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.Redstone]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
   [Network.Amoy]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.Degen]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.SeiTestnet]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.Xai]: "0x1aed60a97192157fda7fb26267a439d523d09c5e",
+  [Network.Nebula]: "0x856523801f13fb8ca62e597ac8b738d40d0df38e",
 };
 
 // Approval proxy
@@ -72,6 +76,9 @@ export const ApprovalProxy: ChainIdToAddress = {
   [Network.Garnet]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
   [Network.Redstone]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
   [Network.Amoy]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
+  [Network.Degen]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
+  [Network.SeiTestnet]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
+  [Network.Xai]: "0x224ecb4eae96d31372d1090c3b0233c8310dbbab",
 };
 
 // Permit proxy
@@ -83,6 +90,7 @@ export const PermitProxy: ChainIdToAddress = {
   [Network.Polygon]: "0x30b3de99ab1de0c9700181f7a2597150e9416aa6",
   [Network.Mumbai]: "0x30b3de99ab1de0c9700181f7a2597150e9416aa6",
   [Network.AstarZkevm]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.BaseSepolia]: "0x71ddd095d246e4ce4033a5ceb0bb61b0542acdc8",
 };
 
 // Utility modules
@@ -139,6 +147,9 @@ export const MintModule: ChainIdToAddress = {
   [Network.BerachainTestnet]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Garnet]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
   [Network.Redstone]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.Degen]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.Xai]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
+  [Network.SeiTestnet]: "0xe3de16f7ed5a124686cc27571898e394959e8b39",
 };
 
 export const DittoModule: ChainIdToAddress = {
@@ -200,7 +211,7 @@ export const SeaportV15Module: ChainIdToAddress = {
   [Network.FrameTestnet]: "0x4e9aaa72727a2f5aa5d2bef80ab5642661e29ef6",
   [Network.Opbnb]: "0x00ca04c45da318d5b7e7b14d5381ca59f09c73f0",
   [Network.Ancient8]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
-  [Network.BaseSepolia]: "0x4e9aaa72727a2f5aa5d2bef80ab5642661e29ef6",
+  [Network.BaseSepolia]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.BlastSepolia]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Apex]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Blast]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
@@ -208,6 +219,8 @@ export const SeaportV15Module: ChainIdToAddress = {
   [Network.ApexTestnet]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Garnet]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
   [Network.Redstone]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
+  [Network.Degen]: "0x16b7f92cdfc9e1aaf30fc7af8914d539b5340a55",
+  [Network.Nebula]: "0x385df8cbc196f5f780367f3cdc96af072a916f7e",
 };
 
 export const AlienswapModule: ChainIdToAddress = {
@@ -321,4 +334,15 @@ export const SeaportV16Module: ChainIdToAddress = {
   [Network.Bsc]: "0xd8f24f5f0382e197c1e87ad82b357209383470cf",
   [Network.Zora]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
   [Network.Blast]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+  [Network.Xai]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+  [Network.SeiTestnet]: "0xfdf5cfbcf6503293046ad686bb7fee8e9885b93d",
+};
+
+export const MintifyModule: ChainIdToAddress = {
+  [Network.Ethereum]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
+  [Network.Base]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
+  [Network.Blast]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
+  [Network.EthereumSepolia]: "0x481917e23fe40c6e15f70a864421eee865e0f250",
+  [Network.BaseSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
+  [Network.BlastSepolia]: "0x2c5327ecad565f294637e06f0ec1067e21fc0b5a",
 };

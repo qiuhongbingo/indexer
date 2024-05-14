@@ -31,6 +31,7 @@ export const getApiKeyDetails: RouteOptions = {
       permissions: Joi.object().allow(null),
       createdAt: Joi.string(),
       revShareBps: Joi.number(),
+      orderbookFees: Joi.object().allow(null),
     }).label("getApiKeyRateLimitsResponse"),
     failAction: (_request, _h, error) => {
       logger.error("get-api-key-details-handler", `Wrong response schema: ${error}`);
@@ -62,6 +63,7 @@ export const getApiKeyDetails: RouteOptions = {
       origins: apiKey.origins ?? [],
       createdAt: new Date(apiKey.createdAt).toISOString(),
       revShareBps: apiKey.revShareBps,
+      orderbookFees: apiKey.orderbookFees ?? {},
     };
   },
 };

@@ -9,6 +9,7 @@ export * as seaport from "@/orderbook/orders/seaport-v1.1";
 export * as seaportV14 from "@/orderbook/orders/seaport-v1.4";
 export * as seaportV15 from "@/orderbook/orders/seaport-v1.5";
 export * as seaportV16 from "@/orderbook/orders/seaport-v1.6";
+export * as mintify from "@/orderbook/orders/mintify";
 export * as alienswap from "@/orderbook/orders/alienswap";
 export * as sudoswap from "@/orderbook/orders/sudoswap";
 export * as x2y2 from "@/orderbook/orders/x2y2";
@@ -95,7 +96,8 @@ export type OrderKind =
   | "blur-v2"
   | "joepeg"
   | "payment-processor-v2"
-  | "mooar";
+  | "mooar"
+  | "mintify";
 
 // In case we don't have the source of an order readily available, we use
 // a default value where possible (since very often the exchange protocol
@@ -217,6 +219,8 @@ export const getOrderSourceByOrderKind = async (
         return sources.getOrInsert("superrare.com");
       case "alienswap":
         return sources.getOrInsert("alienswap.xyz");
+      case "mintify":
+        return sources.getOrInsert("mintify.xyz");
       case "mooar":
         return sources.getOrInsert("mooar.com");
       case "mint": {
@@ -431,6 +435,7 @@ export const generateListingDetailsV6 = async (
             contract: token.contract,
             tokenId: token.tokenId,
             id: order.id,
+            zone: order.rawData.zone,
           } as Sdk.SeaportBase.Types.OpenseaPartialOrder,
         };
       } else {
@@ -468,6 +473,24 @@ export const generateListingDetailsV6 = async (
 
       return {
         kind: "alienswap",
+        ...common,
+        order: sdkOrder,
+      };
+    }
+
+    case "mintify": {
+      const sdkOrder = new Sdk.Mintify.Order(config.chainId, order.rawData);
+      await offchainCancel.seaport.doSignOrder(
+        sdkOrder,
+        taker,
+        sdkOrder.buildMatching({
+          tokenId: common.tokenId,
+          amount: common.amount ?? 1,
+        })
+      );
+
+      return {
+        kind: "mintify",
         ...common,
         order: sdkOrder,
       };
@@ -889,6 +912,49 @@ export const generateBidDetailsV6 = async (
       };
     }
 
+    case "mintify": {
+      const extraArgs: any = {};
+
+      const sdkOrder = new Sdk.Mintify.Order(config.chainId, order.rawData);
+      if (sdkOrder.params.kind?.includes("token-list")) {
+        // When filling a "token-list" order, we also need to pass in the
+        // full list of tokens the order was made on (in order to be able
+        // to generate a valid merkle proof)
+        const tokens = await idb.manyOrNone(
+          `
+            SELECT
+              token_sets_tokens.token_id
+            FROM token_sets_tokens
+            WHERE token_sets_tokens.token_set_id = (
+              SELECT
+                orders.token_set_id
+              FROM orders
+              WHERE orders.id = $/id/
+            )
+          `,
+          { id: sdkOrder.hash() }
+        );
+        extraArgs.tokenIds = tokens.map(({ token_id }) => token_id);
+      }
+
+      await offchainCancel.seaport.doSignOrder(
+        sdkOrder,
+        taker,
+        sdkOrder.buildMatching({
+          tokenId: common.tokenId,
+          amount: common.amount ?? 1,
+          ...extraArgs,
+        })
+      );
+
+      return {
+        kind: "mintify",
+        ...common,
+        order: sdkOrder,
+        extraArgs,
+      };
+    }
+
     case "looks-rare": {
       const sdkOrder = new Sdk.LooksRare.Order(config.chainId, order.rawData);
       return {
@@ -1204,7 +1270,7 @@ export const checkBlacklistAndFallback = async (
 
       // Fallback to PaymentProcessor when Seaport v1.6 is blocked
       if (params.orderKind === "seaport-v1.6" && seaportV16IsBlocked) {
-        params.orderKind = "payment-processor";
+        params.orderKind = "payment-processor-v2";
       }
 
       // Fallback to PaymentProcessor v2 when PaymentProcessor is blocked

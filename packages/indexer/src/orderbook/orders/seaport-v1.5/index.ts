@@ -231,8 +231,6 @@ export const save = async (
             Sdk.SeaportBase.Addresses.OkxCancellationZone[config.chainId],
             // FxHash pausable zone
             Sdk.SeaportBase.Addresses.FxHashPausableZone[config.chainId],
-            // Immutable protected zone
-            Sdk.SeaportBase.Addresses.ImmutableProtectedZone[config.chainId],
           ].includes(order.params.zone) &&
           // Protected offers zone
           !isProtectedOffer
@@ -597,7 +595,15 @@ export const save = async (
       }
 
       // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("seaport-v1.5", feeBreakdown);
+      try {
+        await validateOrderbookFee("seaport-v1.5", feeBreakdown, metadata.apiKey, isReservoir);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
+      }
 
       // Handle: royalties on top
       const defaultRoyalties =

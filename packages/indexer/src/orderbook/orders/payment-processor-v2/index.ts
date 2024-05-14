@@ -349,9 +349,6 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
         });
       }
 
-      // Validate the potential inclusion of an orderbook fee
-      await validateOrderbookFee("payment-processor-v2", feeBreakdown);
-
       const feeBps = feeBreakdown.map(({ bps }) => bps).reduce((a, b) => Number(a) + Number(b), 0);
 
       // Handle: royalties on top
@@ -384,6 +381,17 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       let source = await sources.getOrInsert("limitbreak.com");
       if (metadata.source) {
         source = await sources.getOrInsert(metadata.source);
+      }
+
+      // Validate the potential inclusion of an orderbook fee
+      try {
+        await validateOrderbookFee("payment-processor-v2", feeBreakdown, metadata.apiKey, true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
       }
 
       // Price conversion

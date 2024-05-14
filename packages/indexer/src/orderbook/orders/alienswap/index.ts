@@ -22,6 +22,7 @@ import {
   OrderUpdatesByIdJobPayload,
 } from "@/jobs/order-updates/order-updates-by-id-job";
 import * as offchainCancel from "@/utils/offchain-cancel";
+import { validateOrderbookFee } from "@/utils/orderbook-fee";
 
 export type OrderInfo = {
   orderParams: Sdk.SeaportBase.Types.OrderComponents;
@@ -387,6 +388,17 @@ export const save = async (orderInfos: OrderInfo[]): Promise<SaveResult[]> => {
       const matchedSource = sources.getByDomainHash(sourceHash);
       if (matchedSource) {
         source = matchedSource;
+      }
+
+      // Validate the potential inclusion of an orderbook fee
+      try {
+        await validateOrderbookFee("alienswap", feeBreakdown, metadata.apiKey, true);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        return results.push({
+          id,
+          status: error.message,
+        });
       }
 
       // Handle: price conversion

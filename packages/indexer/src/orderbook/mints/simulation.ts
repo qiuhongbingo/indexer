@@ -4,7 +4,8 @@ import * as Sdk from "@reservoir0x/sdk";
 import { Network, TxData } from "@reservoir0x/sdk/dist/utils";
 
 import { idb } from "@/common/db";
-import { baseProvider } from "@/common/provider";
+import { logger } from "@/common/logger";
+import { baseProviderWithTimeout } from "@/common/provider";
 import { bn, fromBuffer } from "@/common/utils";
 import { config } from "@/config/index";
 import { CollectionMint, PricePerQuantity } from "@/orderbook/mints";
@@ -209,13 +210,12 @@ const simulateMintTxData = async (
   if (
     [
       Network.Ethereum,
-      Network.EthereumGoerli,
       Network.EthereumSepolia,
       Network.Optimism,
       // Network.Polygon,
       // Network.Arbitrum,
       Network.Bsc,
-      Network.Zora,
+      // Network.Zora,
       Network.Base,
       Network.Ancient8Testnet,
     ].includes(config.chainId)
@@ -227,7 +227,24 @@ const simulateMintTxData = async (
     try {
       logs = await getEmittedEvents(txData, config.chainId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch {
+    } catch (error: any) {
+      // We want to avoid marking mints as closed due to rpc internal errors
+      if (error.message && !error.message.includes("reverted")) {
+        logger.info(
+          "mints-simulation",
+          JSON.stringify({
+            contract,
+            contractKind,
+            quantity,
+            txData,
+            error,
+            stack: error.stack,
+          })
+        );
+
+        throw error;
+      }
+
       return false;
     }
 
@@ -274,7 +291,25 @@ const simulateMintTxData = async (
 
     try {
       await triggerCall(txData);
-    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      // We want to avoid marking mints as closed due to rpc internal errors
+      if (error.message && !error.message.includes("reverted")) {
+        logger.info(
+          "mints-simulation",
+          JSON.stringify({
+            contract,
+            contractKind,
+            quantity,
+            txData,
+            error,
+            stack: error.stack,
+          })
+        );
+
+        throw error;
+      }
+
       return false;
     }
 
@@ -297,7 +332,7 @@ const getEmittedEvents = async (txData: TxData, chainId: number) => {
         [txData.from]: value,
       },
     },
-    baseProvider,
+    baseProviderWithTimeout(5000),
     {
       method: [Network.Polygon, Network.Arbitrum].includes(chainId) ? "opcodeTrace" : "withLog",
     }
@@ -320,6 +355,6 @@ const triggerCall = async (txData: TxData) => {
         [txData.from]: value,
       },
     },
-    baseProvider
+    baseProviderWithTimeout(5000)
   );
 };

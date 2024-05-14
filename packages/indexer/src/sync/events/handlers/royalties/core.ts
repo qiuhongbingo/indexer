@@ -80,9 +80,9 @@ export async function extractRoyalties(
   const royaltyFeeOnTop: Royalty[] = [];
 
   const { txHash } = fillEvent.baseEventParams;
-  const { tokenId, contract, currency, price } = fillEvent;
+  const { tokenId, contract, currency } = fillEvent;
 
-  const currencyPrice = fillEvent.currencyPrice ?? price;
+  const currencyPrice = bn(fillEvent.currencyPrice ?? fillEvent.price).mul(bn(fillEvent.amount));
 
   // Fetch the current transaction's trace
   let txTrace: TransactionTrace | undefined;
@@ -168,6 +168,7 @@ export async function extractRoyalties(
 
   // The (sub)call where the current fill occured
   let subcallToAnalyze = txTrace.calls;
+
   const globalState = getStateChange(txTrace.calls);
   const routerCall = searchForCall(
     txTrace.calls,
@@ -319,6 +320,7 @@ export async function extractRoyalties(
     (total, item) => total.add(bn(item.currencyPrice ?? item.price).mul(bn(item.amount))),
     bn(0)
   );
+
   // Extract any fill events that have the same order kind and currency
   const sameProtocolFills = fillEvents
     .filter((e) => {
@@ -536,6 +538,8 @@ export async function extractRoyalties(
       };
 
       const feeRecipientPlatform = feeRecipient.getByAddress(address, "marketplace");
+      const inFeeBreakdown = (orderInfo?.feeBreakdown ?? []).find((c) => c.recipient === address);
+
       if (feeRecipientPlatform) {
         // Make sure current fee address in every order
         let protocolFeeSum = sameProtocolTotalPrice;
@@ -565,11 +569,12 @@ export async function extractRoyalties(
         if (matchRangePayment && isReliable && hasMultiple) {
           royalty.bps = bn(matchRangePayment.amount)
             .mul(PRECISION_BASE)
-            .div(fillEvent.currencyPrice ?? fillEvent.price)
+            .div(currencyPrice)
             .toNumber();
         }
 
-        marketplaceFeeBreakdown.push(royalty);
+        const recipientIsEligible = !notRoyaltyRecipients.has(address);
+        if (recipientIsEligible) marketplaceFeeBreakdown.push(royalty);
       } else {
         // For different collection with same fee recipient
         const sameRecipientDetails = sameProtocolDetails.filter((d) => d.recipient === address);
@@ -599,22 +604,6 @@ export async function extractRoyalties(
           }
         }
 
-        // Re-calculate the bps based on the fee amount in the order
-        if (linkedOrder) {
-          const feeItem = linkedOrder.fees.find(
-            (c) => c.recipient.toLowerCase() === address.toLowerCase()
-          );
-          if (feeItem) {
-            bps = bn(feeItem.amount)
-              .mul(PRECISION_BASE)
-              .div(fillEvent.currencyPrice ?? fillEvent.price)
-              .toNumber();
-          } else {
-            // Skip if not the in the fees
-            continue;
-          }
-        }
-
         // Conditions:
         // - royalty percentage between 0% and 15% (both exclusive)
         // - royalty recipient is not a known platform fee recipient
@@ -628,12 +617,40 @@ export async function extractRoyalties(
 
         const inRoyaltyRecipient = royalties.find((c) => c.find((d) => d.recipient === address));
 
-        const recipientIsEligible =
+        let outOfLimit = bps > BPS_LIMIT;
+
+        if (inFeeBreakdown && outOfLimit) {
+          outOfLimit = false;
+        }
+
+        let recipientIsEligible =
           bps > 0 &&
-          bps < BPS_LIMIT &&
+          !outOfLimit &&
           !matchFee &&
           excludeOtherRecipients &&
           (!notRoyaltyRecipients.has(address) || inRoyaltyRecipient);
+
+        // Re-calculate the bps based on the fee amount in the order
+        if (linkedOrder) {
+          try {
+            const feeItem = linkedOrder.fees.find(
+              (c) => c.recipient.toLowerCase() === address.toLowerCase()
+            );
+
+            if (feeItem) {
+              const currentFeeAmount = bn(feeItem.amount)
+                .div(linkedOrder.amount)
+                .mul(fillEvent.amount);
+              bps = bn(currentFeeAmount).mul(PRECISION_BASE).div(currencyPrice).toNumber();
+              recipientIsEligible = true;
+            } else {
+              // Skip if not the in the fees
+              continue;
+            }
+          } catch (err) {
+            throw new Error(`caclute-royalty-linked-order-error ${err}`);
+          }
+        }
 
         // For multiple sales, we should check if the current payment is
         // in the range of payments associated to the current fill event
@@ -646,7 +663,7 @@ export async function extractRoyalties(
 
         // Match with the order's fee breakdown
         if (!isInRange) {
-          isInRange = Boolean((orderInfo?.feeBreakdown ?? []).find((c) => c.recipient === address));
+          isInRange = Boolean(inFeeBreakdown);
         }
 
         // For now we exclude AMMs which don't pay royalties
@@ -672,10 +689,7 @@ export async function extractRoyalties(
         if (isInPayment) {
           const royalty = {
             recipient: missingInStateFee.recipient,
-            bps: bn(missingInStateFee.amount)
-              .mul(PRECISION_BASE)
-              .div(fillEvent.currencyPrice ?? fillEvent.price)
-              .toNumber(),
+            bps: bn(missingInStateFee.amount).mul(PRECISION_BASE).div(currencyPrice).toNumber(),
           };
 
           royaltyFeeBreakdown.push(royalty);

@@ -12,7 +12,7 @@ const version = "v1";
 
 export const postExecuteSolveCapacityV1Options: RouteOptions = {
   description: "Get the capacity for indirect filling via a solver",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

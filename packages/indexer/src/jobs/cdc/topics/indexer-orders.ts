@@ -12,6 +12,7 @@ import { Tokens } from "@/models/tokens";
 import { PendingFlagStatusSyncTokens } from "@/models/pending-flag-status-sync-tokens";
 import { EventKind, processAskEventJob } from "@/jobs/elasticsearch/asks/process-ask-event-job";
 import { formatStatus } from "@/jobs/websocket-events/utils";
+import { config } from "@/config/index";
 
 export class IndexerOrdersHandler extends KafkaEventHandler {
   topicName = "indexer.public.orders";
@@ -28,12 +29,14 @@ export class IndexerOrdersHandler extends KafkaEventHandler {
     } else if (payload.after.side === "buy") {
       eventKind = WebsocketEventKind.BuyOrder;
     } else {
-      logger.warn(
-        "IndexerOrdersHandler",
-        `${this.topicName}: Unknown order kind, skipping websocket event router for order=${
-          JSON.stringify(payload.after) || "null"
-        }`
-      );
+      if (config.chainId !== 81457) {
+        logger.warn(
+          "IndexerOrdersHandler",
+          `${this.topicName}: Unknown order kind, skipping websocket event router for order=${
+            JSON.stringify(payload.after) || "null"
+          }`
+        );
+      }
 
       return;
     }
@@ -206,7 +209,8 @@ export class IndexerOrdersHandler extends KafkaEventHandler {
                   tokenId,
                 },
               ],
-              true
+              true,
+              "kafka-event-handler"
             );
           }
         }

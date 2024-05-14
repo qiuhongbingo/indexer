@@ -63,6 +63,8 @@ export type TokensEntityParams = {
   remaining_supply: number | null;
   is_spam: number | null;
   nsfw_status: number | null;
+  last_sale_timestamp: number;
+  last_sale_value: number;
 };
 
 export class TokensEntity {
@@ -96,6 +98,8 @@ export class TokensEntity {
   remainingSupply: number;
   isSpam: number;
   nsfwStatus: number;
+  lastSaleTimestamp: number;
+  lastSaleValue: number;
 
   constructor(params: TokensEntityParams) {
     this.contract = fromBuffer(params.contract);
@@ -132,5 +136,7 @@ export class TokensEntity {
     this.remainingSupply = Number(params.remaining_supply);
     this.isSpam = Number(params.is_spam);
     this.nsfwStatus = Number(params.nsfw_status);
+    this.lastSaleTimestamp = params.last_sale_timestamp;
+    this.lastSaleValue = params.last_sale_value;
   }
 }

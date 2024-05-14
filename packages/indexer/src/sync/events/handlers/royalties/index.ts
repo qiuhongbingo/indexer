@@ -140,7 +140,7 @@ export const getOrderInfos = async (orderIds: string[]): Promise<OrderInfo[]> =>
 };
 
 const checkFeeIsValid = (result: RoyaltyResult) =>
-  result.marketplaceFeeBps + result.royaltyFeeBps < 10000;
+  result.marketplaceFeeBps + result.royaltyFeeBps <= 10000;
 
 const subFeeWithBps = (amount: BigNumberish, totalFeeBps: number) => {
   return bn(amount).sub(bn(amount).mul(totalFeeBps).div(10000)).toString();
@@ -151,6 +151,7 @@ export const assignRoyaltiesToFillEvents = async (
   enableCache = true,
   forceOnChain = false
 ) => {
+  const fillsToRetry: es.fills.Event[] = [];
   const cache: StateCache = {
     royalties: new Map(),
     orderInfos: new Map(),
@@ -175,6 +176,7 @@ export const assignRoyaltiesToFillEvents = async (
               enableCache,
               forceOnChain
             );
+
             if (result) {
               const isValid = checkFeeIsValid(result);
               if (!isValid) {
@@ -191,6 +193,8 @@ export const assignRoyaltiesToFillEvents = async (
                 fillEvent.currencyPrice ?? fillEvent.price,
                 result.royaltyFeeBps + result.marketplaceFeeBps
               );
+            } else {
+              fillsToRetry.push(fillEvent);
             }
           }
         } catch (error) {
@@ -205,4 +209,6 @@ export const assignRoyaltiesToFillEvents = async (
       })
     )
   );
+
+  return fillsToRetry;
 };

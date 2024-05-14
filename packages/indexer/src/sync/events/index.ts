@@ -393,7 +393,7 @@ export const syncTraces = async (block: number) => {
 
   const endSyncTime = Date.now();
 
-  logger.info(
+  logger.debug(
     "sync-traces-timing",
     JSON.stringify({
       message: `Traces realtime syncing block ${block}`,
@@ -676,14 +676,12 @@ export const syncEvents = async (
       syncTime: endSyncTime - startSyncTime,
       // find the longest block sync time - the start sync time
       blockSyncTime: Math.max(...saveDataTimes.map((t) => t[0]?.endSaveBlocksTime)) - startSyncTime,
-
       logs: {
         count: logs.length,
         eventCount: enhancedEvents.length,
         getLogsTime,
         processLogs: endProcessLogs - startProcessLogs,
       },
-
       blocks: {
         count: 1,
         getBlockTime: endGetBlockTime - startGetBlockTime,

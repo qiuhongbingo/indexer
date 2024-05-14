@@ -9,7 +9,6 @@ import { AddressZero } from "@ethersproject/constants";
 import { metadataIndexProcessJob } from "@/jobs/metadata-index/metadata-process-job";
 import { onchainMetadataFetchTokenUriJob } from "@/jobs/metadata-index/onchain-metadata-fetch-token-uri-job";
 import { isOpenseaSlugSharedContract } from "@/metadata/extend";
-import { redis } from "@/common/redis";
 
 export type MetadataIndexFetchJobPayload =
   | {
@@ -18,6 +17,7 @@ export type MetadataIndexFetchJobPayload =
         method: string;
         collection: string;
         continuation?: string;
+        onlyTokensWithMissingImages?: boolean;
       };
       context?: string;
     }
@@ -50,23 +50,20 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
       return;
     }
 
-    const tokenMetadataIndexingDebug = await redis.sismember(
-      "metadata-indexing-debug-contracts",
-      payload.data.collection
+    logger.log(
+      config.debugMetadataIndexingCollections.includes(payload.data.collection) ? "info" : "debug",
+      this.queueName,
+      JSON.stringify({
+        topic: "tokenMetadataIndexing",
+        message: `Start. collection=${payload.data.collection}, tokenId=${
+          payload.kind === "single-token" ? payload.data.tokenId : ""
+        }`,
+        payload,
+        debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+          payload.data.collection
+        ),
+      })
     );
-
-    if (tokenMetadataIndexingDebug) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexingDebug",
-          message: `Start. collection=${payload.data.collection}, tokenId=${
-            payload.kind === "single-token" ? payload.data.tokenId : ""
-          }`,
-          payload,
-        })
-      );
-    }
 
     const { kind, data } = payload;
     const prioritized = !_.isUndefined(this.rabbitMqMessage?.prioritized);
@@ -87,7 +84,13 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
       const [contract, tokenId] = data.continuation
         ? data.continuation.split(":")
         : [AddressZero, "0"];
-      refreshTokens = await this.getTokensForCollection(data.collection, contract, tokenId, limit);
+      refreshTokens = await this.getTokensForCollection(
+        data.collection,
+        contract,
+        tokenId,
+        limit,
+        data.onlyTokensWithMissingImages
+      );
 
       // If no more tokens found
       if (_.isEmpty(refreshTokens)) {
@@ -151,12 +154,14 @@ export default class MetadataIndexFetchJob extends AbstractRabbitMqJobHandler {
     collection: string,
     contract: string,
     tokenId: string,
-    limit: number
+    limit: number,
+    onlyTokensWithMissingImages = false
   ) {
     const tokens = await redb.manyOrNone(
       `SELECT tokens.contract, tokens.token_id
             FROM tokens
             WHERE tokens.collection_id = $/collection/
+            ${onlyTokensWithMissingImages ? "AND tokens.image IS NULL" : ""}
             AND (tokens.contract, tokens.token_id) > ($/contract/, $/tokenId/)
             LIMIT ${limit}`,
       {

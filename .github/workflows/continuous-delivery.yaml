@@ -61,6 +61,7 @@ jobs:
           tags: |
             ghcr.io/reservoirprotocol/indexer:latest
             ghcr.io/reservoirprotocol/indexer:${{ github.sha }}
+            ghcr.io/reservoirprotocol/indexer:${{ github.ref_name }}-${{ github.sha }}
           # ghcr.io/reservoirprotocol/indexer:${{ steps.semantic.outputs.new_release_version }}
           # build-args: |
           #   VERSION=${{ steps.semantic.outputs.new_release_version }}
@@ -216,12 +217,6 @@ jobs:
             ./prod/platform/indexer-worker-master-mainnet.yaml \
             ./prod/platform/indexer-websocket-ethereum.yaml
 
-          ./utils/version_update_batch.sh indexer-mumbai ${{ github.sha }} \
-            ./prod/platform/indexer-api-mumbai.yaml \
-            ./prod/platform/indexer-worker-mumbai.yaml \
-            ./prod/platform/indexer-worker-master-mumbai.yaml \
-            ./prod/platform/indexer-websocket-mumbai.yaml
-
           ./utils/version_update_batch.sh indexer-opbnb ${{ github.sha }} \
             ./prod/platform/indexer-api-opbnb.yaml \
             ./prod/platform/indexer-worker-opbnb.yaml \
@@ -293,23 +288,24 @@ jobs:
           ./utils/version_update_batch.sh indexer-blast ${{ github.sha }} \
             ./prod/platform/indexer-api-blast.yaml \
             ./prod/platform/indexer-worker-blast.yaml \
-            ./prod/platform/indexer-worker-master-blast.yaml
+            ./prod/platform/indexer-worker-master-blast.yaml \
+            ./prod/platform/indexer-websocket-blast.yaml
 
           ./utils/version_update_batch.sh indexer-apex-testnet ${{ github.sha }} \
             ./prod/platform/indexer-api-apex-testnet.yaml \
             ./prod/platform/indexer-worker-apex-testnet.yaml \
             ./prod/platform/indexer-worker-master-apex-testnet.yaml
-          
+
           ./utils/version_update_batch.sh indexer-berachain-testnet ${{ github.sha }} \
             ./prod/platform/indexer-api-berachain-testnet.yaml \
             ./prod/platform/indexer-worker-berachain-testnet.yaml \
             ./prod/platform/indexer-worker-master-berachain-testnet.yaml
-          
+
           ./utils/version_update_batch.sh indexer-garnet ${{ github.sha }} \
             ./prod/platform/indexer-api-garnet.yaml \
             ./prod/platform/indexer-worker-garnet.yaml \
             ./prod/platform/indexer-worker-master-garnet.yaml
-          
+
           ./utils/version_update_batch.sh indexer-redstone ${{ github.sha }} \
             ./prod/platform/indexer-api-redstone.yaml \
             ./prod/platform/indexer-worker-redstone.yaml \
@@ -319,6 +315,26 @@ jobs:
             ./prod/platform/indexer-api-amoy.yaml \
             ./prod/platform/indexer-worker-amoy.yaml \
             ./prod/platform/indexer-worker-master-amoy.yaml
+
+          ./utils/version_update_batch.sh indexer-degen ${{ github.sha }} \
+            ./prod/platform/indexer-api-degen.yaml \
+            ./prod/platform/indexer-worker-degen.yaml \
+            ./prod/platform/indexer-worker-master-degen.yaml
+
+          ./utils/version_update_batch.sh indexer-sei-testnet ${{ github.sha }} \
+            ./prod/platform/indexer-api-sei-testnet.yaml \
+            ./prod/platform/indexer-worker-sei-testnet.yaml \
+            ./prod/platform/indexer-worker-master-sei-testnet.yaml
+
+          ./utils/version_update_batch.sh indexer-xai ${{ github.sha }} \
+            ./prod/platform/indexer-api-xai.yaml \
+            ./prod/platform/indexer-worker-xai.yaml \
+            ./prod/platform/indexer-worker-master-xai.yaml
+
+          ./utils/version_update_batch.sh indexer-nebula ${{ github.sha }} \
+            ./prod/platform/indexer-api-nebula.yaml \
+            ./prod/platform/indexer-worker-nebula.yaml \
+            ./prod/platform/indexer-worker-master-nebula.yaml
 
       - name: Post to Slack
         if: ${{ always() }}

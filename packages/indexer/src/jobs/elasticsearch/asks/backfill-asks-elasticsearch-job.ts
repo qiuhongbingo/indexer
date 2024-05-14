@@ -148,7 +148,7 @@ export class BackfillAsksElasticsearchJob extends AbstractRabbitMqJobHandler {
         this.queueName,
         JSON.stringify({
           topic: "debugAskIndex",
-          message: `Indexed ${bulkIndexOps.length} asks. Deleted ${bulkDeleteOps.length} asks`,
+          message: `Indexed ${bulkIndexOps.length / 2} asks. Deleted ${bulkDeleteOps.length} asks`,
           payload,
           nextCursor,
           indexName: AskIndex.getIndexName(),
@@ -159,7 +159,7 @@ export class BackfillAsksElasticsearchJob extends AbstractRabbitMqJobHandler {
         })
       );
 
-      await backfillAsksElasticsearchJob.addToQueue(
+      await this.addToQueue(
         payload.fromTimestamp,
         payload.orderKind,
         payload.onlyActive,
@@ -181,14 +181,17 @@ export class BackfillAsksElasticsearchJob extends AbstractRabbitMqJobHandler {
       return;
     }
 
-    await this.send({
-      payload: {
-        fromTimestamp,
-        orderKind,
-        onlyActive,
-        cursor,
+    await this.send(
+      {
+        payload: {
+          fromTimestamp,
+          orderKind,
+          onlyActive,
+          cursor,
+        },
       },
-    });
+      1000
+    );
   }
 }
 

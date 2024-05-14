@@ -111,6 +111,18 @@ export const getNetworkName = () => {
     case 690:
       return "redstone";
 
+    case 666666666:
+      return "degen";
+
+    case 713715:
+      return "sei-testnet";
+
+    case 660279:
+      return "xai";
+
+    case 1482601649:
+      return "nebula";
+
     default:
       return "unknown";
   }
@@ -146,6 +158,8 @@ export const getOpenseaNetworkName = () => {
       return "zora";
     case 84532:
       return "base_sepolia";
+    case 168587773:
+      return "blast_sepolia";
     case 81457:
       return "blast";
     default:
@@ -1250,15 +1264,30 @@ export const getNetworkSettings = (): NetworkSettings => {
         },
         whitelistedCurrencies: new Map([
           [
-            "0x8ef069e433022cf3625a086096c3d9ec96da0160",
+            "0xab509da7810b38317fe9710c57ffcea9c5877a36",
             {
-              contract: "0x8ef069e433022cf3625a086096c3d9ec96da0160",
+              contract: "0xab509da7810b38317fe9710c57ffcea9c5877a36",
               name: "ZED Token",
               symbol: "ZED",
               decimals: 18,
               metadata: {
                 image:
                   "https://bafkreidcljrhz7hq4h5rarxgxd63tail24mqawllwhxfrvr3esfv2nvyiy.ipfs.nftstorage.link/",
+                coingeckoCurrencyId: "zed-run",
+              },
+            },
+          ],
+          // ZED Run's Custom WETH
+          [
+            "0xeb5667fb4b6dfebeb16874b9f26dea002fcefc3f",
+            {
+              contract: "0xeb5667fb4b6dfebeb16874b9f26dea002fcefc3f",
+              name: "Wrapped Ether",
+              symbol: "WETH",
+              decimals: 18,
+              metadata: {
+                image: "https://assets.coingecko.com/coins/images/2518/large/weth.png?1628852295",
+                coingeckoCurrencyId: "ethereum",
               },
             },
           ],
@@ -1991,6 +2020,143 @@ export const getNetworkSettings = (): NetworkSettings => {
                   metadata
                 ) VALUES (
                   '\\x0000000000000000000000000000000000000000',
+                  'Ether',
+                  'ETH',
+                  18,
+                  '{"coingeckoCurrencyId": "ethereum", "image": "https://assets.coingecko.com/coins/images/279/large/ethereum.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Degen
+    case 666666666: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: true,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        coingecko: {
+          networkId: "degen",
+        },
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Degen',
+                  'DEGEN',
+                  18,
+                  '{"coingeckoCurrencyId": "degen-base", "image": "https://assets.coingecko.com/coins/images/34515/large/android-chrome-512x512.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Sei Testnet
+    case 713715: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: true,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        coingecko: {
+          networkId: "sei-network",
+        },
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Sei',
+                  'SEI',
+                  18,
+                  '{"coingeckoCurrencyId": "sei-network", "image": "https://assets.coingecko.com/coins/images/28205/large/Sei_Logo_-_Transparent.png"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Xai
+    case 660279: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: false,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        coingecko: {
+          networkId: "xai",
+        },
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x0000000000000000000000000000000000000000',
+                  'Xai',
+                  'XAI',
+                  18,
+                  '{"coingeckoCurrencyId": "xai-blockchain", "image": "https://assets.coingecko.com/coins/images/34258/large/2024-01-09_16.31.28.jpg"}'
+                ) ON CONFLICT DO NOTHING
+              `
+            ),
+          ]);
+        },
+      };
+    }
+    // Nebula
+    case 1482601649: {
+      return {
+        ...defaultNetworkSettings,
+        enableWebSocket: true,
+        realtimeSyncMaxBlockLag: 32,
+        realtimeSyncFrequencySeconds: 5,
+        lastBlockLatency: 5,
+        onStartup: async () => {
+          // Insert the native currency
+          await Promise.all([
+            idb.none(
+              `
+                INSERT INTO currencies (
+                  contract,
+                  name,
+                  symbol,
+                  decimals,
+                  metadata
+                ) VALUES (
+                  '\\x7f73b66d4e6e67bcdeaf277b9962addcdabbfc4d',
                   'Ether',
                   'ETH',
                   18,

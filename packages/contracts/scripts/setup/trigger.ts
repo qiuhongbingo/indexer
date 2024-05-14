@@ -180,6 +180,23 @@ export const trigger = {
           console.log("Granted conduit access to Seaport v1.6");
         }
 
+        // Grant Mintify
+        if (
+          Sdk.Mintify.Addresses.Exchange[chainId] &&
+          !(await conduitController.getChannelStatus(
+            result.conduit,
+            Sdk.Mintify.Addresses.Exchange[chainId]
+          ))
+        ) {
+          await conduitController.updateChannel(
+            result.conduit,
+            Sdk.Mintify.Addresses.Exchange[chainId],
+            true,
+            getGasConfigs(chainId)
+          );
+          console.log("Granted conduit access to Mintify");
+        }
+
         if (!(await readDeployment(contractName, version, chainId))) {
           await writeDeployment(result.conduit, contractName, version, chainId);
         }
@@ -268,6 +285,12 @@ export const trigger = {
         DEPLOYER,
         Sdk.RouterV6.Addresses.Router[chainId],
         Sdk.Alienswap.Addresses.Exchange[chainId],
+      ]),
+    MintifyModule: async (chainId: number) =>
+      dv("MintifyModule", "v2", [
+        DEPLOYER,
+        Sdk.RouterV6.Addresses.Router[chainId],
+        Sdk.Mintify.Addresses.Exchange[chainId],
       ]),
     SudoswapModule: async (chainId: number) =>
       dv("SudoswapModule", "v1", [

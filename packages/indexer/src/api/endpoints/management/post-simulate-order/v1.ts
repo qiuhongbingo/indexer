@@ -28,7 +28,7 @@ const version = "v1";
 
 export const postSimulateOrderV1Options: RouteOptions = {
   description: "Simulate any given order",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,
@@ -213,7 +213,7 @@ export const postSimulateOrderV1Options: RouteOptions = {
 
         const blurPrice = await axios
           .get(
-            `${config.orderFetcherBaseUrl}/api/blur-token?contract=${contract}&tokenId=${tokenId}`
+            `${config.orderFetcherBaseUrl}/api/blur-token?contract=${contract}&tokenId=${tokenId}&chainId=${config.chainId}`
           )
           .then((response) =>
             response.data.blurPrice
@@ -282,6 +282,10 @@ export const postSimulateOrderV1Options: RouteOptions = {
         "0xc379e535caff250a01caa6c3724ed1359fe5c29b:1",
         // JRNYERS
         "0xf6228c82fc2404d90827d9d7a1340106a3407b06:1",
+        // FOMO Apes
+        "0x823460fd74d322b57cd07562c25c2f01376c71a1:1",
+        // Neo Tokyo Identities
+        "0x059174c2fef43f06178d23572fe5556f078f2f99:1",
         // y00ts
         "0x670fd103b1a08628e9557cd66b87ded841115190:137",
       ];
@@ -327,7 +331,9 @@ export const postSimulateOrderV1Options: RouteOptions = {
           let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
           if (!blurAuthChallenge) {
             blurAuthChallenge = (await axios
-              .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${taker}`)
+              .get(
+                `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${taker}&chainId=${config.chainId}`
+              )
               .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
             await b.saveAuthChallenge(blurAuthChallengeId, blurAuthChallenge, 60);

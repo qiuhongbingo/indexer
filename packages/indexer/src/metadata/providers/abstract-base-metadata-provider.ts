@@ -80,25 +80,20 @@ export abstract class AbstractBaseMetadataProvider {
     // extend metadata
     const extendedMetadata = await Promise.all(
       allMetadata.map(async (metadata) => {
-        // if ([1, 137, 11155111].includes(config.chainId)) {
-        //   const tokenMetadataIndexingDebug = await redis.sismember(
-        //     "metadata-indexing-debug-contracts",
-        //     metadata.contract
-        //   );
-        //
-        //   if (tokenMetadataIndexingDebug) {
-        //     logger.info(
-        //       "getTokensMetadata",
-        //       JSON.stringify({
-        //         topic: "tokenMetadataIndexingDebug",
-        //         message: `_getTokensMetadata. contract=${metadata.contract}, tokenId=${metadata.tokenId}, method=${this.method}`,
-        //         metadata: JSON.stringify(metadata),
-        //       })
-        //     );
-        //   }
-        // }
+        logger.log(
+          config.debugMetadataIndexingCollections.includes(metadata.contract) ? "info" : "debug",
+          "getTokensMetadata",
+          JSON.stringify({
+            topic: "tokenMetadataIndexing",
+            message: `_getTokensMetadata. contract=${metadata.contract}, tokenId=${metadata.tokenId}, method=${this.method}`,
+            metadata: JSON.stringify(metadata),
+            debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+              metadata.contract
+            ),
+          })
+        );
 
-        if (hasExtendHandler(metadata.contract)) {
+        if (!["soundxyz"].includes(this.method) && hasExtendHandler(metadata.contract)) {
           return extendMetadata(metadata);
         }
 
@@ -110,14 +105,9 @@ export abstract class AbstractBaseMetadataProvider {
     await Promise.all(
       extendedMetadata.map(async (metadata) => {
         try {
-          const tokenMetadataIndexingDebug = await redis.sismember(
-            "metadata-indexing-debug-contracts",
-            metadata.contract
-          );
-
           if (
             metadata.imageUrl &&
-            !metadata.imageUrl.startsWith("data:") &&
+            (!metadata.imageUrl.startsWith("data:") || [690, 17069].includes(config.chainId)) &&
             !metadata.imageMimeType
           ) {
             const _getImageMimeTypeStart = Date.now();
@@ -128,17 +118,21 @@ export abstract class AbstractBaseMetadataProvider {
               metadata.tokenId
             );
 
-            if (tokenMetadataIndexingDebug) {
-              logger.info(
-                "getTokensMetadata",
-                JSON.stringify({
-                  topic: "tokenMetadataIndexingDebug",
-                  message: `_getImageMimeType. contract=${metadata.contract}, tokenId=${metadata.tokenId}, method=${this.method}, imageMimeType=${metadata.imageMimeType}`,
-                  metadata: JSON.stringify(metadata),
-                  _getImageMimeTypeStartLatency: Date.now() - _getImageMimeTypeStart,
-                })
-              );
-            }
+            logger.log(
+              config.debugMetadataIndexingCollections.includes(metadata.contract)
+                ? "info"
+                : "debug",
+              "getTokensMetadata",
+              JSON.stringify({
+                topic: "tokenMetadataIndexing",
+                message: `_getImageMimeType. contract=${metadata.contract}, tokenId=${metadata.tokenId}, method=${this.method}, imageMimeType=${metadata.imageMimeType}`,
+                metadata: JSON.stringify(metadata),
+                _getImageMimeTypeStartLatency: Date.now() - _getImageMimeTypeStart,
+                debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                  metadata.contract
+                ),
+              })
+            );
 
             if (metadata.contract === "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d") {
               metadata.imageMimeType = "image/png";
@@ -148,12 +142,13 @@ export abstract class AbstractBaseMetadataProvider {
               logger.warn(
                 "getTokensMetadata",
                 JSON.stringify({
-                  topic: tokenMetadataIndexingDebug
-                    ? "tokenMetadataIndexingDebug"
-                    : "debugMimeType",
+                  topic: "tokenMetadataIndexing",
                   message: `Missing image mime type. contract=${metadata.contract}, tokenId=${metadata.tokenId}, imageUrl=${metadata.imageUrl}`,
                   metadata: JSON.stringify(metadata),
                   method: this.method,
+                  debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                    metadata.contract
+                  ),
                 })
               );
             }
@@ -161,7 +156,7 @@ export abstract class AbstractBaseMetadataProvider {
 
           if (
             metadata.mediaUrl &&
-            !metadata.mediaUrl.startsWith("data:") &&
+            (!metadata.mediaUrl.startsWith("data:") || [690, 17069].includes(config.chainId)) &&
             !metadata.mediaMimeType
           ) {
             const _getImageMimeTypeStart = Date.now();
@@ -176,11 +171,14 @@ export abstract class AbstractBaseMetadataProvider {
               logger.warn(
                 "getTokensMetadata",
                 JSON.stringify({
-                  topic: "debugMimeType",
+                  topic: "tokenMetadataIndexing",
                   message: `Missing media mime type. contract=${metadata.contract}, tokenId=${metadata.tokenId}, mediaUrl=${metadata.mediaUrl}`,
                   metadata: JSON.stringify(metadata),
                   method: this.method,
                   _getImageMimeTypeStartLatency: Date.now() - _getImageMimeTypeStart,
+                  debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                    metadata.contract
+                  ),
                 })
               );
             }
@@ -190,6 +188,7 @@ export abstract class AbstractBaseMetadataProvider {
 
           // if the imageMimeType is not an "image" mime type, we want to set imageUrl to null and mediaUrl to imageUrl
           if (
+            !["soundxyz"].includes(this.method) &&
             metadata.imageUrl &&
             metadata.imageMimeType &&
             !imageMimeTypesPrefixes.some((imageMimeTypesPrefix) =>
@@ -223,21 +222,43 @@ export abstract class AbstractBaseMetadataProvider {
     if (url.endsWith(".png")) {
       return "image/png";
     }
+
     if (url.endsWith(".jpg") || url.endsWith(".jpeg")) {
       return "image/jpeg";
     }
+
     if (url.endsWith(".gif")) {
       return "image/gif";
     }
+
     if (url.endsWith(".svg")) {
       return "image/svg+xml";
     }
+
     if (url.endsWith(".webp")) {
       return "image/webp";
     }
+
     if (url.endsWith(".mp4")) {
       return "video/mp4";
     }
+
+    if (url.endsWith(".mp3")) {
+      return "audio/mp3";
+    }
+
+    if (url.endsWith(".wav")) {
+      return "audio/wav";
+    }
+
+    if (url.endsWith(".m4a")) {
+      return "audio/m4a";
+    }
+
+    if (url.startsWith("data:image/svg+xml")) {
+      return "image/svg+xml";
+    }
+
     if (!url.startsWith("http")) {
       return "";
     }
@@ -268,10 +289,12 @@ export abstract class AbstractBaseMetadataProvider {
                 logger.warn(
                   "_getImageMimeType",
                   JSON.stringify({
-                    topic: "debugMissingTokenImages",
+                    topic: "tokenMetadataIndexing",
                     message: `Fallback Error. contract=${contract}, tokenId=${tokenId}, url=${_url}, ipfsGatewayUrl=${ipfsGatewayUrl}, error=${error}, fallbackError=${fallbackError}`,
                     error,
                     fallbackError,
+                    debugMetadataIndexingCollection:
+                      config.debugMetadataIndexingCollections.includes(contract),
                   })
                 );
               });
@@ -279,9 +302,11 @@ export abstract class AbstractBaseMetadataProvider {
             logger.warn(
               "_getImageMimeType",
               JSON.stringify({
-                topic: "debugMissingTokenImages",
+                topic: "tokenMetadataIndexing",
                 message: `Error. contract=${contract}, tokenId=${tokenId}, url=${_url}, error=${error}`,
                 error,
+                debugMetadataIndexingCollection:
+                  config.debugMetadataIndexingCollections.includes(contract),
               })
             );
           }

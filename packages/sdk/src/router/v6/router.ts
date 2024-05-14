@@ -66,6 +66,7 @@ import SeaportModuleAbi from "./abis/SeaportModule.json";
 import SeaportV14ModuleAbi from "./abis/SeaportV14Module.json";
 import SeaportV15ModuleAbi from "./abis/SeaportV15Module.json";
 import SeaportV16ModuleAbi from "./abis/SeaportV16Module.json";
+import MintifyModuleAbi from "./abis/MintifyModule.json";
 import AlienswapModuleAbi from "./abis/AlienswapModule.json";
 import SudoswapModuleAbi from "./abis/SudoswapModule.json";
 import SuperRareModuleAbi from "./abis/SuperRareModule.json";
@@ -226,6 +227,11 @@ export class Router {
         AlienswapModuleAbi,
         provider
       ),
+      mintifyModule: new Contract(
+        Addresses.MintifyModule[chainId] ?? AddressZero,
+        MintifyModuleAbi,
+        provider
+      ),
       cryptoPunksModule: new Contract(
         Addresses.CryptoPunksModule[chainId] ?? AddressZero,
         CryptoPunksModuleAbi,
@@ -271,15 +277,16 @@ export class Router {
     const approvals: FTApproval[] = [];
 
     const sender = options?.relayer ?? taker;
-    const hasNoneNativeMint = details.some(
+    const hasERC20Mint = details.some(
       (c) => !isNative(this.chainId, c.currency ?? Sdk.Common.Addresses.Native[this.chainId])
     );
 
+    let viaRouter = false;
     if (
       !Addresses.MintModule[this.chainId] ||
       options?.forceDirectFilling ||
       // ERC20 mints
-      hasNoneNativeMint ||
+      hasERC20Mint ||
       // Single mints with no fees, no comment and no `relayer` field (only if the mint doesn't have an explicit recipient)
       (details.length === 1 &&
         !details[0].fees?.length &&
@@ -322,6 +329,7 @@ export class Router {
       }
     } else {
       // Otherwise, we wrap the mint transactions within a router execution
+      viaRouter = true;
 
       const proxyCalldata = new Interface(MintProxyAbi).encodeFunctionData("mintMultiple", [
         details.map((d) => ({
@@ -379,7 +387,7 @@ export class Router {
       }
     }
 
-    return { txs, success };
+    return { txs, success, viaRouter };
   }
 
   public async fillListingsTx(
@@ -836,6 +844,7 @@ export class Router {
             })),
             authToken: options?.blurAuth?.accessToken,
             metadata: this.options?.orderFetcherMetadata,
+            chainId: this.chainId,
           })
           .then((response) => response.data.calldata);
 
@@ -939,19 +948,45 @@ export class Router {
     // - fetch the full order data for each partial order (concurrently)
     // - remove any partial order from the details
 
+    const relayer = options?.relayer ?? taker;
+
+    const directSeaportV16Fill =
+      details.length &&
+      details.every(
+        ({ kind, fees, currency, order }) =>
+          kind === "seaport-v1.6" &&
+          buyInCurrency === currency &&
+          // All orders must have the same currency
+          currency === details[0].currency &&
+          // All orders must have the same conduit
+          (order as Sdk.SeaportV16.Order).params.conduitKey ===
+            (details[0].order as Sdk.SeaportV16.Order).params.conduitKey &&
+          !fees?.length
+      ) &&
+      !options?.forceRouter &&
+      !options?.usePermit;
+
     await Promise.all(
       details.map(async (detail, i) => {
         if (["seaport-v1.5-partial", "seaport-v1.6-partial"].includes(detail.kind)) {
           const protocolVersion = detail.kind.includes("seaport-v1.5") ? "v1.5" : "v1.6";
           const order = detail.order as Sdk.SeaportBase.Types.OpenseaPartialOrder;
 
+          // When filling royalty-enforcing orders via the router, we need to set the router
+          // module address as the taker in order to get a correct oracle signature from the
+          // order fetcher / opensea API
+          const fulfiller =
+            order.zone === Sdk.SeaportBase.Addresses.OpenSeaV16SignedZone[this.chainId] &&
+            !directSeaportV16Fill
+              ? this.contracts.seaportV16Module.address
+              : relayer;
           try {
             const result = await axios.post(`${this.options?.orderFetcherBaseUrl}/api/listing`, {
               contract: detail.contract,
               tokenId: detail.tokenId,
               unitPrice: order.unitPrice,
               orderHash: order.id,
-              taker,
+              taker: fulfiller,
               chainId: this.chainId,
               protocolVersion,
               openseaApiKey: this.options?.openseaApiKey,
@@ -1049,12 +1084,11 @@ export class Router {
       })
     );
 
-    const relayer = options?.relayer ?? taker;
-
     // Direct filling for:
     // - seaport-1.5
     // - seaport-1.6
     // - alienswap
+    // - mintify
 
     if (
       details.length &&
@@ -1151,22 +1185,7 @@ export class Router {
       }
     }
 
-    if (
-      details.length &&
-      details.every(
-        ({ kind, fees, currency, order }) =>
-          kind === "seaport-v1.6" &&
-          buyInCurrency === currency &&
-          // All orders must have the same currency
-          currency === details[0].currency &&
-          // All orders must have the same conduit
-          (order as Sdk.SeaportV16.Order).params.conduitKey ===
-            (details[0].order as Sdk.SeaportV16.Order).params.conduitKey &&
-          !fees?.length
-      ) &&
-      !options?.forceRouter &&
-      !options?.usePermit
-    ) {
+    if (directSeaportV16Fill) {
       const exchange = new Sdk.SeaportV16.Exchange(this.chainId);
 
       const conduitKey =
@@ -1335,6 +1354,95 @@ export class Router {
       }
     }
 
+    if (
+      details.length &&
+      details.every(
+        ({ kind, fees, currency, order }) =>
+          kind === "mintify" &&
+          buyInCurrency === currency &&
+          // All orders must have the same currency
+          currency === details[0].currency &&
+          // All orders must have the same conduit
+          (order as Sdk.Mintify.Order).params.conduitKey ===
+            (details[0].order as Sdk.Mintify.Order).params.conduitKey &&
+          !fees?.length
+      ) &&
+      !options?.forceRouter &&
+      !options?.usePermit
+    ) {
+      const exchange = new Sdk.Mintify.Exchange(this.chainId);
+
+      const conduitKey =
+        options?.conduitKey ?? (details[0].order as Sdk.Mintify.Order).params.conduitKey;
+      const conduit = exchange.deriveConduit(conduitKey);
+
+      let approval: FTApproval | undefined;
+      if (!isNative(this.chainId, details[0].currency)) {
+        approval = {
+          currency: details[0].currency,
+          amount: details[0].price,
+          owner: relayer,
+          operator: conduit,
+          txData: generateFTApprovalTxData(details[0].currency, relayer, conduit),
+        };
+      }
+
+      if (details.length === 1) {
+        const order = details[0].order as Sdk.Mintify.Order;
+        return {
+          txs: [
+            {
+              approvals: approval ? [approval] : [],
+              permits: [],
+              preSignatures: [],
+              txTags: {
+                listings: { mintify: 1 },
+              },
+              txData: await exchange.fillOrderTx(
+                relayer,
+                order,
+                order.buildMatching({ amount: details[0].amount }),
+                {
+                  ...options,
+                  conduitKey,
+                  recipient: taker,
+                }
+              ),
+              orderIds: [details[0].orderId],
+            },
+          ],
+          success: { [details[0].orderId]: true },
+        };
+      } else {
+        const orders = details.map((d) => d.order as Sdk.Mintify.Order);
+
+        return {
+          txs: [
+            {
+              approvals: approval ? [approval] : [],
+              permits: [],
+              preSignatures: [],
+              txTags: {
+                listings: { mintify: details.length },
+              },
+              txData: await exchange.fillOrdersTx(
+                relayer,
+                orders,
+                orders.map((order, i) => order.buildMatching({ amount: details[i].amount })),
+                {
+                  ...options,
+                  conduitKey,
+                  recipient: taker,
+                }
+              ),
+              orderIds: details.map((d) => d.orderId),
+            },
+          ],
+          success: Object.fromEntries(details.map((d) => [d.orderId, true])),
+        };
+      }
+    }
+
     // Keep track of any approvals that might be needed
     const approvals: FTApproval[] = [];
 
@@ -1368,6 +1476,7 @@ export class Router {
     const seaportV15Details: PerCurrencyListingDetails = {};
     const seaportV16Details: PerCurrencyListingDetails = {};
     const alienswapDetails: PerCurrencyListingDetails = {};
+    const mintifyDetails: PerCurrencyListingDetails = {};
 
     for (const detail of details) {
       // Skip any listings handled in a previous step
@@ -1427,6 +1536,13 @@ export class Router {
             seaportV16Details[currency] = [];
           }
           detailsRef = seaportV16Details[currency];
+          break;
+
+        case "mintify":
+          if (!mintifyDetails[currency]) {
+            mintifyDetails[currency] = [];
+          }
+          detailsRef = mintifyDetails[currency];
           break;
 
         case "alienswap":
@@ -2507,6 +2623,221 @@ export class Router {
           });
 
           addRouterTags("seaport-v1.6", orders.length, fees.length);
+
+          // Mark the listings as successfully handled
+          for (const { orderId } of currencyDetails) {
+            success[orderId] = true;
+          }
+        }
+      }
+    }
+
+    // Handle Mintify listings
+    if (Object.keys(mintifyDetails).length) {
+      const exchange = new Sdk.Mintify.Exchange(this.chainId);
+      for (const currency of Object.keys(mintifyDetails)) {
+        const rawCurrencyDetails = mintifyDetails[currency];
+
+        // Account private vs non-private orders separately
+        const privateDetails: Sdk.RouterV6.Types.ListingDetails[] = [];
+        const normalDetails: Sdk.RouterV6.Types.ListingDetails[] = [];
+        for (const currencyDetail of rawCurrencyDetails) {
+          if ((currencyDetail.order as Sdk.Mintify.Order).isPrivateOrder()) {
+            privateDetails.push(currencyDetail);
+          } else {
+            normalDetails.push(currencyDetail);
+          }
+        }
+
+        const splittedDetails: Sdk.RouterV6.Types.ListingDetails[][] = [];
+        if (privateDetails.length) {
+          splittedDetails.push(privateDetails);
+        }
+        if (normalDetails.length) {
+          splittedDetails.push(normalDetails);
+        }
+
+        for (const currencyDetails of splittedDetails) {
+          const orders = currencyDetails.map((d) => d.order as Sdk.Mintify.Order);
+          const isPrivate = orders[0].isPrivateOrder();
+
+          const module = this.contracts.mintifyModule;
+
+          const fees = getFees(currencyDetails);
+          const price = orders
+            .map((order, i) =>
+              // Seaport orders can be partially-fillable
+              bn(order.getMatchingPrice())
+                .mul(currencyDetails[i].amount ?? 1)
+                .div(order.getInfo()!.amount)
+            )
+            .reduce((a, b) => a.add(b), bn(0));
+          const feeAmount = fees.map(({ amount }) => bn(amount)).reduce((a, b) => a.add(b), bn(0));
+          const totalPrice = price.add(feeAmount);
+
+          const currencyIsNative = isNative(this.chainId, currency);
+          const buyInCurrencyIsNative = isNative(this.chainId, buyInCurrency);
+
+          if (isPrivate) {
+            executions.push({
+              info: {
+                module: module.address,
+                data: module.interface.encodeFunctionData(
+                  `accept${currencyIsNative ? "ETH" : "ERC20"}PrivateListings`,
+                  [
+                    await Promise.all(
+                      orders.map(async (order, i) => {
+                        const totalAmount = order.getInfo()!.amount;
+                        const filledAmount = currencyDetails[i].amount ?? 1;
+
+                        const counterOrder = order.constructPrivateListingCounterOrder(
+                          module.address,
+                          taker,
+                          HashZero
+                        );
+                        const fulfillments = order.getPrivateListingFulfillments();
+
+                        const orderData = {
+                          parameters: {
+                            ...order.params,
+                            totalOriginalConsiderationItems: order.params.consideration.length,
+                          },
+                          numerator: filledAmount,
+                          denominator: totalAmount,
+                          signature: order.params.signature,
+                          extraData: order.params.extraData ?? "0x",
+                        };
+
+                        return {
+                          orders: [
+                            orderData,
+                            {
+                              ...counterOrder,
+                              numerator: filledAmount,
+                              denominator: totalAmount,
+                              extraData: "0x",
+                            },
+                          ],
+                          fulfillments,
+                          price: currencyIsNative
+                            ? bn(orders[i].getMatchingPrice()).mul(filledAmount).div(totalAmount)
+                            : bn(0),
+                        };
+                      })
+                    ),
+                    {
+                      fillTo: taker,
+                      refundTo: relayer,
+                      revertIfIncomplete: Boolean(!options?.partial),
+                      amount: price,
+                      // Only needed for ERC20 listings
+                      token: currency,
+                    },
+                    fees,
+                  ]
+                ),
+                value: buyInCurrencyIsNative && currencyIsNative ? totalPrice : 0,
+              },
+              orderIds: currencyDetails.map((d) => d.orderId),
+            });
+          } else {
+            executions.push({
+              info: {
+                module: module.address,
+                data:
+                  orders.length === 1
+                    ? module.interface.encodeFunctionData(
+                        `accept${currencyIsNative ? "ETH" : "ERC20"}Listing`,
+                        [
+                          {
+                            parameters: {
+                              ...orders[0].params,
+                              totalOriginalConsiderationItems:
+                                orders[0].params.consideration.length,
+                            },
+                            numerator: currencyDetails[0].amount ?? 1,
+                            denominator: orders[0].getInfo()!.amount,
+                            signature: orders[0].params.signature,
+                            extraData: await exchange.getExtraData(orders[0], {
+                              amount: currencyDetails[0].amount ?? 1,
+                              extraData: currencyDetails[0].extraArgs?.extraData,
+                            }),
+                          },
+                          {
+                            fillTo: taker,
+                            refundTo: relayer,
+                            revertIfIncomplete: Boolean(!options?.partial),
+                            amount: price,
+                            // Only needed for ERC20 listings
+                            token: currency,
+                          },
+                          fees,
+                        ]
+                      )
+                    : module.interface.encodeFunctionData(
+                        `accept${currencyIsNative ? "ETH" : "ERC20"}Listings`,
+                        [
+                          await Promise.all(
+                            orders.map(async (order, i) => {
+                              const totalAmount = order.getInfo()!.amount;
+                              const filledAmount = currencyDetails[i].amount ?? 1;
+
+                              const orderData = {
+                                parameters: {
+                                  ...order.params,
+                                  totalOriginalConsiderationItems:
+                                    order.params.consideration.length,
+                                },
+                                numerator: filledAmount,
+                                denominator: totalAmount,
+                                signature: order.params.signature,
+                                extraData: await exchange.getExtraData(order, {
+                                  amount: filledAmount,
+                                  extraData: currencyDetails[i].extraArgs?.extraData,
+                                }),
+                              };
+
+                              if (currencyIsNative) {
+                                return {
+                                  order: orderData,
+                                  price: bn(orders[i].getMatchingPrice())
+                                    .mul(filledAmount)
+                                    .div(totalAmount),
+                                };
+                              } else {
+                                return orderData;
+                              }
+                            })
+                          ),
+                          {
+                            fillTo: taker,
+                            refundTo: relayer,
+                            revertIfIncomplete: Boolean(!options?.partial),
+                            amount: price,
+                            // Only needed for ERC20 listings
+                            token: currency,
+                          },
+                          fees,
+                        ]
+                      ),
+                value: buyInCurrencyIsNative && currencyIsNative ? totalPrice : 0,
+              },
+              orderIds: currencyDetails.map((d) => d.orderId),
+            });
+          }
+
+          // Track any possibly required swap
+          swapDetails.push({
+            tokenIn: buyInCurrency,
+            tokenOut: currency,
+            tokenOutAmount: totalPrice,
+            recipient: module.address,
+            refundTo: relayer,
+            details: currencyDetails,
+            executionIndex: executions.length - 1,
+          });
+
+          addRouterTags("mintify", orders.length, fees.length);
 
           // Mark the listings as successfully handled
           for (const { orderId } of currencyDetails) {
@@ -4100,6 +4431,7 @@ export class Router {
     }
 
     return {
+      swaps: successfulSwapInfos,
       txs,
       success,
     };
@@ -4176,6 +4508,7 @@ export class Router {
               price: d.price,
             })),
             authToken: options?.blurAuth?.accessToken,
+            chainId: this.chainId,
           })
           .then((response) => response.data.calldata);
 
@@ -4476,6 +4809,11 @@ export class Router {
 
         case "alienswap": {
           module = this.contracts.alienswapModule;
+          break;
+        }
+
+        case "mintify": {
+          module = this.contracts.mintifyModule;
           break;
         }
 
@@ -4978,6 +5316,52 @@ export class Router {
               throw new Error(getErrorMessage(error));
             }
           }
+
+          break;
+        }
+
+        case "mintify": {
+          const order = detail.order as Sdk.Mintify.Order;
+          const module = this.contracts.mintifyModule;
+
+          const matchParams = order.buildMatching({
+            tokenId: detail.tokenId,
+            amount: detail.amount ?? 1,
+            ...(detail.extraArgs ?? {}),
+          });
+
+          const exchange = new Sdk.Mintify.Exchange(this.chainId);
+          executionsWithDetails.push({
+            detail,
+            execution: {
+              module: module.address,
+              data: module.interface.encodeFunctionData(
+                detail.contractKind === "erc721" ? "acceptERC721Offer" : "acceptERC1155Offer",
+                [
+                  {
+                    parameters: {
+                      ...order.params,
+                      totalOriginalConsiderationItems: order.params.consideration.length,
+                    },
+                    numerator: matchParams.amount ?? 1,
+                    denominator: order.getInfo()!.amount,
+                    signature: order.params.signature,
+                    extraData: await exchange.getExtraData(order, matchParams),
+                  },
+                  matchParams.criteriaResolvers ?? [],
+                  {
+                    fillTo: taker,
+                    refundTo: taker,
+                    revertIfIncomplete: Boolean(!options?.partial),
+                  },
+                  fees,
+                ]
+              ),
+              value: 0,
+            },
+          });
+
+          success[detail.orderId] = true;
 
           break;
         }
@@ -6055,6 +6439,7 @@ export class Router {
     return {
       preTxs,
       txs,
+      swaps: successfulSwapInfos,
       success,
     };
   }

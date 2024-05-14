@@ -1,6 +1,7 @@
 import { BigNumberish } from "@ethersproject/bignumber";
 
 import { Permit } from "./permit";
+import { SwapInfo } from "./swap/index";
 import * as Sdk from "../../index";
 import { TxData } from "../../utils";
 
@@ -188,6 +189,10 @@ export type GenericOrder =
   | {
       kind: "payment-processor-v2";
       order: Sdk.PaymentProcessorV2.Order;
+    }
+  | {
+      kind: "mintify";
+      order: Sdk.Mintify.Order;
     };
 
 // Listings
@@ -226,6 +231,7 @@ export type FillListingsResult = {
     preSignatures: PreSignature[];
   }[];
   success: { [orderId: string]: boolean };
+  swaps?: SwapInfo[];
 };
 
 // Bids
@@ -268,6 +274,7 @@ export type FillBidsResult = {
     preSignatures: PreSignature[];
   }[];
   success: { [orderId: string]: boolean };
+  swaps?: SwapInfo[];
 };
 
 // Mints
@@ -293,6 +300,8 @@ export type FillMintsResult = {
     approvals: FTApproval[];
   }[];
   success: { [orderId: string]: boolean };
+  // Whether the mints are executed via the router
+  viaRouter?: boolean;
 };
 
 // Transfers

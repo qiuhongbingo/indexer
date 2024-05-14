@@ -95,6 +95,10 @@ export type GenericOrderInfo =
   | ({
       kind: "caviar-v1";
       info: orders.caviarV1.OrderInfo;
+    } & CommonOrderInfo)
+  | ({
+      kind: "mintify";
+      info: orders.mintify.OrderInfo;
     } & CommonOrderInfo);
 
 export const processOrder = async (job: AbstractRabbitMqJobHandler, payload: GenericOrderInfo) => {
@@ -215,6 +219,16 @@ export const processOrder = async (job: AbstractRabbitMqJobHandler, payload: Gen
 
   if (_.random(100) <= 50) {
     logger.info(
+      job.queueName,
+      JSON.stringify({
+        topic: "orderbook-metrics",
+        message: `[${kind}] Order save result: ${JSON.stringify(result)}`,
+        orderKind: kind,
+        resultStatus: result[0]?.status,
+      })
+    );
+  } else {
+    logger.debug(
       job.queueName,
       JSON.stringify({
         topic: "orderbook-metrics",

@@ -21,12 +21,12 @@ export const handleEvents = async (events: EnhancedEvent[]) => {
         const parsedLog = eventData.abi.parseLog(log);
         const collection = parsedLog.args["collection"].toLowerCase();
 
-        await erc721c.v1.refreshConfig(collection);
+        await erc721c.refreshConfig(collection);
         break;
       }
 
       case "erc721c-transfer-validator-updated": {
-        await erc721c.v1.refreshConfig(baseEventParams.address);
+        await erc721c.refreshConfig(baseEventParams.address);
         break;
       }
 

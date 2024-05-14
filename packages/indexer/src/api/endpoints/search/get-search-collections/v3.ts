@@ -17,7 +17,7 @@ const version = "v3";
 
 export const getSearchCollectionsV3Options: RouteOptions = {
   description: "Search Collections",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 3,

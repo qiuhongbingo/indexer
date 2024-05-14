@@ -15,7 +15,7 @@ const version = "v1";
 
 export const postExecuteDepositV1Options: RouteOptions = {
   description: "Deposit funds to the solver",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,

@@ -19,7 +19,7 @@ export const postCancelSignatureV1Options: RouteOptions = {
   description: "Off-chain cancel orders",
   notes:
     "If your order was created using the Seaport Oracle to allow off chain & gasless cancellations, you can just use the Kit's cancel modals, SDK's `cancelOrder`, or `/execute/cancel/`. Those tools will automatically access this endpoint for an oracle cancellation without you directly calling this endpoint.",
-  tags: ["api", "Misc"],
+  tags: ["api", "Misc", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 50,
@@ -42,6 +42,7 @@ export const postCancelSignatureV1Options: RouteOptions = {
           "seaport-v1.5",
           "seaport-v1.6",
           "alienswap",
+          "mintify",
           "blur-bid",
           "payment-processor-v2"
         )
@@ -107,6 +108,7 @@ export const postCancelSignatureV1Options: RouteOptions = {
                 contract,
                 prices,
                 authToken: auth,
+                chainId: config.chainId,
               });
             })
           );
@@ -115,6 +117,7 @@ export const postCancelSignatureV1Options: RouteOptions = {
         }
 
         case "alienswap":
+        case "mintify":
         case "seaport-v1.4":
         case "seaport-v1.5":
         case "seaport-v1.6": {

@@ -1169,6 +1169,24 @@ export const setupRoutes = (server: Server) => {
   });
 
   server.route({
+    method: "GET",
+    path: "/users/{user}/asks/v1",
+    options: ordersEndpoints.getUserAsksV1Options,
+  });
+
+  server.route({
+    method: "GET",
+    path: "/tokens/{token}/bids/v1",
+    options: ordersEndpoints.getTokenBidsV1Options,
+  });
+
+  server.route({
+    method: "GET",
+    path: "/tokens/{token}/asks/v1",
+    options: ordersEndpoints.getTokenAsksV1Options,
+  });
+
+  server.route({
     method: "POST",
     path: "/order/v2",
     options: ordersEndpoints.postOrderV2Options,
@@ -1542,6 +1560,12 @@ export const setupRoutes = (server: Server) => {
     method: "GET",
     path: "/transactions/{txHash}/synced/v1",
     options: transactionsEndpoints.getTransactionSyncedV1Options,
+  });
+
+  server.route({
+    method: "GET",
+    path: "/transactions/synced/v2",
+    options: transactionsEndpoints.getTransactionSyncedV2Options,
   });
 
   // Transfers

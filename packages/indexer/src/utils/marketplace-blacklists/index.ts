@@ -78,12 +78,13 @@ export const isBlockedByCustomLogic = async (
       [
         "0x0c86cdc978b7d191f11b36731107e924c699af10",
         "0x4d7d2e237d64d1484660b55c0a4cc092fa5e6716",
-        "0x4b15a9c28034dc83db40cd810001427d3bd7163d",
         "0x2358693f4faec9d658bb97fc9cd8885f62105dc1",
         "0x8f1b132e9fd2b9a2b210baa186bf1ae650adf7ac",
         "0xd4b7d9bb20fa20ddada9ecef8a7355ca983cccb1",
         "0x572e33ffa523865791ab1c26b42a86ac244df784",
         "0x7daec605e9e2a1717326eedfd660601e2753a057",
+        "0xe75ef1ec029c71c9db0f968e389331609312aa22",
+        "0x0cfb5d82be2b949e8fa73a656df91821e2ad99fd",
       ].includes(contract) &&
       (operators.includes(BLUR) || operators.includes(OPENSEA))
     ) {
@@ -168,7 +169,7 @@ export const isBlockedByCustomLogic = async (
       if (blacklist.length) {
         await orderRevalidationsJob.addToQueue([
           {
-            by: "operator",
+            by: "operator-or-zone",
             data: {
               origin: "marketplace-blacklist",
               contract,
@@ -254,7 +255,7 @@ export const updateMarketplaceBlacklist = async (contract: string) => {
   // Invalid any orders relying on the blacklisted operator
   await orderRevalidationsJob.addToQueue([
     {
-      by: "operator",
+      by: "operator-or-zone",
       data: {
         origin: "marketplace-blacklist",
         contract,

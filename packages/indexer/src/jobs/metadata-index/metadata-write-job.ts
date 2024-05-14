@@ -91,22 +91,18 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
       decimals,
     } = payload;
 
-    const tokenMetadataIndexingDebug = await redis.sismember(
-      "metadata-indexing-debug-contracts",
-      contract
+    logger.log(
+      config.debugMetadataIndexingCollections.includes(collection) ? "info" : "debug",
+      this.queueName,
+      JSON.stringify({
+        topic: "tokenMetadataIndexing",
+        message: `Start. collection=${collection}, tokenId=${tokenId}, metadataMethod=${metadataMethod}`,
+        payload,
+        metadataMethod,
+        debugMetadataIndexingCollection:
+          config.debugMetadataIndexingCollections.includes(collection),
+      })
     );
-
-    if (tokenMetadataIndexingDebug) {
-      logger.info(
-        this.queueName,
-        JSON.stringify({
-          topic: "tokenMetadataIndexingDebug",
-          message: `Start. collection=${collection}, tokenId=${tokenId}, metadataMethod=${metadataMethod}`,
-          payload,
-          metadataMethod,
-        })
-      );
-    }
 
     if (metadataMethod === "simplehash") {
       try {
@@ -121,11 +117,13 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
           logger.info(
             this.queueName,
             JSON.stringify({
-              topic: "simpleHashFallbackDebug",
+              topic: "tokenMetadataIndexing",
               message: `Fallback. collection=${collection}, tokenId=${tokenId}`,
               payload,
               fallbackSuccess,
               fallbackError,
+              debugMetadataIndexingCollection:
+                config.debugMetadataIndexingCollections.includes(collection),
             })
           );
 
@@ -142,9 +140,11 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
         logger.error(
           this.queueName,
           JSON.stringify({
-            topic: "simpleHashFallbackDebug",
+            topic: "tokenMetadataIndexing",
             message: `Fallback check error. collection=${collection}, tokenId=${tokenId}`,
             payload,
+            debugMetadataIndexingCollection:
+              config.debugMetadataIndexingCollections.includes(collection),
           })
         );
       }

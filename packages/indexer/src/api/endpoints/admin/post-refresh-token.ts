@@ -7,7 +7,6 @@ import Joi from "joi";
 
 import { logger } from "@/common/logger";
 import { config } from "@/config/index";
-import { Collections } from "@/models/collections";
 import { Tokens } from "@/models/tokens";
 import { OpenseaIndexerApi } from "@/utils/opensea-indexer-api";
 import { tokenRefreshCacheJob } from "@/jobs/token-updates/token-refresh-cache-job";
@@ -63,7 +62,7 @@ export const postRefreshTokenOptions: RouteOptions = {
       await OpenseaIndexerApi.fastTokenSync(payload.token);
 
       // Refresh meta data
-      const collection = await Collections.getByContractAndTokenId(contract, tokenId);
+      const collection = await Tokens.getCollection(contract, tokenId);
 
       await metadataIndexFetchJob.addToQueue(
         [
@@ -88,7 +87,8 @@ export const postRefreshTokenOptions: RouteOptions = {
             tokenId,
           },
         ],
-        true
+        true,
+        "post-refresh-token"
       );
 
       // Revalidate the token orders

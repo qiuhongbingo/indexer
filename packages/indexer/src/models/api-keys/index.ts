@@ -1,27 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import _ from "lodash";
+import { Boom } from "@hapi/boom";
 import Hapi, { Request } from "@hapi/hapi";
+import axios from "axios";
+import _ from "lodash";
+import flat from "flat";
+import getUuidByString from "uuid-by-string";
 
 import { idb, pgp, redb } from "@/common/db";
 import { logger } from "@/common/logger";
 import { redis } from "@/common/redis";
+import tracer from "@/common/tracer";
+import { fromBuffer, regex } from "@/common/utils";
+import { config } from "@/config/index";
+import { getNetworkName, getSubDomain } from "@/config/network";
+import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import {
   ApiKeyEntity,
   ApiKeyPermission,
   ApiKeyUpdateParams,
 } from "@/models/api-keys/api-key-entity";
-import getUuidByString from "uuid-by-string";
+import { Sources } from "@/models/sources";
 import { AllChainsChannel, Channel } from "@/pubsub/channels";
-import axios from "axios";
-import { getNetworkName, getSubDomain } from "@/config/network";
-import { config } from "@/config/index";
-import { Boom } from "@hapi/boom";
-import tracer from "@/common/tracer";
-import flat from "flat";
-import { fromBuffer, regex } from "@/common/utils";
-import { syncApiKeysJob } from "@/jobs/api-keys/sync-api-keys-job";
 import { AllChainsPubSub, PubSub } from "@/pubsub/index";
+import { OrderKind } from "@/orderbook/orders";
+import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
 
 export type ApiKeyRecord = {
   appName: string;
@@ -42,6 +45,7 @@ export type NewApiKeyResponse = {
 
 export class ApiKeyManager {
   public static defaultRevShareBps = 3000;
+  public static defaultOrderbookFeeBps = 0;
 
   private static apiKeys: Map<string, ApiKeyEntity> = new Map();
 
@@ -135,6 +139,8 @@ export class ApiKeyManager {
         ips: [],
         origins: [],
         rev_share_bps: ApiKeyManager.defaultRevShareBps,
+        orderbook_fees: {},
+        disable_orderbook_fees: false,
       });
     }
 
@@ -389,9 +395,29 @@ export class ApiKeyManager {
           updateString += `${_.snakeCase(fieldName)} = '$/${fieldName}:raw/'::jsonb,`;
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else if (_.isObject(value)) {
-          updateString += `${_.snakeCase(
-            fieldName
-          )} = COALESCE(${fieldName}, '{}') || '$/${fieldName}:raw/'::jsonb,`;
+          let newObjectValues = `COALESCE(${_.snakeCase(fieldName)}, '{}')`;
+          const fieldsToUpdate: { [key: string]: any } = {};
+
+          // Add all fields need to add/update
+          Object.keys(value).forEach((key) => {
+            if (!_.isNull((value as any)[key])) {
+              fieldsToUpdate[key] = (value as any)[key];
+            }
+          });
+
+          if (!_.isEmpty(fieldsToUpdate)) {
+            (replacementValues as any)[`${fieldName}Add`] = JSON.stringify(fieldsToUpdate);
+            newObjectValues = `(${newObjectValues}|| '$/${fieldName}Add:raw/'::jsonb)`;
+          }
+
+          // Add any field needs to be removed
+          Object.keys(value).forEach((key) => {
+            if (_.isNull((value as any)[key])) {
+              newObjectValues += ` - '${key}'`;
+            }
+          });
+
+          updateString += `${_.snakeCase(fieldName)} = ${newObjectValues}`;
           (replacementValues as any)[`${fieldName}`] = JSON.stringify(value);
         } else {
           updateString += `${_.snakeCase(fieldName)} = $/${fieldName}/,`;
@@ -413,7 +439,10 @@ export class ApiKeyManager {
      SET ${updateString}
      WHERE key = $/key/
      RETURNING ${updatedFields
-       .map((fieldName) => `(SELECT ${fieldName} FROM old_values) AS "old_${fieldName}"`)
+       .map(
+         (fieldName) =>
+           `(SELECT ${_.snakeCase(fieldName)} FROM old_values) AS "old_${_.snakeCase(fieldName)}"`
+       )
        .join(",")}`;
 
     const oldValues = await idb.manyOrNone(query, replacementValues);
@@ -433,6 +462,20 @@ export class ApiKeyManager {
       "api-key",
       `Update key ${key} with ${JSON.stringify(fields)}, oldValues=${JSON.stringify(oldValues)}`
     );
+  }
+
+  public static async getOrderbookFee(key: string, orderbook: OrderKind) {
+    // Fees are enforced only for specific orderbooks
+    if (!ORDERBOOK_FEE_ORDER_KINDS.includes(orderbook)) {
+      return 0;
+    }
+
+    const apiKey = await ApiKeyManager.getApiKey(key);
+    if (apiKey?.disableOrderbookFees) {
+      return 0;
+    }
+
+    return apiKey?.orderbookFees?.[orderbook]?.feeBps ?? ApiKeyManager.defaultOrderbookFeeBps;
   }
 
   static async notifyApiKeyCreated(values: ApiKeyRecord) {
@@ -495,5 +538,22 @@ export class ApiKeyManager {
       .catch(() => {
         // Skip on any errors
       });
+  }
+
+  public static async isRestrictedSource(source: string, key: string) {
+    try {
+      const sources = await Sources.getInstance();
+      const sourceObject = sources.getByDomain(source);
+      if (sourceObject && sourceObject.metadata?.allowedApiKeys?.length) {
+        const apiKey = await ApiKeyManager.getApiKey(key);
+        if (!apiKey || !sourceObject.metadata.allowedApiKeys.includes(apiKey.key)) {
+          return true;
+        }
+      }
+    } catch {
+      // Skip any errors
+    }
+
+    return false;
   }
 }

@@ -61,6 +61,7 @@ export interface AskDocument extends BaseDocument {
       };
     };
     isDynamic: boolean;
+    isReservoir: boolean;
     rawData: Record<string, unknown>;
     missingRoyalties: { bps: number; recipient: string }[];
     pricing: {
@@ -124,6 +125,7 @@ export interface BuildAskDocumentData extends BuildDocumentData {
   order_maker: Buffer;
   order_taker?: Buffer;
   order_dynamic: boolean;
+  order_is_reservoir: boolean;
   order_raw_data: Record<string, unknown>;
   order_missing_royalties: { bps: number; recipient: string }[];
 }
@@ -180,6 +182,7 @@ export class AskDocumentBuilder extends DocumentBuilder {
         quantityFilled: data.order_quantity_filled,
         quantityRemaining: data.order_quantity_remaining,
         isDynamic: Boolean(data.order_dynamic || 0),
+        isReservoir: Boolean(data.order_is_reservoir ?? false),
         rawData: data.order_raw_data,
         missingRoyalties: data.order_missing_royalties,
         pricing: {

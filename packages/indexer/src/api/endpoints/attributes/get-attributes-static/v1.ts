@@ -17,7 +17,7 @@ export const getAttributesStaticV1Options: RouteOptions = {
     expiresIn: 1000 * 60 * 60 * 24,
   },
   description: "All attributes + token ids",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 2,

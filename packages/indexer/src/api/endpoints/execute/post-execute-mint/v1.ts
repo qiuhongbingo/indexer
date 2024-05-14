@@ -35,7 +35,7 @@ export const postExecuteMintV1Options: RouteOptions = {
   description: "Mint Tokens",
   notes:
     "Use this API to mint tokens. We recommend using the SDK over this API as the SDK will iterate through the steps and return callbacks.",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   timeout: {
     server: 40 * 1000,
   },
@@ -217,6 +217,9 @@ export const postExecuteMintV1Options: RouteOptions = {
     // Needed for cross-chain solving which works off the original request
     const originalPayload = _.cloneDeep(payload);
 
+    // When the mint is unlimited we use this value as a cap
+    const UNLIMITED_MINT_CAP = 30000;
+
     try {
       type ExecuteFee = {
         kind?: string;
@@ -353,6 +356,8 @@ export const postExecuteMintV1Options: RouteOptions = {
 
       let allMintsHaveExplicitRecipient = true;
 
+      const id = randomUUID();
+
       let lastError: string | undefined;
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -368,6 +373,7 @@ export const postExecuteMintV1Options: RouteOptions = {
         }
 
         // Scenario 1: fill via `custom`
+        const perfTimeA1 = performance.now();
         if (item.custom) {
           const rawMint = {
             ...item.custom,
@@ -443,8 +449,10 @@ export const postExecuteMintV1Options: RouteOptions = {
             }
           }
         }
+        const perfTimeA2 = performance.now();
 
         // Scenario 2: fill via `collection`
+        const perfTimeB1 = performance.now();
         if (item.collection) {
           let hasActiveMints = false;
           const collectionData = await idb.oneOrNone(
@@ -470,7 +478,7 @@ export const postExecuteMintV1Options: RouteOptions = {
             });
 
             for (const mint of openMints) {
-              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker);
+              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker, id);
               let quantityToMint = bn(
                 amountMintable
                   ? amountMintable.lt(item.quantity)
@@ -508,6 +516,12 @@ export const postExecuteMintV1Options: RouteOptions = {
                     price: mint.price,
                   });
 
+                  const maxQuantity = mint.tokenId
+                    ? quantityToMint.toString()
+                    : amountMintable
+                    ? amountMintable.toString()
+                    : null;
+
                   await addToPath(
                     {
                       id: orderId,
@@ -521,7 +535,8 @@ export const postExecuteMintV1Options: RouteOptions = {
                     {
                       kind: collectionData.token_kind,
                       contract: mint.contract,
-                      quantity: quantityToMint,
+                      quantity:
+                        preview && maxQuantity === null ? UNLIMITED_MINT_CAP : quantityToMint,
                     }
                   );
 
@@ -529,11 +544,7 @@ export const postExecuteMintV1Options: RouteOptions = {
                     // The max quantity is the amount mintable on the collection
                     maxQuantities.push({
                       itemIndex,
-                      maxQuantity: mint.tokenId
-                        ? quantityToMint.toString()
-                        : amountMintable
-                        ? amountMintable.toString()
-                        : null,
+                      maxQuantity,
                     });
 
                     // Solver filling is restricted to a single path item for now
@@ -569,8 +580,10 @@ export const postExecuteMintV1Options: RouteOptions = {
             }
           }
         }
+        const perfTimeB2 = performance.now();
 
         // Scenario 3: fill via `token`
+        const perfTimeC1 = performance.now();
         if (item.token) {
           const [contract, tokenId] = item.token.split(":");
 
@@ -603,7 +616,7 @@ export const postExecuteMintV1Options: RouteOptions = {
             });
 
             for (const mint of openMints) {
-              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker);
+              const amountMintable = await mints.getAmountMintableByWallet(mint, payload.taker, id);
 
               const quantityToMint = bn(
                 amountMintable
@@ -635,6 +648,8 @@ export const postExecuteMintV1Options: RouteOptions = {
                     price: mint.price,
                   });
 
+                  const maxQuantity = amountMintable ? amountMintable.toString() : null;
+
                   await addToPath(
                     {
                       id: orderId,
@@ -649,7 +664,8 @@ export const postExecuteMintV1Options: RouteOptions = {
                       kind: collectionData.token_kind,
                       contract: mint.contract,
                       tokenId,
-                      quantity: quantityToMint,
+                      quantity:
+                        preview && maxQuantity === null ? UNLIMITED_MINT_CAP : quantityToMint,
                     }
                   );
 
@@ -657,7 +673,7 @@ export const postExecuteMintV1Options: RouteOptions = {
                     // The max quantity is the amount mintable on the collection
                     maxQuantities.push({
                       itemIndex,
-                      maxQuantity: amountMintable ? amountMintable.toString() : null,
+                      maxQuantity,
                     });
 
                     // Solver filling is restricted to a single path item for now
@@ -690,6 +706,21 @@ export const postExecuteMintV1Options: RouteOptions = {
               throw getExecuteError(lastError);
             }
           }
+        }
+        const perfTimeC2 = performance.now();
+
+        if (config.chainId === 8453) {
+          logger.info(
+            "mint-performance-debug",
+            JSON.stringify({
+              id,
+              method: "get-data",
+              totalTimeA: (perfTimeA2 - perfTimeA1) / 1000,
+              totalTimeB: (perfTimeB2 - perfTimeB1) / 1000,
+              totalTimeC: (perfTimeC2 - perfTimeC1) / 1000,
+              item,
+            })
+          );
         }
       }
 
@@ -799,13 +830,16 @@ export const postExecuteMintV1Options: RouteOptions = {
           source: payload.source,
         };
 
-        const { requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
+        const { txData, requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
           .post(`${config.crossChainSolverBaseUrl}/intents/quote`, data, {
-            headers: {
-              origin: request.headers["origin"],
-            },
+            headers: request.headers["origin"]
+              ? {
+                  origin: request.headers["origin"],
+                }
+              : undefined,
           })
           .then((response) => ({
+            txData: response.data.txData,
             requestId: response.data.requestId,
             shortRequestId: response.data.shortRequestId,
             price: response.data.price,
@@ -827,6 +861,7 @@ export const postExecuteMintV1Options: RouteOptions = {
         }
 
         return {
+          txData,
           requestId,
           shortRequestId,
           request: data.request,
@@ -970,10 +1005,7 @@ export const postExecuteMintV1Options: RouteOptions = {
           status: "incomplete",
           data: {
             from: payload.taker,
-            to: data.solver.address,
-            data: data.shortRequestId,
-            value: bn(cost).toString(),
-            gasLimit: 22000,
+            ...data.txData,
             chainId: payload.currencyChainId,
           },
           check: {
@@ -1026,37 +1058,55 @@ export const postExecuteMintV1Options: RouteOptions = {
       // - there is at least one successful mint
       // - all minted tokens have the taker as the final owner (eg. nothing gets stuck in the router / module)
 
-      let safeToUse = true;
-      for (const { txData, approvals } of mintsResult.txs) {
-        // ERC20 mints (which will have a corresponding approval) need to be minted directly
-        if (approvals.length) {
-          safeToUse = false;
-          continue;
-        }
+      const perfTime1 = performance.now();
 
-        const events = await getNFTTransferEvents(txData);
-        if (!events.length) {
-          // At least one successful mint
-          safeToUse = false;
-        } else {
-          // Every token landed in the taker's wallet
-          const uniqueTokens = [
-            ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
-          ].map((t) => t.split(":"));
-          for (const [contract, tokenId] of uniqueTokens) {
-            if (
-              !events.find(
-                (e) => e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
-              )
-            ) {
-              safeToUse = false;
-              break;
+      let safeToUse = true;
+      if (mintsResult.viaRouter) {
+        for (const { txData, approvals } of mintsResult.txs) {
+          // ERC20 mints (which will have a corresponding approval) need to be minted directly
+          if (approvals.length) {
+            safeToUse = false;
+            continue;
+          }
+
+          const events = await getNFTTransferEvents(txData);
+          if (!events.length) {
+            // At least one successful mint
+            safeToUse = false;
+          } else {
+            // Every token landed in the taker's wallet
+            const uniqueTokens = [
+              ...new Set(events.map((e) => `${e.contract}:${e.tokenId}`)).values(),
+            ].map((t) => t.split(":"));
+            for (const [contract, tokenId] of uniqueTokens) {
+              if (
+                !events.find(
+                  (e) => e.contract === contract && e.tokenId === tokenId && e.to === payload.taker
+                )
+              ) {
+                safeToUse = false;
+                break;
+              }
             }
           }
         }
       }
 
-      if (!safeToUse) {
+      const perfTime2 = performance.now();
+
+      if (config.chainId === 8453) {
+        logger.info(
+          "mint-performance-debug",
+          JSON.stringify({
+            id,
+            method: "get-nft-transfer-events",
+            totalTime: (perfTime2 - perfTime1) / 1000,
+            mintsResult,
+          })
+        );
+      }
+
+      if (mintsResult.viaRouter && !safeToUse) {
         if (payload.relayer) {
           throw Boom.badRequest("Relayer not supported for requested mints");
         }

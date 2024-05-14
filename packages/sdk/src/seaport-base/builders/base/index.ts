@@ -81,6 +81,11 @@ export abstract class BaseBuilder {
       throw new Error("Invalid consideration");
     }
 
+    // Contract orders are not supported
+    if (order.params.orderType === Types.OrderType.CONTRACT) {
+      throw new Error("Contract orders not supported");
+    }
+
     const offerItem = order.params.offer[0];
 
     let side: "sell" | "buy";

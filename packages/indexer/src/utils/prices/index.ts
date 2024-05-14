@@ -1,6 +1,7 @@
 import { AddressZero } from "@ethersproject/constants";
 import { parseUnits } from "@ethersproject/units";
 import * as Sdk from "@reservoir0x/sdk";
+import { SwapInfo } from "@reservoir0x/sdk/dist/router/v6/swap";
 import axios from "axios";
 import _ from "lodash";
 
@@ -295,7 +296,7 @@ export const getUSDAndNativePrices = async (
     isTestnetCurrency(currencyAddress) ||
     isWhitelistedCurrency(currencyAddress) ||
     // Allow price conversion on Zora which is not supported by Coingecko
-    (config.chainId === 7777777 &&
+    ([690, 7777777].includes(config.chainId) &&
       _.includes(
         [Sdk.Common.Addresses.Native[config.chainId], Sdk.Common.Addresses.WNative[config.chainId]],
         currencyAddress
@@ -373,7 +374,7 @@ export const getUSDAndCurrencyPrices = async (
     (isTestnetCurrency(fromCurrencyAddress) && isTestnetCurrency(toCurrencyAddress)) ||
     (isWhitelistedCurrency(fromCurrencyAddress) && isWhitelistedCurrency(toCurrencyAddress)) ||
     // Allow price conversion on Zora which is not supported by Coingecko
-    (config.chainId === 7777777 &&
+    ([690, 7777777].includes(config.chainId) &&
       _.includes(
         [Sdk.Common.Addresses.Native[config.chainId], Sdk.Common.Addresses.WNative[config.chainId]],
         fromCurrencyAddress
@@ -433,4 +434,65 @@ export const getUSDAndCurrencyPrices = async (
   }
 
   return { usdPrice, currencyPrice };
+};
+
+export const validateSwapPrice = async (
+  path: {
+    currency: string;
+    totalRawPrice?: string;
+    buyInRawQuote?: string;
+    buyInCurrency?: string;
+    sellOutCurrency?: string;
+    sellOutRawQuote?: string;
+  }[],
+  swaps?: SwapInfo[],
+  slippageLimit = 100 // 10%
+) => {
+  if (!swaps) {
+    return;
+  }
+
+  for (const item of path) {
+    if (!item.totalRawPrice) {
+      continue;
+    }
+
+    // Buy
+    if (item.buyInCurrency && !item.buyInRawQuote) {
+      continue;
+    }
+
+    // Sell
+    if (item.sellOutCurrency && !item.sellOutRawQuote) {
+      continue;
+    }
+
+    for (const swap of swaps) {
+      if (
+        item.buyInCurrency === swap.tokenIn ||
+        (item.sellOutCurrency && item.currency === swap.tokenIn)
+      ) {
+        if (swap.amountOut) {
+          let diff = 0;
+          try {
+            const currencyIn = await getCurrency(swap.tokenIn);
+            const currencyInUnit = bn(10).pow(currencyIn.decimals!);
+
+            const swapPrice = bn(swap.amountOut).mul(currencyInUnit).div(swap.amountIn);
+            const itemPrice = item.sellOutRawQuote
+              ? bn(item.sellOutRawQuote).mul(currencyInUnit).div(item.totalRawPrice)
+              : bn(item.totalRawPrice).mul(currencyInUnit).div(item.buyInRawQuote!);
+
+            diff = Math.abs(swapPrice.sub(itemPrice).mul(1000).div(itemPrice).toNumber());
+          } catch {
+            // Skip errors
+          }
+
+          if (diff > slippageLimit) {
+            throw new Error("Could not generate a good-enough swap route");
+          }
+        }
+      }
+    }
+  }
 };

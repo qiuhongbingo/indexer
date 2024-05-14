@@ -10,11 +10,11 @@ import { idb } from "@/common/db";
 import { logger } from "@/common/logger";
 import { regex } from "@/common/utils";
 import { config } from "@/config/index";
-import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
-import * as orders from "@/orderbook/orders";
-
 import { orderbookPostOrderExternalOpenseaJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-opensea-job";
 import { orderbookPostOrderExternalJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-job";
+import { ApiKeyManager } from "@/models/api-keys";
+import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
+import * as orders from "@/orderbook/orders";
 
 const version = "v3";
 
@@ -43,6 +43,7 @@ export const postOrderV3Options: RouteOptions = {
             "seaport-v1.4",
             "seaport-v1.5",
             "seaport-v1.6",
+            "mintify",
             "x2y2",
             "alienswap"
           )
@@ -95,6 +96,8 @@ export const postOrderV3Options: RouteOptions = {
       const orderbookApiKey = payload.orderbookApiKey;
       const source = payload.source;
 
+      const apiKey: string | undefined = request.headers["x-api-key"];
+
       // We'll always have only one of the below cases:
       // Only relevant/present for attribute bids
       const attribute = payload.attribute;
@@ -109,6 +112,17 @@ export const postOrderV3Options: RouteOptions = {
       // Permits
       const permitId = payload.permitId;
       const permitIndex = payload.permitIndex;
+
+      // Source restrictions
+      if (source) {
+        const isRestricted = await ApiKeyManager.isRestrictedSource(
+          source,
+          request.headers["x-api-key"]
+        );
+        if (isRestricted) {
+          throw Boom.unauthorized("Restricted source");
+        }
+      }
 
       const signature = query.signature ?? order.data.signature;
       if (signature) {
@@ -208,6 +222,7 @@ export const postOrderV3Options: RouteOptions = {
         }
 
         case "alienswap":
+        case "mintify":
         case "seaport":
         case "seaport-v1.4":
         case "seaport-v1.5":
@@ -238,6 +253,10 @@ export const postOrderV3Options: RouteOptions = {
 
             case "alienswap":
               orderId = new Sdk.Alienswap.Order(config.chainId, order.data).hash();
+              break;
+
+            case "mintify":
+              orderId = new Sdk.Mintify.Order(config.chainId, order.data).hash();
               break;
 
             default:
@@ -271,6 +290,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);
@@ -287,6 +307,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);
@@ -305,6 +326,7 @@ export const postOrderV3Options: RouteOptions = {
                     source,
                     permitId,
                     permitIndex,
+                    apiKey,
                   },
                 },
               ]);
@@ -323,6 +345,23 @@ export const postOrderV3Options: RouteOptions = {
                     source,
                     permitId,
                     permitIndex,
+                    apiKey,
+                  },
+                },
+              ]);
+              if (!["success", "already-exists"].includes(result.status)) {
+                const error = Boom.badRequest(result.status);
+                error.output.payload.orderId = orderId;
+                throw error;
+              }
+            } else if (order.kind == "mintify") {
+              const [result] = await orders.mintify.save([
+                {
+                  orderParams: order.data,
+                  metadata: {
+                    schema,
+                    source,
+                    apiKey,
                   },
                 },
               ]);
@@ -338,6 +377,7 @@ export const postOrderV3Options: RouteOptions = {
                   metadata: {
                     schema,
                     source,
+                    apiKey,
                   },
                 },
               ]);

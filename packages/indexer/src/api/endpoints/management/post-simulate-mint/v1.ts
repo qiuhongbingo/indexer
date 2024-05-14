@@ -9,7 +9,7 @@ const version = "v1";
 
 export const postSimulateMintV1Options: RouteOptions = {
   description: "Simulate any given mint",
-  tags: ["api", "Management"],
+  tags: ["api", "Management", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,

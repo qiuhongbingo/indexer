@@ -295,19 +295,21 @@ export function handleTokenUriResponse(contract: string, tokenId: string, respon
 }
 
 export function handleTokenUriErrorResponse(contract: string, tokenId: string, error: any) {
-  // logger.warn(
-  //   "onchain-fetcher",
-  //   JSON.stringify({
-  //     topic: "tokenMetadataIndexingDebug",
-  //     message: `handleTokenUriErrorResponse. contract=${contract}, tokenId=${tokenId}`,
-  //     contract,
-  //     tokenId,
-  //     uri: error.request.url,
-  //     error,
-  //     errorResponseStatus: error.response?.status,
-  //     errorResponseData: error.response?.data,
-  //   })
-  // );
+  if (config.debugMetadataIndexingCollections.includes(contract)) {
+    logger.warn(
+      "onchain-fetcher",
+      JSON.stringify({
+        topic: "tokenMetadataIndexing",
+        message: `handleTokenUriErrorResponse. contract=${contract}, tokenId=${tokenId}, url=${error.config.url}, responseStatus=${error.response?.status}`,
+        contract,
+        tokenId,
+        error: JSON.stringify(error),
+        errorResponseStatus: error.response?.status,
+        errorResponseData: error.response?.data,
+        debugMetadataIndexingCollection: true,
+      })
+    );
+  }
 
   return [null, error.response?.status || error.code || `${error}`];
 }

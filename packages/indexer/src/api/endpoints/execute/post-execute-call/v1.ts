@@ -15,7 +15,7 @@ const version = "v1";
 
 export const postExecuteCallV1Options: RouteOptions = {
   description: "Make arbitrary same-chain and cross-chain calls via solver",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       deprecated: true,
@@ -116,13 +116,16 @@ export const postExecuteCallV1Options: RouteOptions = {
         source: payload.source,
       };
 
-      const { requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
+      const { txData, requestId, shortRequestId, price, relayerFee, depositGasFee } = await axios
         .post(`${config.crossChainSolverBaseUrl}/intents/quote`, data, {
-          headers: {
-            origin: request.headers["origin"],
-          },
+          headers: request.headers["origin"]
+            ? {
+                origin: request.headers["origin"],
+              }
+            : undefined,
         })
         .then((response) => ({
+          txData: response.data.txData,
           requestId: response.data.requestId,
           shortRequestId: response.data.shortRequestId,
           price: response.data.price,
@@ -178,10 +181,7 @@ export const postExecuteCallV1Options: RouteOptions = {
         status: "incomplete",
         data: {
           from: user,
-          to: ccConfig.solver!.address,
-          data: shortRequestId,
-          value: bn(cost).toString(),
-          gasLimit: 22000,
+          ...txData,
           chainId: originChainId,
         },
         check: {

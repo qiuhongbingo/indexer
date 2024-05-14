@@ -4,7 +4,6 @@ import { AddressZero, HashZero } from "@ethersproject/constants";
 import * as Sdk from "@reservoir0x/sdk";
 
 import { idb } from "@/common/db";
-import { logger } from "@/common/logger";
 import { bn, toBuffer, fromBuffer } from "@/common/utils";
 import { config } from "@/config/index";
 import * as utils from "@/events-sync/utils";
@@ -249,7 +248,7 @@ export const extractByTx = async (
       });
     }
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   if (params.length !== parsedParams.length) {

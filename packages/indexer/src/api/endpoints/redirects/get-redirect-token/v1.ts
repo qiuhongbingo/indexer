@@ -15,7 +15,7 @@ export const getRedirectTokenV1Options: RouteOptions = {
     expiresIn: 60000,
   },
   description: "Redirect response to the given source token page",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 53,

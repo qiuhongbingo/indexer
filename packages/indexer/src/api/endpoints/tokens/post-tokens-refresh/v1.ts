@@ -11,7 +11,6 @@ import { config } from "@/config/index";
 import { tokenRefreshCacheJob } from "@/jobs/token-updates/token-refresh-cache-job";
 import { resyncTokenAttributesCacheJob } from "@/jobs/update-attribute/resync-token-attributes-cache-job";
 import { ApiKeyManager } from "@/models/api-keys";
-import { Collections } from "@/models/collections";
 import { PendingFlagStatusSyncTokens } from "@/models/pending-flag-status-sync-tokens";
 import { Tokens } from "@/models/tokens";
 import { metadataIndexFetchJob } from "@/jobs/metadata-index/metadata-fetch-job";
@@ -25,7 +24,7 @@ export const postTokensRefreshV1Options: RouteOptions = {
   description: "Refresh Token",
   notes:
     "Token metadata is never automatically refreshed, but may be manually refreshed with this API.\n\nCaution: This API should be used in moderation, like only when missing data is discovered. Calling it in bulk or programmatically will result in your API key getting rate limited.",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,
@@ -134,7 +133,7 @@ export const postTokensRefreshV1Options: RouteOptions = {
       }
 
       // Refresh metadata
-      const collection = await Collections.getByContractAndTokenId(contract, tokenId);
+      const collection = await Tokens.getCollection(contract, tokenId);
 
       if (!collection) {
         logger.warn(
@@ -166,7 +165,8 @@ export const postTokensRefreshV1Options: RouteOptions = {
             tokenId,
           },
         ],
-        true
+        true,
+        "post-tokens-refresh-v1"
       );
 
       // Revalidate the token attribute cache

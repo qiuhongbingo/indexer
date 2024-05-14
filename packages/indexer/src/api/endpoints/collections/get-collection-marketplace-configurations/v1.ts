@@ -66,7 +66,7 @@ export const getCollectionMarketplaceConfigurationsV1Options: RouteOptions = {
   },
   description: "Marketplace configurations by collection",
   notes: "This API returns recommended marketplace configurations given a collection id",
-  tags: ["api", "x-deprecated"],
+  tags: ["api", "x-deprecated", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 5,

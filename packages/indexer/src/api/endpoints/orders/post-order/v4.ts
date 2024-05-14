@@ -11,11 +11,11 @@ import { idb } from "@/common/db";
 import { logger } from "@/common/logger";
 import { regex } from "@/common/utils";
 import { config } from "@/config/index";
-import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
-import * as orders from "@/orderbook/orders";
-
 import { orderbookPostOrderExternalOpenseaJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-opensea-job";
 import { orderbookPostOrderExternalJob } from "@/jobs/orderbook/post-order-external/orderbook-post-order-external-job";
+import { ApiKeyManager } from "@/models/api-keys";
+import * as crossPostingOrdersModel from "@/models/cross-posting-orders";
+import * as orders from "@/orderbook/orders";
 
 const version = "v4";
 
@@ -47,6 +47,7 @@ export const postOrderV4Options: RouteOptions = {
                   "seaport-v1.4",
                   "seaport-v1.5",
                   "seaport-v1.6",
+                  "mintify",
                   "x2y2",
                   "alienswap",
                   "payment-processor",
@@ -72,7 +73,7 @@ export const postOrderV4Options: RouteOptions = {
             permitIndex: Joi.number(),
             bulkData: Joi.object({
               kind: Joi.string()
-                .valid("seaport-v1.4", "seaport-v1.5", "seaport-v1.6", "alienswap")
+                .valid("seaport-v1.4", "seaport-v1.5", "seaport-v1.6", "alienswap", "mintify")
                 .default("seaport-v1.5"),
               data: Joi.object({
                 orderIndex: Joi.number().required(),
@@ -114,6 +115,8 @@ export const postOrderV4Options: RouteOptions = {
     const payload = request.payload as any;
     const query = request.query as any;
 
+    const apiKey: string | undefined = request.headers["x-api-key"];
+
     try {
       const items = payload.items as {
         order: { kind: string; data: any };
@@ -124,7 +127,7 @@ export const postOrderV4Options: RouteOptions = {
         tokenSetId?: string;
         isNonFlagged?: boolean;
         bulkData?: {
-          kind: "seaport-v1.4" | "seaport-v1.5" | "seaport-v1.6" | "alienswap";
+          kind: "seaport-v1.4" | "seaport-v1.5" | "seaport-v1.6" | "alienswap" | "mintify";
           data: {
             orderIndex: number;
             merkleProof: string[];
@@ -140,7 +143,8 @@ export const postOrderV4Options: RouteOptions = {
               item.order.kind === "seaport-v1.4" ||
               item.order.kind === "seaport-v1.5" ||
               item.order.kind === "seaport-v1.6" ||
-              item.order.kind === "alienswap"
+              item.order.kind === "alienswap" ||
+              item.order.kind === "mintify"
           )
         ) {
           throw Boom.badRequest("Bulk orders are only supported on Seaport and forks");
@@ -177,6 +181,17 @@ export const postOrderV4Options: RouteOptions = {
           const permitId = payload.permitId;
           const permitIndex = payload.permitIndex;
 
+          // Source restrictions
+          if (source) {
+            const isRestricted = await ApiKeyManager.isRestrictedSource(
+              source,
+              request.headers["x-api-key"]
+            );
+            if (isRestricted) {
+              throw Boom.unauthorized("Restricted source");
+            }
+          }
+
           const signature = query.signature ?? order.data.signature;
           if (signature) {
             try {
@@ -209,6 +224,14 @@ export const postOrderV4Options: RouteOptions = {
                 );
               } else if (bulkData?.kind === "alienswap") {
                 order.data.signature = new Sdk.Alienswap.Exchange(
+                  config.chainId
+                ).encodeBulkOrderProofAndSignature(
+                  bulkData.data.orderIndex,
+                  bulkData.data.merkleProof,
+                  signature
+                );
+              } else if (bulkData?.kind === "mintify") {
+                order.data.signature = new Sdk.Mintify.Exchange(
                   config.chainId
                 ).encodeBulkOrderProofAndSignature(
                   bulkData.data.orderIndex,
@@ -340,6 +363,7 @@ export const postOrderV4Options: RouteOptions = {
               }
             }
 
+            case "mintify":
             case "alienswap":
             case "seaport":
             case "seaport-v1.4":
@@ -356,6 +380,8 @@ export const postOrderV4Options: RouteOptions = {
                 orderId = new Sdk.SeaportV15.Order(config.chainId, order.data).hash();
               } else if (order.kind === "seaport-v1.6") {
                 orderId = new Sdk.SeaportV16.Order(config.chainId, order.data).hash();
+              } else if (order.kind === "mintify") {
+                orderId = new Sdk.Mintify.Order(config.chainId, order.data).hash();
               } else {
                 orderId = new Sdk.Alienswap.Order(config.chainId, order.data).hash();
               }
@@ -389,6 +415,7 @@ export const postOrderV4Options: RouteOptions = {
                         source,
                         permitId,
                         permitIndex,
+                        apiKey,
                       },
                     },
                   ]);
@@ -405,6 +432,7 @@ export const postOrderV4Options: RouteOptions = {
                         source,
                         permitId,
                         permitIndex,
+                        apiKey,
                       },
                     },
                   ]);
@@ -418,6 +446,21 @@ export const postOrderV4Options: RouteOptions = {
                       metadata: {
                         schema,
                         source,
+                        apiKey,
+                      },
+                    },
+                  ]);
+                  if (!["success", "already-exists"].includes(result.status)) {
+                    return results.push({ message: result.status, orderIndex: i, orderId });
+                  }
+                } else if (order.kind === "mintify") {
+                  const [result] = await orders.mintify.save([
+                    {
+                      orderParams: order.data,
+                      metadata: {
+                        schema,
+                        source,
+                        apiKey,
                       },
                     },
                   ]);
@@ -604,6 +647,7 @@ export const postOrderV4Options: RouteOptions = {
                 metadata: {
                   schema,
                   source,
+                  apiKey,
                 },
               };
 
@@ -646,6 +690,7 @@ export const postOrderV4Options: RouteOptions = {
                 metadata: {
                   schema,
                   source,
+                  apiKey,
                 },
               };
 
@@ -676,17 +721,19 @@ export const postOrderV4Options: RouteOptions = {
                       id: result.id,
                     },
                   });
-                  logger.info(
-                    "validate-order-on-creation",
-                    JSON.stringify({
-                      id: result.id,
-                      response: response.payload,
-                      contract: orderInfo.orderParams.tokenAddress,
-                      side,
-                    })
-                  );
 
                   simulationResult = JSON.parse(response.payload).message;
+                  if (simulationResult === "Order is not fillable") {
+                    logger.info(
+                      "validate-order-on-creation",
+                      JSON.stringify({
+                        id: result.id,
+                        response: response.payload,
+                        contract: orderInfo.orderParams.tokenAddress,
+                        side,
+                      })
+                    );
+                  }
                 } catch {
                   // Skip errors
                 }

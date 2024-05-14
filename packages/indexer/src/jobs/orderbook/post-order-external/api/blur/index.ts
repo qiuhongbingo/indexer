@@ -31,6 +31,7 @@ export async function postOrder(order: BlurData): Promise<void> {
       authToken: order.authToken,
       signature: order.signature,
       isCollectionBid: order.isCollectionBid ? "true" : undefined,
+      chainId: config.chainId,
     });
   } catch (err: any) {
     if (err?.response) {

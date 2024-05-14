@@ -56,7 +56,7 @@ export const config = {
   doEventsSyncBackfill: Boolean(Number(process.env.DO_EVENTS_SYNC_BACKFILL)),
   disableOrders: Boolean(Number(process.env.DISABLE_ORDERS)),
 
-  // for kafka
+  // For kafka
   doKafkaWork: Boolean(Number(process.env.DO_KAFKA_WORK)),
   kafkaPartitionsConsumedConcurrently: Number(process.env.KAFKA_PARTITIONS_CONSUMED_CONCURRENTLY),
   kafkaConsumerGroupId: String(process.env.KAFKA_CONSUMER_GROUP_ID),
@@ -110,6 +110,9 @@ export const config = {
   // Custom taker (used for simulation)
   customTakerPrivateKey: process.env.CUSTOM_TAKER_PRIVATE_KEY,
 
+  // Distributor (used for split fee distribute)
+  paymentSplitDistributorPrivateKey: process.env.PAYMENT_SPLIT_DISTRIBUTOR_PRIVATE_KEY,
+
   openSeaTokenMetadataApiKey: String(
     process.env.OPENSEA_TOKENS_API_KEY || process.env.OPENSEA_API_KEY
   ),
@@ -154,7 +157,6 @@ export const config = {
 
   blurWsApiKey: process.env.BLUR_WS_API_KEY,
   blurWsUrl: process.env.BLUR_WS_URL,
-  blurWsListingsUrl: process.env.BLUR_LISTINGS_WS_URL,
 
   orderFetcherBaseUrl: String(process.env.ORDER_FETCHER_BASE_URL),
 
@@ -204,4 +206,10 @@ export const config = {
   disabledDatadogPluginsTracing: process.env.DISABLED_DATADOG_PLUGINS_TRACING
     ? String(process.env.DISABLED_DATADOG_PLUGINS_TRACING).split(",")
     : "ioredis,amqplib,pg,fetch".split(","),
+
+  debugMetadataIndexingCollections: process.env.DEBUG_METADATA_INDEXING_COLLECTIONS
+    ? String(process.env.DEBUG_METADATA_INDEXING_COLLECTIONS).split(",")
+    : [],
+
+  blockedMakers: process.env.BLOCKED_MAKERS ? String(process.env.BLOCKED_MAKERS).split(",") : [],
 };

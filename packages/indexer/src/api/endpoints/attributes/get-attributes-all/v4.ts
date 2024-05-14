@@ -17,7 +17,7 @@ export const getAttributesAllV4Options: RouteOptions = {
   description: "All attributes",
   notes:
     "Use this API to see all possible attributes within a collection.\n\n- `floorAskPrice` for all attributes might not be returned on collections with more than 10k tokens. \n\n- Attributes are case sensitive. \n\n- Attributes will return a maximum of 500 values.",
-  tags: ["api", "Attributes"],
+  tags: ["api", "Attributes", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 2,
@@ -147,7 +147,7 @@ export const getAttributesAllV4Options: RouteOptions = {
 
       const result = await redb.manyOrNone(baseQuery, params).then((result) => {
         return result.map(async (r) => {
-          if (r.values.count == 0) {
+          if (Number(r?.values?.count) == 0) {
             return undefined;
           }
 

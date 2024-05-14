@@ -28,6 +28,16 @@ export const baseProvider = new StaticJsonRpcProvider(
   config.chainId
 );
 
+export const baseProviderWithTimeout = (timeout: number) =>
+  new StaticJsonRpcProvider(
+    {
+      url: config.baseNetworkHttpUrl,
+      timeout,
+      headers: getBaseProviderHeaders(),
+    },
+    config.chainId
+  );
+
 export const metadataIndexingBaseProvider = new StaticJsonRpcProvider(
   {
     url: config.baseNetworkMetadataIndexingUrl,

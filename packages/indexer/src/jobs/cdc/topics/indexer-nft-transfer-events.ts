@@ -6,6 +6,8 @@ import {
   WebsocketEventRouter,
 } from "@/jobs/websocket-events/websocket-event-router";
 import { updateUserCollectionsJob } from "@/jobs/nft-balance-updates/update-user-collections-job";
+import { Tokens } from "@/models/tokens";
+import { resyncUserCollectionsJob } from "@/jobs/nft-balance-updates/reynsc-user-collections-job";
 
 export class IndexerTransferEventsHandler extends KafkaEventHandler {
   topicName = "indexer.public.nft_transfer_events";
@@ -55,16 +57,18 @@ export class IndexerTransferEventsHandler extends KafkaEventHandler {
     const isDeleted = payload.before.is_deleted !== payload.after.is_deleted;
 
     if (isDeleted) {
-      // If the transfer was marked as deleted revert the user collection update
-      await updateUserCollectionsJob.addToQueue([
-        {
-          fromAddress: payload.after.to,
-          toAddress: payload.after.from,
-          contract: payload.after.address,
-          tokenId: payload.after.token_id,
-          amount: payload.after.amount,
-        },
-      ]);
+      const token = await Tokens.getByContractAndTokenId(
+        payload.after.address,
+        payload.after.token_id
+      );
+
+      // If the transfer was marked as deleted resync the user collection token count
+      if (token && token.collectionId) {
+        await resyncUserCollectionsJob.addToQueue([
+          { user: payload.after.from, collectionId: token.collectionId },
+          { user: payload.after.to, collectionId: token.collectionId },
+        ]);
+      }
     }
   }
 

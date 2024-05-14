@@ -35,7 +35,7 @@ import { checkAddressIsBlockedByOFAC } from "@/utils/ofac";
 import * as onChainData from "@/utils/on-chain-data";
 import { getPersistentPermit } from "@/utils/permits";
 import { getPreSignatureId, getPreSignature, savePreSignature } from "@/utils/pre-signatures";
-import { getUSDAndCurrencyPrices } from "@/utils/prices";
+import { getUSDAndCurrencyPrices, validateSwapPrice } from "@/utils/prices";
 
 const version = "v7";
 
@@ -43,7 +43,7 @@ export const getExecuteSellV7Options: RouteOptions = {
   description: "Sell Tokens",
   notes:
     "Use this API to accept bids. We recommend using the SDK over this API as the SDK will iterate through the steps and return callbacks. Please mark `excludeEOA` as `true` to exclude Blur orders.",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   timeout: {
     server: 40 * 1000,
   },
@@ -80,6 +80,7 @@ export const getExecuteSellV7Options: RouteOptions = {
                   "seaport-v1.4",
                   "seaport-v1.5",
                   "seaport-v1.6",
+                  "mintify",
                   "x2y2",
                   "rarible",
                   "sudoswap",
@@ -1181,7 +1182,9 @@ export const getExecuteSellV7Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${payload.taker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(
@@ -1340,7 +1343,15 @@ export const getExecuteSellV7Options: RouteOptions = {
         throw getExecuteError(error.message, errors);
       }
 
-      const { preTxs, txs, success } = result;
+      const { preTxs, txs, success, swaps } = result;
+
+      // Check the swap price
+      try {
+        validateSwapPrice(path, swaps ?? []);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        throw getExecuteError(error.message, errors);
+      }
 
       // Filter out any non-fillable orders from the path
       path = path.filter((p) => success[p.orderId]);
@@ -1497,23 +1508,7 @@ export const getExecuteSellV7Options: RouteOptions = {
       const executionsBuffer = new ExecutionsBuffer();
       for (const item of path) {
         const txData = txs.find((tx) => tx.orderIds.includes(item.orderId))?.txData;
-
-        let orderId = item.orderId;
-        if (txData && item.source === "blur.io") {
-          // Blur bids don't have the correct order id so we have to override it
-          const orders = await new Sdk.Blur.Exchange(config.chainId).getMatchedOrdersFromCalldata(
-            baseProvider,
-            txData!.data
-          );
-
-          const index = orders.findIndex(
-            ({ sell }) =>
-              sell.params.collection === item.contract && sell.params.tokenId === item.tokenId
-          );
-          if (index !== -1) {
-            orderId = orders[index].buy.hash();
-          }
-        }
+        const orderId = item.orderId;
 
         executionsBuffer.addFromRequest(request, {
           side: "sell",

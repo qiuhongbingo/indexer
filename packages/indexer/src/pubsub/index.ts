@@ -1,4 +1,5 @@
 import _ from "lodash";
+import getUuidByString from "uuid-by-string";
 
 import { logger } from "@/common/logger";
 import {
@@ -9,23 +10,24 @@ import {
   allChainsSyncRedis,
 } from "@/common/redis";
 import { config } from "@/config/index";
+import { getNetworkName } from "@/config/network";
 import { AllChainsChannel, Channel } from "@/pubsub/channels";
-import { ApiKeyUpdatedEvent } from "@/pubsub/events/api-key-updated-event";
-import { RateLimitUpdatedEvent } from "@/pubsub/events/rate-limit-updated-event";
-import { RoutersUpdatedEvent } from "@/pubsub/events/routers-updated-event";
-import { SourcesUpdatedEvent } from "@/pubsub/events/sources-updated-event";
+
 import { ApiKeyCreatedAllChainsEvent } from "@/pubsub/all-chains-events/api-key-created-all-chains-event";
 import { ApiKeyUpdatedAllChainsEvent } from "@/pubsub/all-chains-events/api-key-updated-all-chains-event";
-import { PauseRabbitConsumerEvent } from "@/pubsub/events/pause-rabbit-consumer-event";
-import { ResumeRabbitConsumerEvent } from "@/pubsub/events/resume-rabbit-consumer-event";
-
-import getUuidByString from "uuid-by-string";
-import { RateLimitCreatedEvent } from "@/pubsub/all-chains-events/rate-limit-created-event";
-import { RateLimitDeletedEvent } from "@/pubsub/all-chains-events/rate-limit-deleted-event";
+import { ApiKeyUpdatedEvent } from "@/pubsub/events/api-key-updated-event";
+import { FeeRecipientsUpdatedEvent } from "@/pubsub/events/fee-recipients-updated-event";
 import { MetadataReenabledEvent } from "@/pubsub/events/metadata-reenable-event";
 import { PauseRabbitConsumerAllChainsEvent } from "@/pubsub/all-chains-events/pause-rabbit-consumer-all-chains-event";
+import { PauseRabbitConsumerEvent } from "@/pubsub/events/pause-rabbit-consumer-event";
+import { RateLimitCreatedAllChainsEvent } from "@/pubsub/all-chains-events/rate-limit-created-all-chains-event";
+import { RateLimitDeletedAllChainsEvent } from "@/pubsub/all-chains-events/rate-limit-deleted-all-chains-event";
+import { RateLimitUpdatedEvent } from "@/pubsub/events/rate-limit-updated-event";
 import { ResumeRabbitConsumerAllChainsEvent } from "@/pubsub/all-chains-events/resume-rabbit-consumer-all-chains-event";
-import { getNetworkName } from "@/config/network";
+import { ResumeRabbitConsumerEvent } from "@/pubsub/events/resume-rabbit-consumer-event";
+import { RoutersUpdatedEvent } from "@/pubsub/events/routers-updated-event";
+import { SourcesUpdatedEvent } from "@/pubsub/events/sources-updated-event";
+import { RateLimitUpdatedAllChainsEvent } from "@/pubsub/all-chains-events/rate-limit-updated-all-chains-event";
 
 export class PubSub {
   public static getFullChannelName(channelName: Channel) {
@@ -54,6 +56,10 @@ export class PubSub {
       switch (channel) {
         case PubSub.getFullChannelName(Channel.ApiKeyUpdated):
           await ApiKeyUpdatedEvent.handleEvent(message);
+          break;
+
+        case PubSub.getFullChannelName(Channel.FeeRecipientsUpdated):
+          await FeeRecipientsUpdatedEvent.handleEvent(message);
           break;
 
         case PubSub.getFullChannelName(Channel.RateLimitRuleUpdated):
@@ -128,15 +134,15 @@ export class AllChainsPubSub {
           break;
 
         case lockAcquired && config.chainId !== 1 && AllChainsChannel.RateLimitRuleCreated:
-          await RateLimitCreatedEvent.handleEvent(message);
+          await RateLimitCreatedAllChainsEvent.handleEvent(message);
           break;
 
         case lockAcquired && config.chainId !== 1 && AllChainsChannel.RateLimitRuleUpdated:
-          await RateLimitUpdatedEvent.handleEvent(message);
+          await RateLimitUpdatedAllChainsEvent.handleEvent(message);
           break;
 
         case lockAcquired && config.chainId !== 1 && AllChainsChannel.RateLimitRuleDeleted:
-          await RateLimitDeletedEvent.handleEvent(message);
+          await RateLimitDeletedAllChainsEvent.handleEvent(message);
           break;
 
         case AllChainsChannel.PauseRabbitConsumerQueue:

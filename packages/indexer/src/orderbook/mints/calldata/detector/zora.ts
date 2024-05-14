@@ -5,7 +5,6 @@ import * as Sdk from "@reservoir0x/sdk";
 import axios from "axios";
 
 import { idb } from "@/common/db";
-import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 import { redis } from "@/common/redis";
 import { bn, toBuffer } from "@/common/utils";
@@ -231,7 +230,7 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
       });
     }
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   // Update the status of each collection mint
@@ -345,11 +344,17 @@ export const extractByCollectionERC1155 = async (
             baseProvider
           );
 
-          const [saleConfig, tokenInfo, mintFee] = await Promise.all([
+          const [saleConfig, tokenInfo] = await Promise.all([
             fixedSale.sale(collection, tokenId),
             c.getTokenInfo(tokenId),
-            c.mintFee(),
           ]);
+
+          let mintFee = bn(0);
+          try {
+            mintFee = await c.mintFee();
+          } catch {
+            // Skip errors
+          }
 
           const price = saleConfig.pricePerToken.add(mintFee).toString();
           results.push({
@@ -642,7 +647,7 @@ export const extractByCollectionERC1155 = async (
       }
     }
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   // Update the status of each collection mint

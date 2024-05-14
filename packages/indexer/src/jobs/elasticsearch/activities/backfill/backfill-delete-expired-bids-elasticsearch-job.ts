@@ -41,7 +41,7 @@ export class BackfillDeleteExpiredBidsElasticsearchJob extends AbstractRabbitMqJ
         sortDirection: "desc",
         limit: Number(limit),
       },
-      true
+      false
     );
 
     if (activities.length > 0) {

@@ -3,6 +3,7 @@
 import { Request, RouteOptions } from "@hapi/hapi";
 
 import Joi from "joi";
+import * as Boom from "@hapi/boom";
 
 import { redb } from "@/common/db";
 import { logger } from "@/common/logger";
@@ -10,13 +11,15 @@ import { JoiOrder, getJoiOrderObject } from "@/common/joi";
 import { buildContinuation, regex, splitContinuation, toBuffer } from "@/common/utils";
 
 import { Orders } from "@/utils/orders";
+import { CollectionSets } from "@/models/collection-sets";
+import _ from "lodash";
 
 const version = "v1";
 
 export const getUserBidsV1Options: RouteOptions = {
   description: "User Bids (offers)",
   notes: "Get a list of bids (offers), filtered by maker.",
-  tags: ["api", "Accounts"],
+  tags: ["api", "Accounts", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 5,
@@ -33,6 +36,9 @@ export const getUserBidsV1Options: RouteOptions = {
         ),
     }),
     query: Joi.object({
+      ids: Joi.alternatives(Joi.array().items(Joi.string()), Joi.string()).description(
+        "Order id(s) to search for."
+      ),
       type: Joi.string()
         .valid("token", "collection", "attribute", "custom")
         .description(
@@ -47,6 +53,14 @@ export const getUserBidsV1Options: RouteOptions = {
         .lowercase()
         .description(
           "Filter to a particular collection bids with collection-id. Example: `0x8d04a8c79ceb0889bdd12acdf3fa9d207ed3ff63`"
+        ),
+      community: Joi.string()
+        .lowercase()
+        .description("Filter to a particular community. Example: `artblocks`"),
+      collectionsSetId: Joi.string()
+        .lowercase()
+        .description(
+          "Filter to a particular collection set. Requires `maker` to be passed. Example: `8daa732ebe5db23f267e58d52f1c9b1879279bcdf4f78b8fb563390e6946ea65`"
         ),
       sortBy: Joi.string()
         .valid("createdAt", "price")
@@ -79,7 +93,7 @@ export const getUserBidsV1Options: RouteOptions = {
         .lowercase()
         .pattern(regex.address)
         .description("Return result in given currency"),
-    }),
+    }).oxor("collection", "community", "collectionsSetId"),
   },
   response: {
     schema: Joi.object({
@@ -97,7 +111,7 @@ export const getUserBidsV1Options: RouteOptions = {
     (query as any).user = toBuffer(request.params.user);
 
     try {
-      const criteriaBuildQuery = Orders.buildCriteriaQuery(
+      const criteriaBuildQuery = Orders.buildCriteriaQueryV2(
         "orders",
         "token_set_id",
         query.includeCriteriaMetadata,
@@ -107,27 +121,6 @@ export const getUserBidsV1Options: RouteOptions = {
       const orderTypeJoin = query.type
         ? `JOIN token_sets ON token_sets.id = orders.token_set_id AND token_sets.schema_hash = orders.token_set_schema_hash`
         : "";
-
-      let orderStatusFilter = "";
-
-      switch (query.status) {
-        case "active": {
-          orderStatusFilter = `orders.fillability_status = 'fillable' AND orders.approval_status = 'approved'`;
-          break;
-        }
-        case "inactive": {
-          orderStatusFilter = `orders.fillability_status = 'no-balance' OR (orders.fillability_status = 'fillable' AND orders.approval_status != 'approved')`;
-          break;
-        }
-        case "valid": {
-          // Potentially-valid orders
-          orderStatusFilter = `orders.fillability_status = 'no-balance' OR (orders.fillability_status = 'fillable' AND orders.approval_status != 'approved') OR (orders.fillability_status = 'fillable' AND orders.approval_status = 'approved')`;
-          break;
-        }
-        default: {
-          orderStatusFilter = `orders.fillability_status = 'fillable' AND orders.approval_status = 'approved'`;
-        }
-      }
 
       let baseQuery = `
         SELECT
@@ -192,8 +185,37 @@ export const getUserBidsV1Options: RouteOptions = {
       const conditions: string[] = [
         `orders.maker = $/user/`,
         `orders.side = 'buy'`,
-        orderStatusFilter,
+        `orders.taker = '\\x0000000000000000000000000000000000000000' OR orders.taker IS NULL`,
       ];
+
+      if (query.ids) {
+        if (Array.isArray(query.ids)) {
+          conditions.push(`orders.id IN ($/ids:csv/)`);
+        } else {
+          conditions.push(`orders.id = $/ids/`);
+        }
+      }
+
+      let orderStatusFilter =
+        "orders.fillability_status = 'fillable' AND orders.approval_status = 'approved'";
+
+      switch (query.status) {
+        case "active": {
+          orderStatusFilter = `orders.fillability_status = 'fillable' AND orders.approval_status = 'approved'`;
+          break;
+        }
+        case "inactive": {
+          orderStatusFilter = `orders.fillability_status = 'no-balance' OR (orders.fillability_status = 'fillable' AND orders.approval_status != 'approved')`;
+          break;
+        }
+        case "valid": {
+          // Potentially-valid orders
+          orderStatusFilter = `orders.fillability_status = 'no-balance' OR (orders.fillability_status = 'fillable' AND orders.approval_status != 'approved') OR (orders.fillability_status = 'fillable' AND orders.approval_status = 'approved')`;
+          break;
+        }
+      }
+
+      conditions.push(orderStatusFilter);
 
       if (query.collection) {
         const [contract] = query.collection.split(":");
@@ -217,6 +239,35 @@ export const getUserBidsV1Options: RouteOptions = {
 
           conditions.push(`tokens.collection_id = $/collection/`);
         }
+      }
+
+      if (query.community) {
+        baseQuery +=
+          "JOIN (SELECT DISTINCT contract FROM collections WHERE community = $/community/) c ON orders.contract = c.contract";
+      }
+
+      if (query.collectionsSetId) {
+        query.collectionsIds = await CollectionSets.getCollectionsIds(query.collectionsSetId);
+
+        if (_.isEmpty(query.collectionsIds)) {
+          throw Boom.badRequest(`No collections for collection set ${query.collectionsSetId}`);
+        }
+
+        baseQuery += `
+            JOIN LATERAL (
+              SELECT
+                contract,
+                token_id
+              FROM
+                token_sets_tokens
+              WHERE
+                token_sets_tokens.token_set_id = orders.token_set_id
+              LIMIT 1) tst ON TRUE
+            JOIN tokens ON tokens.contract = tst.contract
+              AND tokens.token_id = tst.token_id
+          `;
+
+        conditions.push(`tokens.collection_id IN ($/collectionsIds:csv/)`);
       }
 
       switch (query.type) {
@@ -345,6 +396,7 @@ export const getUserBidsV1Options: RouteOptions = {
             includeRawData: query.includeRawData,
             includeDepth: query.includeDepth,
             displayCurrency: query.displayCurrency,
+            resizeImageUrl: query.includeCriteriaMetadata,
           }
         )
       );

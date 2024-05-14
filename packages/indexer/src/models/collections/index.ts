@@ -150,7 +150,6 @@ export class Collections {
       tokenId,
       community
     );
-
     if (collection.metadata == null) {
       const collectionResult = await Collections.getById(collection.id);
 
@@ -200,11 +199,11 @@ export class Collections {
     // If no image use one of the tokens images
     if (_.isEmpty(collection.metadata?.imageUrl)) {
       const tokenImageQuery = `
-        SELECT image
-        FROM tokens
+        SELECT image FROM tokens
         WHERE collection_id = $/collection/
         ORDER BY rarity_rank DESC NULLS LAST
-        LIMIT 1`;
+        LIMIT 1
+      `;
 
       const tokenImage = await redb.oneOrNone(tokenImageQuery, { collection: collection.id });
       if (tokenImage?.image) {
@@ -224,22 +223,22 @@ export class Collections {
         updated_at = now(),
         image_version = CASE WHEN (metadata IS DISTINCT FROM $/metadata:json/) THEN now() ELSE image_version END
       WHERE id = $/id/
-      AND (metadata IS DISTINCT FROM $/metadata:json/ 
-            OR name IS DISTINCT FROM $/name/ 
-            OR slug IS DISTINCT FROM $/slug/
-            OR payment_tokens IS DISTINCT FROM $/paymentTokens/
-            OR creator IS DISTINCT FROM $/creator/
-            OR ((is_spam IS NULL OR is_spam = 0) AND $/isSpamContract/ = 1)
-            )
+        AND (metadata IS DISTINCT FROM $/metadata:json/
+        OR name IS DISTINCT FROM $/name/
+        OR slug IS DISTINCT FROM $/slug/
+        OR payment_tokens IS DISTINCT FROM $/paymentTokens/
+        OR creator IS DISTINCT FROM $/creator/
+        OR ((is_spam IS NULL OR is_spam = 0) AND $/isSpamContract/ = 1)
+      )
       RETURNING (
-                  SELECT
-                  json_build_object(
-                    'name', collections.name,
-                    'metadata', collections.metadata
-                  )
-                  FROM collections
-                  WHERE collections.id = $/id/
-                ) AS old_metadata
+        SELECT
+          json_build_object(
+            'name', collections.name,
+            'metadata', collections.metadata
+          )
+        FROM collections
+        WHERE collections.id = $/id/
+      ) AS old_metadata
     `;
 
     const values = {
@@ -530,14 +529,14 @@ export class Collections {
   ) {
     const updateResult = await idb.manyOrNone(
       `
-            UPDATE collections
-            SET
-              is_spam = $/spam/,
-              updated_at = now()
-            WHERE id IN ($/ids:list/)
-            AND is_spam IS DISTINCT FROM $/spam/
-            RETURNING id
-          `,
+        UPDATE collections
+        SET
+          is_spam = $/spam/,
+          updated_at = now()
+        WHERE id IN ($/ids:list/)
+        AND is_spam IS DISTINCT FROM $/spam/
+        RETURNING id
+      `,
       {
         ids: collectionIds,
         spam: newSpamState,

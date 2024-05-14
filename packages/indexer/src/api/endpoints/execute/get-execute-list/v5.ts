@@ -39,6 +39,9 @@ import * as seaportV15SellToken from "@/orderbook/orders/seaport-v1.5/build/sell
 // Seaport v1.6
 import * as seaportV16SellToken from "@/orderbook/orders/seaport-v1.6/build/sell/token";
 
+// Mintify
+import * as mintifySellToken from "@/orderbook/orders/mintify/build/sell/token";
+
 // Alienswap
 import * as alienswapSellToken from "@/orderbook/orders/alienswap/build/sell/token";
 
@@ -64,7 +67,7 @@ export const getExecuteListV5Options: RouteOptions = {
   description: "Create Listings",
   notes:
     "Generate listings and submit them to multiple marketplaces.\n\n Notes:\n\n- Please use the `/cross-posting-orders/v1` to check the status on cross posted bids.\n\n- We recommend using Reservoir SDK as it abstracts the process of iterating through steps, and returning callbacks that can be used to update your UI.",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 11,
@@ -123,6 +126,7 @@ export const getExecuteListV5Options: RouteOptions = {
                 "seaport-v1.4",
                 "seaport-v1.5",
                 "seaport-v1.6",
+                "mintify",
                 "x2y2",
                 "alienswap",
                 "payment-processor",
@@ -150,6 +154,15 @@ export const getExecuteListV5Options: RouteOptions = {
                 }),
               }),
               "seaport-v1.6": Joi.object({
+                conduitKey: Joi.string().pattern(regex.bytes32),
+                useOffChainCancellation: Joi.boolean().required(),
+                replaceOrderId: Joi.string().when("useOffChainCancellation", {
+                  is: true,
+                  then: Joi.optional(),
+                  otherwise: Joi.forbidden(),
+                }),
+              }),
+              mintify: Joi.object({
                 conduitKey: Joi.string().pattern(regex.bytes32),
                 useOffChainCancellation: Joi.boolean().required(),
                 replaceOrderId: Joi.string().when("useOffChainCancellation", {
@@ -306,7 +319,7 @@ export const getExecuteListV5Options: RouteOptions = {
       expirationTime?: number;
       salt?: string;
       nonce?: string;
-      currency?: string;
+      currency: string;
       taker?: string;
     }[];
 
@@ -328,6 +341,10 @@ export const getExecuteListV5Options: RouteOptions = {
     // OFAC blocklist
     if (await checkAddressIsBlockedByOFAC(maker)) {
       throw Boom.unauthorized("Address is blocked by OFAC");
+    }
+
+    if (config.blockedMakers.includes(maker)) {
+      throw Boom.unauthorized("Address is blocked");
     }
 
     try {
@@ -389,6 +406,16 @@ export const getExecuteListV5Options: RouteOptions = {
           source?: string;
           orderIndex: number;
         }[],
+        mintify: [] as {
+          order: {
+            kind: "mintify";
+            data: Sdk.SeaportBase.Types.OrderComponents;
+          };
+          orderbook: string;
+          orderbookApiKey?: string;
+          source?: string;
+          orderIndex: number;
+        }[],
         alienswap: [] as {
           order: {
             kind: "alienswap";
@@ -416,7 +443,9 @@ export const getExecuteListV5Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(
@@ -495,22 +524,6 @@ export const getExecuteListV5Options: RouteOptions = {
             await checkBlacklistAndFallback(contract, params);
           } catch (error) {
             return errors.push({ message: (error as any).message, orderIndex: i });
-          }
-
-          // PPv2 restrictions
-          try {
-            if (params.orderKind === "payment-processor-v2" && process.env.PP_V2_ALLOWED_KEYS) {
-              const ppv2AllowedKeys = JSON.parse(process.env.PP_V2_ALLOWED_KEYS) as string[];
-              if (!apiKey || !ppv2AllowedKeys.includes(apiKey.key)) {
-                return errors.push({
-                  message:
-                    "Unable to create Payment Processor order. Please change orderKind or contact Reservoir team for access.",
-                  orderIndex: i,
-                });
-              }
-            }
-          } catch {
-            // Skip errors
           }
 
           // Handle fees
@@ -956,6 +969,84 @@ export const getExecuteListV5Options: RouteOptions = {
                 });
 
                 bulkOrders["alienswap"].push({
+                  order: {
+                    kind: params.orderKind,
+                    data: {
+                      ...order.params,
+                    },
+                  },
+                  orderbook: params.orderbook,
+                  orderbookApiKey: params.orderbookApiKey,
+                  source,
+                  orderIndex: i,
+                });
+
+                addExecution(order.hash(), params.quantity);
+
+                break;
+              }
+
+              case "mintify": {
+                if (!["reservoir"].includes(params.orderbook)) {
+                  return errors.push({ message: "Unsupported orderbook", orderIndex: i });
+                }
+
+                const options = params.options?.[params.orderKind] as
+                  | {
+                      useOffChainCancellation?: boolean;
+                      replaceOrderId?: string;
+                    }
+                  | undefined;
+
+                const order = await mintifySellToken.build({
+                  ...params,
+                  ...options,
+                  orderbook: params.orderbook as "reservoir" | "opensea",
+                  maker,
+                  contract,
+                  tokenId,
+                  source,
+                });
+
+                // Will be set if an approval is needed before listing
+                let approvalTx: TxData | undefined;
+
+                // Check the order's fillability
+                const exchange = new Sdk.Mintify.Exchange(config.chainId);
+                try {
+                  await seaportBaseCheck.offChainCheck(order, "mintify", exchange, {
+                    onChainApprovalRecheck: true,
+                  });
+                } catch (error: any) {
+                  switch (error.message) {
+                    case "no-balance-no-approval":
+                    case "no-balance": {
+                      return errors.push({ message: "Maker does not own token", orderIndex: i });
+                    }
+
+                    case "no-approval": {
+                      // Generate an approval transaction
+                      const info = order.getInfo()!;
+
+                      const kind = order.params.kind?.startsWith("erc721") ? "erc721" : "erc1155";
+                      approvalTx = (
+                        kind === "erc721"
+                          ? new Sdk.Common.Helpers.Erc721(baseProvider, info.contract)
+                          : new Sdk.Common.Helpers.Erc1155(baseProvider, info.contract)
+                      ).approveTransaction(maker, exchange.deriveConduit(order.params.conduitKey));
+
+                      break;
+                    }
+                  }
+                }
+
+                steps[1].items.push({
+                  status: approvalTx ? "incomplete" : "complete",
+                  data: approvalTx,
+                  orderIndexes: [i],
+                });
+
+                bulkOrders["mintify"].push({
                   order: {
                     kind: params.orderKind,
                     data: {
@@ -1527,6 +1618,68 @@ export const getExecuteListV5Options: RouteOptions = {
                     orderbookApiKey: o.orderbookApiKey,
                     bulkData: {
                       kind: "alienswap",
+                      data: {
+                        orderIndex: i,
+                        merkleProof: proofs[i],
+                      },
+                    },
+                  })),
+                  source,
+                },
+              },
+            },
+            orderIndexes: orders.map(({ orderIndex }) => orderIndex),
+          });
+        }
+      }
+
+      // Post any mintify bulk orders together
+      {
+        const orders = bulkOrders["mintify"];
+        if (orders.length === 1) {
+          const order = new Sdk.Mintify.Order(config.chainId, orders[0].order.data);
+          steps[2].items.push({
+            status: "incomplete",
+            data: {
+              sign: order.getSignatureData(),
+              post: {
+                endpoint: "/order/v3",
+                method: "POST",
+                body: {
+                  order: {
+                    kind: "mintify",
+                    data: {
+                      ...order.params,
+                    },
+                  },
+                  orderbook: orders[0].orderbook,
+                  orderbookApiKey: orders[0].orderbookApiKey,
+                  source,
+                },
+              },
+            },
+            orderIndexes: [orders[0].orderIndex],
+          });
+        } else if (orders.length > 1) {
+          const exchange = new Sdk.Mintify.Exchange(config.chainId);
+          const { signatureData, proofs } = exchange.getBulkSignatureDataWithProofs(
+            orders.map((o) => new Sdk.Alienswap.Order(config.chainId, o.order.data))
+          );
+
+          steps[2].items.push({
+            status: "incomplete",
+            data: {
+              sign: signatureData,
+              post: {
+                endpoint: "/order/v4",
+                method: "POST",
+                body: {
+                  items: orders.map((o, i) => ({
+                    order: o.order,
+                    orderbook: o.orderbook,
+                    orderbookApiKey: o.orderbookApiKey,
+                    bulkData: {
+                      kind: "mintify",
                       data: {
                         orderIndex: i,
                         merkleProof: proofs[i],

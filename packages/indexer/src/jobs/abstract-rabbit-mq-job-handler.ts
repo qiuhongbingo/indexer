@@ -154,6 +154,7 @@ export abstract class AbstractRabbitMqJobHandler {
             topic: "rabbitmq",
             message: `Error handling event - Retrying. error=${error}`,
             rabbitMqMessage: this.rabbitMqMessage,
+            error,
           })
         );
       }
@@ -165,6 +166,7 @@ export abstract class AbstractRabbitMqJobHandler {
             topic: "rabbitmq",
             message: `Error handling event - Sending to dead letter queue. error=${error}`,
             rabbitMqMessage: this.rabbitMqMessage,
+            error,
           })
         );
       }

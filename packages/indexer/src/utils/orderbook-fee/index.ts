@@ -1,23 +1,27 @@
-import { AddressZero } from "@ethersproject/constants";
-
-import { config } from "@/config/index";
+import { ApiKeyManager } from "@/models/api-keys";
+import { FeeRecipients } from "@/models/fee-recipients";
 import { OrderKind } from "@/orderbook/orders";
 import {
   getPaymentSplitFromDb,
   generatePaymentSplit,
+  getPaymentSplitBalance,
   supportsPaymentSplits,
+  updatePaymentSplitBalance,
 } from "@/utils/payment-splits";
 
-export const FEE_BPS = config.environment !== "prod" && config.chainId === 11155111 ? 50 : 0;
-export const FEE_RECIPIENT =
-  config.chainId === 11155111 ? "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e" : AddressZero;
+export const FEE_RECIPIENT = "0xf3d63166f0ca56c3c1a3508fce03ff0cf3fb691e";
 
-const SINGLE_FEE_ORDER_KINDS: OrderKind[] = ["payment-processor-v2"];
-const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
+export const ORDERBOOK_FEE_ORDER_KINDS: OrderKind[] = [
+  "alienswap",
+  "mintify",
+  "payment-processor",
   "payment-processor-v2",
+  "seaport-v1.4",
   "seaport-v1.5",
   "seaport-v1.6",
 ];
+
+const SINGLE_FEE_ORDER_KINDS: OrderKind[] = ["payment-processor", "payment-processor-v2"];
 
 export const attachOrderbookFee = async (
   params: {
@@ -25,20 +29,18 @@ export const attachOrderbookFee = async (
     feeRecipient?: string[];
     orderKind: OrderKind;
     orderbook: string;
+    currency: string;
   },
-  apiKey: string
+  apiKey = ""
 ) => {
   // Only native orders
   if (params.orderbook != "reservoir") {
     return;
   }
 
-  // Only certain order kinds
-  if (!ORDERBOOK_FEE_ORDER_KINDS.includes(params.orderKind)) {
-    return;
-  }
+  const feeBps = await ApiKeyManager.getOrderbookFee(apiKey, params.orderKind);
 
-  if (FEE_BPS > 0) {
+  if (feeBps > 0) {
     params.fee = params.fee ?? [];
     params.feeRecipient = params.feeRecipient ?? [];
 
@@ -50,26 +52,42 @@ export const attachOrderbookFee = async (
       }
 
       const paymentSplit = await generatePaymentSplit(
-        apiKey,
         {
           recipient: params.feeRecipient[0],
           bps: Number(params.fee),
         },
         {
           recipient: FEE_RECIPIENT,
-          bps: FEE_BPS,
-        }
+          bps: feeBps,
+        },
+        apiKey
       );
       if (!paymentSplit) {
         throw new Error("Could not generate payment split");
       }
 
+      // Keep track of the currency
+      const balance = await getPaymentSplitBalance(paymentSplit.address, params.currency);
+      if (!balance) {
+        await updatePaymentSplitBalance(paymentSplit.address, params.currency, "0");
+      }
+
       // Override
       params.feeRecipient = [paymentSplit.address];
-      params.fee = [String(params.fee.map(Number).reduce((a, b) => a + b) + FEE_BPS)];
+      params.fee = [String(params.fee.map(Number).reduce((a, b) => a + b) + feeBps)];
+
+      // Mark the fee as marketplace fee
+      await FeeRecipients.getInstance().then((feeRecipients) =>
+        feeRecipients.create(paymentSplit.address, "marketplace")
+      );
     } else {
-      params.fee.push(String(FEE_BPS));
+      params.fee.push(String(feeBps));
       params.feeRecipient.push(FEE_RECIPIENT);
+
+      // Mark the fee as marketplace fee
+      await FeeRecipients.getInstance().then((feeRecipients) =>
+        feeRecipients.create(FEE_RECIPIENT, "marketplace")
+      );
     }
   }
 };
@@ -80,24 +98,28 @@ export const validateOrderbookFee = async (
     kind: string;
     recipient: string;
     bps: number;
-  }[]
+  }[],
+  apiKey = "",
+  isReservoir?: boolean
 ) => {
+  // Only native orders
+  if (!isReservoir) {
+    return;
+  }
+
   // This is not the best place to add this check, but it does the job for now
   const totalBps = feeBreakdown.reduce((t, b) => t + b.bps, 0);
   if (totalBps > 10000) {
     throw new Error("invalid-fee");
   }
 
-  // Only certain order kinds
-  if (!ORDERBOOK_FEE_ORDER_KINDS.includes(orderKind)) {
-    return;
-  }
+  const feeBps = await ApiKeyManager.getOrderbookFee(apiKey, orderKind);
 
-  if (FEE_BPS > 0) {
+  if (feeBps > 0) {
     let foundOrderbookFee = false;
 
     for (const fee of feeBreakdown) {
-      if (fee.recipient.toLowerCase() === FEE_RECIPIENT.toLowerCase() && fee.bps === FEE_BPS) {
+      if (fee.recipient.toLowerCase() === FEE_RECIPIENT.toLowerCase() && fee.bps === feeBps) {
         foundOrderbookFee = true;
       }
 

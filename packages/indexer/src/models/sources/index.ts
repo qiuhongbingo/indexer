@@ -8,16 +8,16 @@ import { logger } from "@/common/logger";
 import { redis } from "@/common/redis";
 import { regex } from "@/common/utils";
 import { config } from "@/config/index";
+import { fetchSourceInfoJob } from "@/jobs/sources/fetch-source-info-job";
 import {
   SourcesEntity,
   SourcesEntityParams,
   SourcesMetadata,
 } from "@/models/sources/sources-entity";
+import { PubSub } from "@/pubsub/index";
 import { Channel } from "@/pubsub/channels";
 
-import { default as sourcesFromJson } from "./sources.json";
-import { fetchSourceInfoJob } from "@/jobs/sources/fetch-source-info-job";
-import { PubSub } from "@/pubsub/index";
+import { default as sourcesFromJson } from "@/models/sources/sources.json";
 
 export class Sources {
   private static instance: Sources;
@@ -674,6 +674,46 @@ export class Sources {
       if (sourceEntity.metadata.tokenUrlAmoy && contract && tokenId) {
         sourceEntity.metadata.url = _.replace(
           sourceEntity.metadata.tokenUrlAmoy,
+          "${contract}",
+          contract
+        );
+
+        return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
+      }
+    } else if (config.chainId == 666666666) {
+      if (sourceEntity.metadata.tokenUrlDegen && contract && tokenId) {
+        sourceEntity.metadata.url = _.replace(
+          sourceEntity.metadata.tokenUrlDegen,
+          "${contract}",
+          contract
+        );
+
+        return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
+      }
+    } else if (config.chainId == 713715) {
+      if (sourceEntity.metadata.tokenUrlSeiTestnet && contract && tokenId) {
+        sourceEntity.metadata.url = _.replace(
+          sourceEntity.metadata.tokenUrlSeiTestnet,
+          "${contract}",
+          contract
+        );
+
+        return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
+      }
+    } else if (config.chainId == 660279) {
+      if (sourceEntity.metadata.tokenUrlXai && contract && tokenId) {
+        sourceEntity.metadata.url = _.replace(
+          sourceEntity.metadata.tokenUrlXai,
+          "${contract}",
+          contract
+        );
+
+        return _.replace(sourceEntity.metadata.url, "${tokenId}", tokenId);
+      }
+    } else if (config.chainId == 1482601649) {
+      if (sourceEntity.metadata.tokenUrlNebula && contract && tokenId) {
+        sourceEntity.metadata.url = _.replace(
+          sourceEntity.metadata.tokenUrlNebula,
           "${contract}",
           contract
         );

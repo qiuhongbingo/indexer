@@ -26,13 +26,15 @@ export default class BlurBidsRefreshJob extends AbstractRabbitMqJobHandler {
   public async process(payload: BlurBidsRefreshJobPayload) {
     const { collection } = payload;
 
-    if (config.chainId !== 1) {
+    if (![1, 81457].includes(config.chainId)) {
       return;
     }
 
     try {
       await axios
-        .get(`${config.orderFetcherBaseUrl}/api/blur-collection-bids?collection=${collection}`)
+        .get(
+          `${config.orderFetcherBaseUrl}/api/blur-collection-bids?collection=${collection}&chainId=${config.chainId}`
+        )
         .then(async (response) => {
           const pricePoints = response.data.bids as Sdk.Blur.Types.BlurBidPricePoint[];
           await orderbookOrdersJob.addToQueue([
@@ -55,7 +57,7 @@ export default class BlurBidsRefreshJob extends AbstractRabbitMqJobHandler {
 
       await axios
         .get(
-          `${config.orderFetcherBaseUrl}/api/blur-collection-trait-bids?collection=${collection}`
+          `${config.orderFetcherBaseUrl}/api/blur-collection-trait-bids?collection=${collection}&chainId=${config.chainId}`
         )
         .then(async (response) => {
           const traitBids = response.data.bids as {

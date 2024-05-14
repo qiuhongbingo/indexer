@@ -49,28 +49,6 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
       return;
     }
 
-    // let tokenMetadataIndexingDebugContracts: {
-    //   contract: string;
-    //   tokenMetadataIndexingDebug: number;
-    // }[] = [];
-    //
-    // if ([1, 137, 11155111].includes(config.chainId)) {
-    //   tokenMetadataIndexingDebugContracts = fetchTokens.map((fetchToken) => ({
-    //     contract: fetchToken.contract,
-    //     tokenMetadataIndexingDebug: 0,
-    //   }));
-    //
-    //   const tokenMetadataIndexingDebugs = await redis.smismember(
-    //     "metadata-indexing-debug-contracts",
-    //     ...tokenMetadataIndexingDebugContracts.map((token) => token.contract)
-    //   );
-    //
-    //   for (let i = 0; i < tokenMetadataIndexingDebugContracts.length; i++) {
-    //     tokenMetadataIndexingDebugContracts[i].tokenMetadataIndexingDebug =
-    //       tokenMetadataIndexingDebugs[i];
-    //   }
-    // }
-
     let results: {
       contract: string;
       tokenId: string;
@@ -124,11 +102,14 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
           logger.info(
             this.queueName,
             JSON.stringify({
-              topic: "simpleHashFallbackDebug",
+              topic: "tokenMetadataIndexing",
               message: `No uri found. contract=${result.contract}, tokenId=${result.tokenId}, error=${result.error}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
               contract: result.contract,
               error: result.error,
               reason: "No uri found",
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                result.contract
+              ),
             })
           );
 
@@ -152,10 +133,12 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
                 logger.error(
                   this.queueName,
                   JSON.stringify({
-                    topic: "simpleHashFallbackDebug",
+                    topic: "tokenMetadataIndexing",
                     message: `Skip Fallback Error. contract=${result.contract}, tokenId=${result.tokenId}, uri=${result.uri}, error=${error}`,
                     result,
                     error,
+                    debugMetadataIndexingCollection:
+                      config.debugMetadataIndexingCollections.includes(result.contract),
                   })
                 );
               }
@@ -179,24 +162,21 @@ export default class OnchainMetadataFetchTokenUriJob extends AbstractRabbitMqJob
       }
 
       if (tokensToProcess.length) {
-        // for (const tokenToProcess of tokensToProcess) {
-        //   const tokenMetadataIndexingDebug = tokenMetadataIndexingDebugContracts.find(
-        //     (t) => t.contract === tokenToProcess.contract && t.tokenMetadataIndexingDebug
-        //   );
-        //
-        //   if (tokenMetadataIndexingDebug) {
-        //     logger.info(
-        //       this.queueName,
-        //       JSON.stringify({
-        //         topic: "tokenMetadataIndexingDebug",
-        //         message: `onchainMetadataProcessTokenUriJob. contract=${tokenToProcess.contract}, tokenId=${tokenToProcess.tokenId}, uri=${tokenToProcess.uri}, error=${tokenToProcess.error}`,
-        //         tokenToProcess,
-        //         _getTokensMetadataUriLatency,
-        //         fetchTokensCount: fetchTokens.length,
-        //       })
-        //     );
-        //   }
-        // }
+        for (const tokenToProcess of tokensToProcess) {
+          logger.log(
+            config.debugMetadataIndexingCollections.includes(tokenToProcess.contract)
+              ? "info"
+              : "debug",
+            this.queueName,
+            JSON.stringify({
+              topic: "tokenMetadataIndexing",
+              message: `onchainMetadataProcessTokenUriJob. contract=${tokenToProcess.contract}, tokenId=${tokenToProcess.tokenId}, uri=${tokenToProcess.uri}, error=${tokenToProcess.error}`,
+              debugMetadataIndexingCollection: config.debugMetadataIndexingCollections.includes(
+                tokenToProcess.contract
+              ),
+            })
+          );
+        }
 
         await onchainMetadataProcessTokenUriJob.addToQueueBulk(tokensToProcess);
       }

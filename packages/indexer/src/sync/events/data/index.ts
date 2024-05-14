@@ -57,6 +57,7 @@ import * as highlightxyz from "@/events-sync/data/highlightxyz";
 import * as ditto from "@/events-sync/data/ditto";
 import * as mooar from "@/events-sync/data/mooar";
 import * as fairxyz from "@/events-sync/data/fairxyz";
+import * as mintify from "@/events-sync/data/mintify";
 
 // All events we're syncing should have an associated `EventData`
 // entry which dictates the way the event will be parsed and then
@@ -176,6 +177,11 @@ export type EventSubKind =
   | "alienswap-orders-matched"
   | "alienswap-counter-incremented"
   | "alienswap-order-validated"
+  | "mintify-order-cancelled"
+  | "mintify-order-filled"
+  | "mintify-orders-matched"
+  | "mintify-counter-incremented"
+  | "mintify-order-validated"
   | "rarible-match"
   | "rarible-cancel"
   | "rarible-buy-v1"
@@ -360,8 +366,6 @@ export type EventSubKind =
   | "erc721c-v2-removed-account-from-list"
   | "erc721c-v2-removed-code-hash-from-list"
   | "erc721c-v2-applied-list-to-collection"
-  | "erc721c-v2-set-transfer-security-level"
-  | "erc721c-v2-transfer-validator-updated"
   | "ditto-pool-initialized"
   | "mooar-order-filled"
   | "highlightxyz-edition-vector-created"
@@ -438,6 +442,11 @@ const allEventData = [
   alienswap.orderFulfilled,
   alienswap.ordersMatched,
   alienswap.orderValidated,
+  mintify.counterIncremented,
+  mintify.orderCancelled,
+  mintify.orderFulfilled,
+  mintify.ordersMatched,
+  mintify.orderValidated,
   wyvernV2.ordersMatched,
   wyvernV23.ordersMatched,
   zeroExV4.erc721OrderCancelled,
@@ -622,8 +631,6 @@ const allEventData = [
   erc721cV2.removedAccountFromList,
   erc721cV2.removedCodeHashFromList,
   erc721cV2.appliedListToCollection,
-  erc721cV2.setTransferSecurityLevel,
-  erc721cV2.transferValidatorUpdated,
   highlightxyz.editonVectorCreated,
   highlightxyz.seriesVectorCreated,
   highlightxyz.vectorUpdated,

@@ -18,7 +18,7 @@ const version = "v3";
 export const getExecuteCancelV3Options: RouteOptions = {
   description: "Cancel Orders",
   notes: "Cancel existing orders on any marketplace",
-  tags: ["api"],
+  tags: ["api", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 11,
@@ -39,7 +39,8 @@ export const getExecuteCancelV3Options: RouteOptions = {
         "zeroex-v4-erc1155",
         "payment-processor-v2",
         "rarible",
-        "alienswap"
+        "alienswap",
+        "mintify"
       ),
       token: Joi.string().pattern(regex.token),
       blurAuth: Joi.string(),
@@ -155,6 +156,12 @@ export const getExecuteCancelV3Options: RouteOptions = {
           break;
         }
 
+        case "mintify": {
+          const exchange = new Sdk.Mintify.Exchange(config.chainId);
+          cancelTx = exchange.cancelAllOrdersTx(payload.maker);
+          break;
+        }
+
         case "alienswap": {
           const exchange = new Sdk.Alienswap.Exchange(config.chainId);
           cancelTx = exchange.cancelAllOrdersTx(payload.maker);
@@ -215,7 +222,9 @@ export const getExecuteCancelV3Options: RouteOptions = {
             let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
             if (!blurAuthChallenge) {
               blurAuthChallenge = (await axios
-                .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}`)
+                .get(
+                  `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}&chainId=${config.chainId}`
+                )
                 .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
               await b.saveAuthChallenge(
@@ -465,6 +474,19 @@ export const getExecuteCancelV3Options: RouteOptions = {
               break;
             }
 
+            case "mintify": {
+              const orders = data.onchainCancellable.map((order) => {
+                return new Sdk.Mintify.Order(config.chainId, order.raw_data);
+              });
+              const exchange = new Sdk.Mintify.Exchange(config.chainId);
+
+              cancelTxs.push({
+                data: exchange.cancelOrdersTx(maker, orders),
+                orderIds: data.onchainCancellable.map((o) => o.id),
+              });
+              break;
+            }
+
             case "looks-rare-v2": {
               for (const order of data.onchainCancellable) {
                 const sdkOrder = new Sdk.LooksRareV2.Order(config.chainId, order.raw_data);
@@ -549,7 +571,9 @@ export const getExecuteCancelV3Options: RouteOptions = {
                   let blurAuthChallenge = await b.getAuthChallenge(blurAuthChallengeId);
                   if (!blurAuthChallenge) {
                     blurAuthChallenge = (await axios
-                      .get(`${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}`)
+                      .get(
+                        `${config.orderFetcherBaseUrl}/api/blur-auth-challenge?taker=${maker}&chainId=${config.chainId}`
+                      )
                       .then((response) => response.data.authChallenge)) as b.AuthChallenge;
 
                     await b.saveAuthChallenge(
@@ -601,6 +625,7 @@ export const getExecuteCancelV3Options: RouteOptions = {
                     contract: order.raw_data.collection,
                     tokenId: order.raw_data.tokenId,
                     authToken: blurAuth.accessToken,
+                    chainId: config.chainId,
                   })
                   .then((response) => response.data);
                 if (!blurCancelTx) {

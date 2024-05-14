@@ -142,43 +142,45 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
           },
         });
 
-        // To get the correct price that the bid was settled at we have to
-        // parse the transaction's calldata and extract the `minPrice` arg
-        // where applicable (if the transaction was a bid acceptance one)
-        const txTrace = await utils.fetchTransactionTrace(baseEventParams.txHash);
-        if (!txTrace) {
-          // Skip any failed attempts to get the trace
-          break;
-        }
-
-        const iface = new Interface(["function acceptBidForPunk(uint punkIndex, uint minPrice)"]);
-        const poolCallTrace = searchForCall(
-          txTrace.calls,
-          {
-            to: Sdk.CryptoPunks.Addresses.Exchange[config.chainId],
-            type: "CALL",
-            sigHashes: [iface.getSighash("acceptBidForPunk")],
-          },
-          tradeRank++
-        );
-        if (!poolCallTrace) {
-          break;
-        }
-
-        try {
-          const result = iface.decodeFunctionData("acceptBidForPunk", poolCallTrace.input);
-          value = result.minPrice.toString();
-        } catch {
-          // Skip any errors
-        }
-
-        if (value === "0") {
-          // Skip if the sell was for a price of zero (since in that case it was probably
-          // not even a sell, but a hacky way of setting an approval for Cryptopunks)
-          break;
-        }
-
         const orderSide = toAddress === AddressZero ? "buy" : "sell";
+        if (orderSide === "buy") {
+          // To get the correct price that the bid was settled at we have to
+          // parse the transaction's calldata and extract the `minPrice` arg
+          // where applicable (if the transaction was a bid acceptance one)
+          const txTrace = await utils.fetchTransactionTrace(baseEventParams.txHash);
+          if (!txTrace) {
+            // Skip any failed attempts to get the trace
+            break;
+          }
+
+          const iface = new Interface(["function acceptBidForPunk(uint punkIndex, uint minPrice)"]);
+          const poolCallTrace = searchForCall(
+            txTrace.calls,
+            {
+              to: Sdk.CryptoPunks.Addresses.Exchange[config.chainId],
+              type: "CALL",
+              sigHashes: [iface.getSighash("acceptBidForPunk")],
+            },
+            tradeRank++
+          );
+          if (!poolCallTrace) {
+            break;
+          }
+
+          try {
+            const result = iface.decodeFunctionData("acceptBidForPunk", poolCallTrace.input);
+            value = result.minPrice.toString();
+          } catch {
+            // Skip any errors
+          }
+
+          if (value === "0") {
+            // Skip if the sell was for a price of zero (since in that case it was probably
+            // not even a sell, but a hacky way of setting an approval for Cryptopunks)
+            break;
+          }
+        }
+
         const maker = orderSide === "sell" ? fromAddress : toAddress;
         let taker = orderSide === "sell" ? toAddress : fromAddress;
 

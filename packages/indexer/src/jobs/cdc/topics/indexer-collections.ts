@@ -75,8 +75,19 @@ export class IndexerCollectionsHandler extends KafkaEventHandler {
 
     try {
       // Update the elasticsearch activities collection cache
-      if (changed.some((value) => ["name", "image", "image_version"].includes(value))) {
-        await ActivitiesCollectionCache.refreshCollection(payload.after.id, payload.after);
+      let imageChanged = false;
+
+      if (changed.some((value) => ["metadata"].includes(value))) {
+        imageChanged = payload.before?.metadata?.imageUrl !== payload.after?.metadata?.imageUrl;
+      }
+
+      if (imageChanged || changed.some((value) => ["name", "image_version"].includes(value))) {
+        await ActivitiesCollectionCache.refreshCollection(payload.after.id, {
+          id: payload.after.id,
+          name: payload.after.name,
+          image: payload.after.metadata?.imageUrl,
+          image_version: payload.after.image_version,
+        });
       }
     } catch (error) {
       logger.error(
@@ -137,6 +148,10 @@ export class IndexerCollectionsHandler extends KafkaEventHandler {
 
         const { contract, metadata, ...updatedCollection } = payload.after;
 
+        const parsedMetadata = JSON.parse(metadata);
+
+        parsedMetadata.openseaVerificationStatus = parsedMetadata?.safelistRequestStatus;
+
         const updatedPayload = {
           ...updatedCollection,
           contract: fromBuffer(contract),
@@ -144,7 +159,7 @@ export class IndexerCollectionsHandler extends KafkaEventHandler {
             ? fromBuffer(result.floor_sell_currency)
             : Sdk.Common.Addresses.Native[config.chainId],
           metadata: {
-            ...JSON.parse(metadata),
+            ...parsedMetadata,
           },
           sample_images: result?.sample_images || [],
           on_sale_count: result.on_sale_count,

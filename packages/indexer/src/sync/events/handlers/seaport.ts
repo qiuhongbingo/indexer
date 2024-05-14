@@ -39,6 +39,12 @@ const getProtocolInfoFromSubKind = (subKind: EventSubKind) => {
       Order: Sdk.Alienswap.Order,
       Exchange: Sdk.Alienswap.Exchange,
     };
+  } else if (subKind.startsWith("mintify")) {
+    return {
+      orderKind: "mintify" as OrderKind,
+      Order: Sdk.Mintify.Order,
+      Exchange: Sdk.Mintify.Exchange,
+    };
   } else {
     return {
       orderKind: "seaport" as OrderKind,
@@ -56,6 +62,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
   const orderIdsToSkip = new Set<string>();
 
   const alienswapMatchedOrderIds: { [txHash: string]: Set<string> } = {};
+  const mintifyMatchedOrderIds: { [txHash: string]: Set<string> } = {};
   const seaportV14MatchedOrderIds: { [txHash: string]: Set<string> } = {};
   const seaportV15MatchedOrderIds: { [txHash: string]: Set<string> } = {};
   const seaportV16MatchedOrderIds: { [txHash: string]: Set<string> } = {};
@@ -63,6 +70,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
   for (const { baseEventParams, log } of events.filter(({ subKind }) =>
     [
       "alienswap-orders-matched",
+      "mintify-orders-matched",
       "seaport-v1.4-orders-matched",
       "seaport-v1.5-orders-matched",
       "seaport-v1.6-orders-matched",
@@ -117,16 +125,30 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
         seaportV16MatchedOrderIds[txHash].add(orderId);
       }
     }
+
+    const eventData5 = getEventData(["mintify-orders-matched"])[0];
+    if (eventData5?.addresses?.[baseEventParams.address]) {
+      if (!mintifyMatchedOrderIds[txHash]) {
+        mintifyMatchedOrderIds[txHash] = new Set<string>();
+      }
+
+      const parsedLog3 = eventData5.abi.parseLog(log);
+      for (const orderId of parsedLog3.args["orderHashes"]) {
+        mintifyMatchedOrderIds[txHash].add(orderId);
+      }
+    }
   }
 
   // For each transaction keep track of the orders that were explicitly matched
   const matchedOrderIds: {
     alienswap: { [txHash: string]: Set<string> };
+    mintify: { [txHash: string]: Set<string> };
     "seaport-v1.4": { [txHash: string]: Set<string> };
     "seaport-v1.5": { [txHash: string]: Set<string> };
     "seaport-v1.6": { [txHash: string]: Set<string> };
   } = {
     alienswap: alienswapMatchedOrderIds,
+    mintify: mintifyMatchedOrderIds,
     "seaport-v1.4": seaportV14MatchedOrderIds,
     "seaport-v1.5": seaportV15MatchedOrderIds,
     "seaport-v1.6": seaportV16MatchedOrderIds,
@@ -144,6 +166,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
     const eventData = getEventData([subKind])[0];
     switch (subKind) {
       case "alienswap-order-cancelled":
+      case "mintify-order-cancelled":
       case "seaport-order-cancelled":
       case "seaport-v1.4-order-cancelled":
       case "seaport-v1.5-order-cancelled":
@@ -176,6 +199,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
       }
 
       case "alienswap-counter-incremented":
+      case "mintify-counter-incremented":
       case "seaport-counter-incremented":
       case "seaport-v1.4-counter-incremented":
       case "seaport-v1.5-counter-incremented":
@@ -197,6 +221,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
       }
 
       case "alienswap-order-filled":
+      case "mintify-order-filled":
       case "seaport-order-filled":
       case "seaport-v1.4-order-filled":
       case "seaport-v1.5-order-filled":
@@ -243,6 +268,16 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
 
           const seaportV15Matched = matchedOrderIds["seaport-v1.5"][baseEventParams.txHash];
           if (seaportV15Matched && seaportV15Matched.has(orderId)) {
+            const txSender = await utils
+              .fetchTransaction(baseEventParams.txHash)
+              .then(({ from }) => from);
+            if (maker === txSender) {
+              break;
+            }
+          }
+
+          const mintifyMatched = matchedOrderIds["mintify"][baseEventParams.txHash];
+          if (mintifyMatched && mintifyMatched.has(orderId)) {
             const txSender = await utils
               .fetchTransaction(baseEventParams.txHash)
               .then(({ from }) => from);
@@ -345,7 +380,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
           });
 
           onChainData.fillInfos.push({
-            context: `${orderId}-${baseEventParams.txHash}`,
+            context: `${orderId}-${baseEventParams.txHash}-${baseEventParams.logIndex}`,
             orderId: orderId,
             orderSide,
             contract: saleInfo.contract,
@@ -392,6 +427,7 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
       }
 
       case "seaport-order-validated":
+      case "mintify-order-validated":
       case "seaport-v1.4-order-validated":
       case "seaport-v1.5-order-validated":
       case "seaport-v1.6-order-validated": {
@@ -457,7 +493,12 @@ export const handleEvents = async (events: EnhancedEvent[], onChainData: OnChain
 
             if (orderId === order.hash()) {
               onChainData.orders.push({
-                kind: orderKind as "seaport" | "seaport-v1.4" | "seaport-v1.5",
+                kind: orderKind as
+                  | "seaport"
+                  | "seaport-v1.4"
+                  | "seaport-v1.5"
+                  | "seaport-v1.6"
+                  | "mintify",
                 info: {
                   orderParams: order.params,
                   metadata: {

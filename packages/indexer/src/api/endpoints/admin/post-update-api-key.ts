@@ -8,6 +8,9 @@ import { logger } from "@/common/logger";
 import { config } from "@/config/index";
 import { ApiKeyManager } from "@/models/api-keys";
 import { regex } from "@/common/utils";
+import { OrderbookFees } from "@/models/api-keys/api-key-entity";
+import _ from "lodash";
+import { ORDERBOOK_FEE_ORDER_KINDS } from "@/utils/orderbook-fee";
 
 export const postUpdateApiKeyOptions: RouteOptions = {
   description: "Update the given api key",
@@ -33,6 +36,17 @@ export const postUpdateApiKeyOptions: RouteOptions = {
         set_collection_magiceden_verification_status: Joi.boolean().optional(),
       }).optional(),
       revShareBps: Joi.number().allow(null).optional(),
+      orderbookFees: Joi.array()
+        .items(
+          Joi.object({
+            orderbook: Joi.string()
+              .valid(...ORDERBOOK_FEE_ORDER_KINDS)
+              .required(),
+            feeBps: Joi.number().allow(null).required(),
+          })
+        )
+        .optional(),
+      disableOrderbookFees: Joi.boolean().allow(null).optional(),
     }),
   },
   handler: async (request: Request) => {
@@ -41,6 +55,15 @@ export const postUpdateApiKeyOptions: RouteOptions = {
     }
 
     const payload = request.payload as any;
+    let orderbookFees: OrderbookFees | undefined = undefined;
+
+    if (payload.orderbookFees) {
+      orderbookFees = {};
+      for (const orderbookFee of payload.orderbookFees) {
+        orderbookFees[orderbookFee.orderbook as (typeof ORDERBOOK_FEE_ORDER_KINDS)[number]] =
+          _.isNull(orderbookFee.feeBps) ? null : { feeBps: orderbookFee.feeBps };
+      }
+    }
 
     try {
       await ApiKeyManager.update(payload.apiKey, {
@@ -50,6 +73,8 @@ export const postUpdateApiKeyOptions: RouteOptions = {
         origins: payload.origins,
         revShareBps: payload.revShareBps,
         permissions: payload.permissions,
+        disableOrderbookFees: payload.disableOrderbookFees,
+        orderbookFees,
       });
 
       return {

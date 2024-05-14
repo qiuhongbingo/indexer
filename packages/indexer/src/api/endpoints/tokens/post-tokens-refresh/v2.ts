@@ -10,7 +10,6 @@ import { config } from "@/config/index";
 import { tokenRefreshCacheJob } from "@/jobs/token-updates/token-refresh-cache-job";
 import { resyncTokenAttributesCacheJob } from "@/jobs/update-attribute/resync-token-attributes-cache-job";
 import { ApiKeyManager } from "@/models/api-keys";
-import { Collections } from "@/models/collections";
 import { PendingFlagStatusSyncTokens } from "@/models/pending-flag-status-sync-tokens";
 import { Tokens } from "@/models/tokens";
 import { metadataIndexFetchJob } from "@/jobs/metadata-index/metadata-fetch-job";
@@ -24,7 +23,7 @@ export const postTokensRefreshV2Options: RouteOptions = {
   description: "Refresh Token",
   notes:
     "Token metadata is never automatically refreshed, but may be manually refreshed with this API.\n\nCaution: This API should be used in moderation, like only when missing data is discovered. Calling it in bulk or programmatically will result in your API key getting rate limited.",
-  tags: ["api", "Tokens"],
+  tags: ["api", "Tokens", "marketplace"],
   plugins: {
     "hapi-swagger": {
       order: 13,
@@ -121,7 +120,7 @@ export const postTokensRefreshV2Options: RouteOptions = {
         }
 
         if (payload.liquidityOnly) {
-          return { message: "Request accepted" };
+          return { results: tokenRefreshResult };
         }
 
         // Non-liquidity checks (not cheap)
@@ -171,7 +170,7 @@ export const postTokensRefreshV2Options: RouteOptions = {
         }
 
         // Refresh metadata
-        const collection = await Collections.getByContractAndTokenId(contract, Number(tokenId));
+        const collection = await Tokens.getCollection(contract, tokenId);
 
         if (!collection) {
           logger.warn(
@@ -203,7 +202,8 @@ export const postTokensRefreshV2Options: RouteOptions = {
               tokenId,
             },
           ],
-          true
+          true,
+          "post-tokens-refresh-v2"
         );
 
         // Revalidate the token attribute cache

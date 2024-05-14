@@ -1,9 +1,11 @@
 import { Interface } from "@ethersproject/abi";
 import { Contract } from "@ethersproject/contracts";
+import * as Sdk from "@reservoir0x/sdk";
 
 import { idb } from "@/common/db";
 import { baseProvider } from "@/common/provider";
 import { toBuffer } from "@/common/utils";
+import { config } from "@/config/index";
 
 import * as v1 from "@/utils/erc721c/v1";
 import * as v2 from "@/utils/erc721c/v2";
@@ -40,6 +42,13 @@ export const getVersion = async (contract: string) => {
   // valid response from the `getCollectionSecurityPolicyV2` method are on
   // the ERC721c v2 standard, everything else defaulting to v1.
   const transferValidatorAddress = await token.getTransferValidator();
+  if (
+    transferValidatorAddress.toLowerCase() ===
+    Sdk.SeaportBase.Addresses.OpenSeaCustomTransferValidator[config.chainId]
+  ) {
+    return "v2";
+  }
+
   const transferValidator = new Contract(
     transferValidatorAddress,
     new Interface([
