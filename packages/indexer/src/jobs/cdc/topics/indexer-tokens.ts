@@ -200,7 +200,7 @@ export class IndexerTokensHandler extends KafkaEventHandler {
         logger.warn(
           "IndexerTokensHandler",
           JSON.stringify({
-            message: `token image missing. contract=${payload.after.contract}, tokenId=${payload.after.token_id}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+            message: `token image missing! contract=${payload.after.contract}, tokenId=${payload.after.token_id}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
             payload,
           })
         );
