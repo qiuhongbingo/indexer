@@ -4,6 +4,7 @@ import _ from "lodash";
 
 import { idb, redb } from "@/common/db";
 import { logger } from "@/common/logger";
+import { redis } from "@/common/redis";
 import { toBuffer, now } from "@/common/utils";
 import {
   CollectionsEntity,
@@ -16,6 +17,7 @@ import * as marketplaceBlacklist from "@/utils/marketplace-blacklists";
 import * as marketplaceFees from "@/utils/marketplace-fees";
 import * as paymentProcessor from "@/utils/payment-processor";
 import * as paymentProcessorV2 from "@/utils/payment-processor-v2";
+import { checkContractHasStakingKeywords } from "@/utils/staking-detection";
 
 import MetadataProviderRouter from "@/metadata/metadata-provider-router";
 import * as royalties from "@/utils/royalties";
@@ -38,7 +40,6 @@ import {
   ActionsLogOrigin,
   actionsLogJob,
 } from "@/jobs/general-tracking/actions-log-job";
-import { checkContractHasStakingKeywords } from "@/utils/staking-detection";
 
 export class Collections {
   public static async getById(collectionId: string, readReplica = false) {
@@ -323,15 +324,7 @@ export class Collections {
     // Soft-staking detection
     const hasStakingKeywords = await checkContractHasStakingKeywords(collection.contract);
     if (hasStakingKeywords) {
-      await idb.none(
-        `
-          UPDATE collections SET
-            metadata = jsonb_set(coalesce(metadata, '{}'), '{hasStakingKeywords}', 'true', true),
-            updated_at = now()
-          WHERE collections.id = $/id/
-        `,
-        { id: collection.id }
-      );
+      await redis.set(`has-staking-keywords:${collection.id}`, "1", "EX", 7 * 24 * 3600);
     }
   }
 
