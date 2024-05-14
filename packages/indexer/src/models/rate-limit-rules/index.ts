@@ -410,7 +410,7 @@ export class RateLimitRules {
   ): { ruleParams: RateLimitRuleEntity; rule: RateLimiterRedis; pointsToConsume: number } | null {
     const route = request.route.path;
     const method = request.route.method;
-    const apiTags = request.route.settings.tags;
+    const apiTags = request.route.settings.tags ?? [];
 
     if (tier < 0) {
       throw new BlockedKeyError(RateLimitRuleEntity.getRateLimitMessage(apiKey, tier));
