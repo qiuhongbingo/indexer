@@ -6,7 +6,6 @@ import { keccak256 as solidityKeccak256 } from "@ethersproject/solidity";
 import * as Sdk from "@reservoir0x/sdk";
 import MerkleTree from "merkletreejs";
 
-import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 import { config } from "@/config/index";
 import { Transaction } from "@/models/transactions";
@@ -222,7 +221,7 @@ export const extractByCollectionERC721 = async (collection: string): Promise<Col
       }
     }
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   // Update the status of each collection mint
@@ -443,7 +442,7 @@ export const extractByCollectionERC1155 = async (
       }
     }
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   // Update the status of each collection mint

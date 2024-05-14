@@ -210,4 +210,6 @@ export const config = {
   debugMetadataIndexingCollections: process.env.DEBUG_METADATA_INDEXING_COLLECTIONS
     ? String(process.env.DEBUG_METADATA_INDEXING_COLLECTIONS).split(",")
     : [],
+
+  blockedMakers: process.env.BLOCKED_MAKERS ? String(process.env.BLOCKED_MAKERS).split(",") : [],
 };

@@ -66,7 +66,8 @@ export const postFlagTokenV1Options: RouteOptions = {
               tokenId,
             },
           ],
-          true
+          true,
+          "postFlagTokenV1"
         );
 
         const key = request.headers["x-api-key"];

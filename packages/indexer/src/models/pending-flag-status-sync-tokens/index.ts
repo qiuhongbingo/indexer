@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { redis } from "@/common/redis";
 import { getOpenseaNetworkName } from "@/config/network";
+import { logger } from "@/common/logger";
 
 export type PendingFlagStatusSyncToken = {
   contract: string;
@@ -13,9 +14,24 @@ export type PendingFlagStatusSyncToken = {
 export class PendingFlagStatusSyncTokens {
   public static key = "pending-flag-status-sync-tokens";
 
-  public static async add(tokens: PendingFlagStatusSyncToken[], prioritized = false) {
+  public static async add(
+    tokens: PendingFlagStatusSyncToken[],
+    prioritized = false,
+    context?: string
+  ) {
     if (!getOpenseaNetworkName()) {
       return;
+    }
+
+    if (tokens.length) {
+      logger.info(
+        "pending-flag-status-sync-tokens",
+        JSON.stringify({
+          topic: "openseaRateLimitDebug",
+          message: `addToRedis. contract=${tokens[0].contract}, tokenId=${tokens[0].tokenId}, context=${context}`,
+          context,
+        })
+      );
     }
 
     if (prioritized) {

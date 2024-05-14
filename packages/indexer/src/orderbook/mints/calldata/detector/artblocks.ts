@@ -2,7 +2,6 @@ import { Interface } from "@ethersproject/abi";
 import { Contract } from "@ethersproject/contracts";
 import { BigNumber } from "@ethersproject/bignumber";
 
-import { logger } from "@/common/logger";
 import { bn } from "@/common/utils";
 import { baseProvider } from "@/common/provider";
 import { Transaction } from "@/models/transactions";
@@ -214,7 +213,7 @@ export const extractByCollectionERC721 = async (
       }
     }
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   // Update the status of each collection mint

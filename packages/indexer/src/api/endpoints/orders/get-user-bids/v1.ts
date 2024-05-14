@@ -36,6 +36,9 @@ export const getUserBidsV1Options: RouteOptions = {
         ),
     }),
     query: Joi.object({
+      ids: Joi.alternatives(Joi.array().items(Joi.string()), Joi.string()).description(
+        "Order id(s) to search for."
+      ),
       type: Joi.string()
         .valid("token", "collection", "attribute", "custom")
         .description(
@@ -184,6 +187,14 @@ export const getUserBidsV1Options: RouteOptions = {
         `orders.side = 'buy'`,
         `orders.taker = '\\x0000000000000000000000000000000000000000' OR orders.taker IS NULL`,
       ];
+
+      if (query.ids) {
+        if (Array.isArray(query.ids)) {
+          conditions.push(`orders.id IN ($/ids:csv/)`);
+        } else {
+          conditions.push(`orders.id = $/ids/`);
+        }
+      }
 
       let orderStatusFilter =
         "orders.fillability_status = 'fillable' AND orders.approval_status = 'approved'";

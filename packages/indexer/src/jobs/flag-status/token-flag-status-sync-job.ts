@@ -44,7 +44,7 @@ export class TokenFlagStatusSyncJob extends AbstractRabbitMqJobHandler {
                 logger.warn(
                   this.queueName,
                   JSON.stringify({
-                    message: `Too Many Requests. error=${error}`,
+                    message: `Too Many Requests. error=${error}, delay=${error.delay}`,
                     tokensToGetFlagStatusForChunk,
                     error,
                   })
@@ -52,7 +52,11 @@ export class TokenFlagStatusSyncJob extends AbstractRabbitMqJobHandler {
 
                 await extendLock(this.getLockName(), Math.max(error.delay, 5));
 
-                await PendingFlagStatusSyncTokens.add(tokensToGetFlagStatusForChunk, true);
+                await PendingFlagStatusSyncTokens.add(
+                  tokensToGetFlagStatusForChunk,
+                  true,
+                  "throttled"
+                );
               } else {
                 logger.error(
                   this.queueName,

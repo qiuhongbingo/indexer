@@ -4,7 +4,6 @@ import { Contract } from "@ethersproject/contracts";
 import * as Sdk from "@reservoir0x/sdk";
 import axios from "axios";
 
-import { logger } from "@/common/logger";
 import { baseProvider } from "@/common/provider";
 import { redis } from "@/common/redis";
 import { config } from "@/config/index";
@@ -579,7 +578,7 @@ export const extractByCollection = async (
       });
     }
   } catch (error) {
-    logger.error("mint-detector", JSON.stringify({ kind: STANDARD, error }));
+    // logger.warn("mint-detector", JSON.stringify({ kind: STANDARD, error }));
   }
 
   // Update the status of each collection mint

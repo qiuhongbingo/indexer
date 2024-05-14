@@ -60,8 +60,9 @@ export class Assets {
   public static getResizedImageUrl(
     imageUrl: string,
     size?: number,
-    image_version?: number,
-    image_mime_type?: string
+    imageVersion?: number,
+    imageMimeType?: string,
+    context?: string
   ): string {
     if (imageUrl) {
       imageUrl = imageUrl.trim();
@@ -78,17 +79,18 @@ export class Assets {
               resizeImageUrl = imageUrl.replace(/w=\d+/, `w=${ImageSize.large}`);
             }
 
-            return Assets.signImage(resizeImageUrl, size, image_version, image_mime_type);
+            return Assets.signImage(resizeImageUrl, size, imageVersion, imageMimeType);
           }
 
-          return Assets.signImage(resizeImageUrl, size, image_version, image_mime_type);
+          return Assets.signImage(resizeImageUrl, size, imageVersion, imageMimeType);
         }
       } catch (error) {
         logger.warn(
           "getResizedImageUrl",
           JSON.stringify({
-            message: `imageUrl=${imageUrl}, size=${size}, image_version=${image_version}, image_mime_type=${image_mime_type}, error=${error}`,
+            message: `imageUrl=${imageUrl}, size=${size}, imageVersion=${imageVersion}, imageMimeType=${imageMimeType}, error=${error}, context=${context}`,
             error,
+            context,
           })
         );
       }
@@ -116,8 +118,8 @@ export class Assets {
   public static signImage(
     imageUrl: string,
     width?: number,
-    image_version?: number,
-    image_mime_type?: string
+    imageVersion?: number,
+    imageMimeType?: string
   ): string {
     const validImagePrefixes = ["http", "data:image"];
     if (config.imageResizingBaseUrl == null) {
@@ -131,9 +133,9 @@ export class Assets {
     }
 
     let v = "";
-    if (image_version) {
+    if (imageVersion) {
       try {
-        v = image_version ? `?v=${Math.floor(new Date(image_version).getTime() / 1000)}` : "";
+        v = imageVersion ? `?v=${Math.floor(new Date(imageVersion).getTime() / 1000)}` : "";
         if (imageUrl.includes("?")) {
           v = v.replace("?", "&");
         }
@@ -152,7 +154,7 @@ export class Assets {
       }
     ).toString();
 
-    const fileExtension = Assets.getFileExtension(image_mime_type);
+    const fileExtension = Assets.getFileExtension(imageMimeType);
 
     return `${
       config.imageResizingBaseUrl

@@ -369,6 +369,26 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       });
     }
 
+    const imageUrl =
+      normalizeLink(metadata?.image) ||
+      normalizeLink(metadata?.image_url) ||
+      normalizeLink(metadata?.imageUrl) ||
+      normalizeLink(metadata?.image_data) ||
+      null;
+
+    const validImagePrefixes = ["http", "data:image"];
+
+    if (imageUrl && !validImagePrefixes.some((prefix) => imageUrl?.startsWith(prefix))) {
+      logger.debug(
+        "onchain-fetcher",
+        JSON.stringify({
+          topic: "tokenMetadataIndexing",
+          message: `invalidImagePrefix. contract=${metadata.contract}, tokenId=${metadata.tokenId}, imageUrl=${imageUrl}`,
+          metadata: JSON.stringify(metadata),
+        })
+      );
+    }
+
     const parsedMetadata = {
       contract: metadata.contract,
       slug: null,
@@ -380,12 +400,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       // Token descriptions are a waste of space for most collections we deal with
       // so by default we ignore them (this behaviour can be overridden if needed).
       description: metadata.description || null,
-      imageUrl:
-        normalizeLink(metadata?.image) ||
-        normalizeLink(metadata?.image_url) ||
-        normalizeLink(metadata?.imageUrl) ||
-        normalizeLink(metadata?.image_data) ||
-        null,
+      imageUrl,
       imageOriginalUrl: metadata?.image || metadata?.image_url || null,
       animationOriginalUrl: metadata?.animation_url || null,
       mediaUrl: normalizeLink(metadata?.animation_url) || null,

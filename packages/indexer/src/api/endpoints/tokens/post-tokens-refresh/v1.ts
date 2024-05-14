@@ -165,7 +165,8 @@ export const postTokensRefreshV1Options: RouteOptions = {
             tokenId,
           },
         ],
-        true
+        true,
+        "post-tokens-refresh-v1"
       );
 
       // Revalidate the token attribute cache
