@@ -9,6 +9,7 @@ import { getNetworkSettings } from "@/config/network";
 export type ResyncUserCollectionsJobPayload = {
   user: string;
   collectionId?: string;
+  fullResync?: boolean;
   cursor?: {
     contract: string;
     tokenId: string;
@@ -25,7 +26,7 @@ export default class ResyncUserCollectionsJob extends AbstractRabbitMqJobHandler
   } as BackoffStrategy;
 
   public async process(payload: ResyncUserCollectionsJobPayload) {
-    const { user, collectionId, cursor } = payload;
+    const { user, collectionId, fullResync, cursor } = payload;
     let contract = "";
     let newBalanceResults;
     let isSpam;
@@ -62,7 +63,11 @@ export default class ResyncUserCollectionsJob extends AbstractRabbitMqJobHandler
              WHERE nft_balances.contract = tokens.contract
              AND nft_balances.token_id = tokens.token_id
              AND tokens.collection_id IS NOT NULL
-             AND NOT EXISTS (SELECT FROM user_collections uc WHERE owner = $/owner/ AND uc.collection_id = tokens.collection_id)
+             ${
+               fullResync
+                 ? ""
+                 : `AND NOT EXISTS (SELECT FROM user_collections uc WHERE owner = $/owner/ AND uc.collection_id = tokens.collection_id)`
+             }
           ) t ON TRUE
         WHERE owner = $/owner/
         ${cursorFilter}
@@ -95,6 +100,7 @@ export default class ResyncUserCollectionsJob extends AbstractRabbitMqJobHandler
           await this.addToQueue([
             {
               user,
+              fullResync,
               cursor: {
                 contract: fromBuffer(_.last(results).contract),
                 tokenId: _.last(results).token_id,
