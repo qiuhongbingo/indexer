@@ -4,6 +4,7 @@ import _ from "lodash";
 
 import { idb, redb } from "@/common/db";
 import { logger } from "@/common/logger";
+import { redis } from "@/common/redis";
 import { toBuffer, now } from "@/common/utils";
 import {
   CollectionsEntity,
@@ -16,6 +17,7 @@ import * as marketplaceBlacklist from "@/utils/marketplace-blacklists";
 import * as marketplaceFees from "@/utils/marketplace-fees";
 import * as paymentProcessor from "@/utils/payment-processor";
 import * as paymentProcessorV2 from "@/utils/payment-processor-v2";
+import { checkContractHasStakingKeywords } from "@/utils/staking-detection";
 
 import MetadataProviderRouter from "@/metadata/metadata-provider-router";
 import * as royalties from "@/utils/royalties";
@@ -299,6 +301,12 @@ export class Collections {
 
     // Refresh Blur royalties (which get stored separately)
     await updateBlurRoyalties(collection.id, true);
+
+    // Soft-staking detection
+    const hasStakingKeywords = await checkContractHasStakingKeywords(collection.contract);
+    if (hasStakingKeywords) {
+      await redis.set(`has-staking-keywords:${collection.id}`, "1", "EX", 7 * 24 * 3600);
+    }
 
     // Refresh OpenSea marketplace fees
     const openseaFees = collection.openseaFees as royalties.Royalty[] | undefined;

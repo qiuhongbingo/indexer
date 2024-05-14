@@ -191,7 +191,7 @@ export const getUserTokensV3Options: RouteOptions = {
           t.token_id, 
           t.name,
           t.image,
-          t.image_version,
+          COALESCE(t.metadata_version::TEXT, t.image_version::TEXT) AS image_version,
           (t.metadata ->> 'image_mime_type')::TEXT AS image_mime_type,
           (t.metadata ->> 'media_mime_type')::TEXT AS media_mime_type,
           t.collection_id,
@@ -207,7 +207,7 @@ export const getUserTokensV3Options: RouteOptions = {
     if (query.includeTopBid) {
       tokensJoin = `
         JOIN LATERAL (
-          SELECT t.token_id, t.name, t.image,t.image_version, t.collection_id, t.metadata_disabled AS "t_metadata_disabled"
+          SELECT t.token_id, t.name, t.image, COALESCE(t.metadata_version::TEXT, t.image_version::TEXT) AS image_version, t.collection_id, t.metadata_disabled AS "t_metadata_disabled"
           FROM tokens t
           WHERE b.token_id = t.token_id
           AND b.contract = t.contract

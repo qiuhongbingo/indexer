@@ -288,19 +288,14 @@ export const getUSDAndNativePrices = async (
     nonZeroCommunityTokens?: boolean;
   }
 ): Promise<USDAndNativePrices> => {
+  const currency = await getCurrency(currencyAddress);
   let usdPrice: string | undefined;
   let nativePrice: string | undefined;
 
   if (
-    getNetworkSettings().coingecko?.networkId ||
+    currency.metadata?.coingeckoCurrencyId ||
     isTestnetCurrency(currencyAddress) ||
-    isWhitelistedCurrency(currencyAddress) ||
-    // Allow price conversion on Zora which is not supported by Coingecko
-    ([690, 7777777].includes(config.chainId) &&
-      _.includes(
-        [Sdk.Common.Addresses.Native[config.chainId], Sdk.Common.Addresses.WNative[config.chainId]],
-        currencyAddress
-      ))
+    isWhitelistedCurrency(currencyAddress)
   ) {
     const currencyUSDPrice = await getAvailableUSDPrice(
       currencyAddress,
@@ -317,7 +312,6 @@ export const getUSDAndNativePrices = async (
       );
     }
 
-    const currency = await getCurrency(currencyAddress);
     if (currency.decimals !== undefined && currencyUSDPrice) {
       const currencyUnit = bn(10).pow(currency.decimals);
       usdPrice = bn(price).mul(currencyUSDPrice.value).div(currencyUnit).toString();
@@ -365,24 +359,16 @@ export const getUSDAndCurrencyPrices = async (
     acceptStalePrice?: boolean;
   }
 ): Promise<USDAndCurrencyPrices> => {
+  const fromCurrency = await getCurrency(fromCurrencyAddress);
+  const toCurrency = await getCurrency(toCurrencyAddress);
   let usdPrice: string | undefined;
   let currencyPrice: string | undefined;
 
   // Only try to get pricing data if the network supports it
   if (
-    getNetworkSettings().coingecko?.networkId ||
+    (fromCurrency.metadata?.coingeckoCurrencyId && toCurrency.metadata?.coingeckoCurrencyId) ||
     (isTestnetCurrency(fromCurrencyAddress) && isTestnetCurrency(toCurrencyAddress)) ||
-    (isWhitelistedCurrency(fromCurrencyAddress) && isWhitelistedCurrency(toCurrencyAddress)) ||
-    // Allow price conversion on Zora which is not supported by Coingecko
-    ([690, 7777777].includes(config.chainId) &&
-      _.includes(
-        [Sdk.Common.Addresses.Native[config.chainId], Sdk.Common.Addresses.WNative[config.chainId]],
-        fromCurrencyAddress
-      ) &&
-      _.includes(
-        [Sdk.Common.Addresses.Native[config.chainId], Sdk.Common.Addresses.WNative[config.chainId]],
-        toCurrencyAddress
-      ))
+    (isWhitelistedCurrency(fromCurrencyAddress) && isWhitelistedCurrency(toCurrencyAddress))
   ) {
     // Get the FROM currency price
     const fromCurrencyUSDPrice = await getAvailableUSDPrice(
@@ -399,9 +385,6 @@ export const getUSDAndCurrencyPrices = async (
         options?.acceptStalePrice
       );
     }
-
-    const fromCurrency = await getCurrency(fromCurrencyAddress);
-    const toCurrency = await getCurrency(toCurrencyAddress);
 
     if (fromCurrency.decimals && fromCurrencyUSDPrice) {
       const fromCurrencyUnit = bn(10).pow(fromCurrency.decimals!);

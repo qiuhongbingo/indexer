@@ -106,7 +106,7 @@ export const getUserTokensV1Options: RouteOptions = {
           "t"."floor_sell_id",
           "t"."top_buy_id",
           "t"."top_buy_value",
-          "t"."image_version",
+          COALESCE("t"."metadata_version"::TEXT, "t"."image_version"::TEXT) AS "image_version",
           "ts"."schema" AS "top_buy_schema",
           "nb"."amount" * "t"."top_buy_value" AS "total_buy_value",
           (

@@ -39,6 +39,7 @@ export const postUpdateImageVersionOptions: RouteOptions = {
         `
           UPDATE tokens
             SET image_version = NOW(),
+                metadata_version = COALESCE(metadata_version, 0) + 1,
                 updated_at = NOW()
           WHERE contract = $1 AND token_id = $2
         `,

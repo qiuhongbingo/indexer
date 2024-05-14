@@ -265,7 +265,7 @@ export class Orders {
                       'tokenId', tokens.token_id::TEXT,
                       'name', tokens.name,
                       'image', tokens.image,
-                      'image_version', tokens.image_version,
+                      'image_version', COALESCE(tokens.metadata_version::TEXT, tokens.image_version::TEXT),
                       'image_mime_type', (tokens.metadata ->> 'image_mime_type')::TEXT
                     ),
                     'collection', json_build_object(

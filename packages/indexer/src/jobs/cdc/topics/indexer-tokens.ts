@@ -73,6 +73,7 @@ export class IndexerTokensHandler extends KafkaEventHandler {
               "image",
               "metadata_disabled",
               "image_version",
+              "metadata_version",
               "rarity_rank",
               "rarity_score",
             ].includes(value)
@@ -199,7 +200,7 @@ export class IndexerTokensHandler extends KafkaEventHandler {
         logger.warn(
           "IndexerTokensHandler",
           JSON.stringify({
-            message: `token image missing. contract=${payload.after.contract}, tokenId=${payload.after.token_id}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
+            message: `token image missing! contract=${payload.after.contract}, tokenId=${payload.after.token_id}, fallbackMetadataIndexingMethod=${config.fallbackMetadataIndexingMethod}`,
             payload,
           })
         );

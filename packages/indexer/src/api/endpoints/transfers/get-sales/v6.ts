@@ -318,6 +318,7 @@ export const getSalesV6Options: RouteOptions = {
             fill_events_2.royalty_fee_breakdown,
             fill_events_2.marketplace_fee_breakdown,
             fill_events_2.paid_full_royalty,
+            fill_events_2.comment,
             fill_events_2.is_deleted,
             extract(epoch from fill_events_2.updated_at) updated_ts,
             fill_events_2.created_at
@@ -343,7 +344,7 @@ export const getSalesV6Options: RouteOptions = {
                     tokens.name,
                     tokens.image,
                     tokens.collection_id,
-                    tokens.image_version,
+                    COALESCE(tokens.metadata_version::TEXT, tokens.image_version::TEXT) AS image_version,
                     (tokens.metadata->>'image_mime_type')::text AS image_mime_type,
                     (tokens.metadata->>'media_mime_type')::text AS media_mime_type,
                     collections.name AS collection_name
@@ -421,6 +422,7 @@ export const getSalesV6Options: RouteOptions = {
           txHash: r.tx_hash,
           logIndex: r.log_index,
           batchIndex: r.batch_index,
+          comment: r.comment,
           isDeleted: Boolean(r.is_deleted),
           createdAt: new Date(r.created_at).toISOString(),
           updatedAt: new Date(r.updated_ts * 1000).toISOString(),

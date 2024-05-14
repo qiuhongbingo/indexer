@@ -109,7 +109,7 @@ export const getTransfersV2Options: RouteOptions = {
           nft_transfer_events.token_id,
           tokens.name,
           tokens.image,
-          tokens.image_version,
+          COALESCE(tokens.metadata_version::TEXT, tokens.image_version::TEXT) AS image_version,
           (tokens.metadata->>'image_mime_type')::text as image_mime_type,
           tokens.collection_id,
           collections.name as collection_name,

@@ -84,6 +84,7 @@ export const CONFIG_DEFAULT = {
           collectionIsMinting: { type: "boolean" },
           collectionMintType: { type: "keyword" },
           isAirdrop: { type: "boolean" },
+          comment: { type: "keyword" },
         },
       },
       pricing: {
