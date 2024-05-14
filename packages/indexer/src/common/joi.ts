@@ -803,6 +803,7 @@ export const JoiSale = Joi.object({
     .items(JoiFeeBreakdown)
     .optional()
     .description("`kind` can be `marketplace` or `royalty`"),
+  comment: Joi.string().allow("", null).optional(),
   isDeleted: Joi.boolean().optional(),
   createdAt: Joi.string().optional().description("Time when added to indexer"),
   updatedAt: Joi.string().optional().description("Time when updated in indexer"),
@@ -902,6 +903,7 @@ export const getJoiSaleObject = async (sale: {
   txHash?: Buffer;
   logIndex?: number;
   batchIndex?: number;
+  comment?: string;
   isDeleted?: boolean;
   updatedAt?: string;
   createdAt?: string;
@@ -1007,6 +1009,7 @@ export const getJoiSaleObject = async (sale: {
       lastSaleFeeInfoIsValid,
       sale.prices.gross.amount
     ),
+    comment: sale.comment,
     isDeleted: sale.isDeleted,
     createdAt: sale.createdAt,
     updatedAt: sale.updatedAt,
