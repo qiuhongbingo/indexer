@@ -509,17 +509,6 @@ export const getTrendingMints = async (params: {
 
       const esResult = (await elasticsearch.search(esSearchParams)) as any;
 
-      logger.info(
-        "elasticsearch-activities",
-        JSON.stringify({
-          topic: "getTrendingMints",
-          latency: esResult.took,
-          params: JSON.stringify(params),
-          esResult: JSON.stringify(esResult),
-          esSearchParams: JSON.stringify(esSearchParams),
-        })
-      );
-
       results[period as Period] = esResult?.aggregations?.collections?.buckets?.map(
         (bucket: any) => {
           return {
