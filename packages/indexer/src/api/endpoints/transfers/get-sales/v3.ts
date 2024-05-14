@@ -279,7 +279,7 @@ export const getSalesV3Options: RouteOptions = {
             tokens.name,
             tokens.image,
             tokens.collection_id,
-            tokens.image_version,
+            COALESCE(tokens.metadata_version::TEXT, tokens.image_version::TEXT) AS image_version,
             (tokens.metadata->>'image_mime_type')::text as image_mime_type,
             collections.name AS collection_name
           FROM tokens

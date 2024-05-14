@@ -227,7 +227,7 @@ export const getCollectionV3Options: RouteOptions = {
             "t"."token_id" AS "floor_sell_token_id",
             "t"."name" AS "floor_sell_token_name",
             "t"."image" AS "floor_sell_token_image",
-            "t"."image_version" AS "floor_sell_token_image_version",
+            COALESCE("t"."metadata_version"::TEXT, "t"."image_version"::TEXT) AS "floor_sell_token_image_version",
             "t"."floor_sell_id",
             "t"."floor_sell_value",
             "t"."floor_sell_maker",

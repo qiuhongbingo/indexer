@@ -546,7 +546,7 @@ export const getTokensV5Options: RouteOptions = {
           t.last_buy_timestamp,
           t.last_sell_value,
           t.last_sell_timestamp,
-          t.image_version,
+          COALESCE(t.metadata_version::TEXT, t.image_version::TEXT) AS image_version,
           (t.metadata ->> 'image_mime_type')::TEXT AS image_mime_type,
           (t.metadata ->> 'media_mime_type')::TEXT AS media_mime_type,
           (c.metadata ->> 'imageUrl')::TEXT AS collection_image,

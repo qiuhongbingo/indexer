@@ -184,6 +184,10 @@ export default class MetadataIndexWriteJob extends AbstractRabbitMqJobHandler {
             WHEN (SELECT is_updated FROM updated_check) THEN now()
             ELSE image_version
           END,
+          metadata_version = CASE
+            WHEN (SELECT is_updated FROM updated_check) THEN COALESCE(metadata_version, 0) + 1
+            ELSE metadata_version
+          END,
           collection_id = collection_id,
           created_at = created_at,
           metadata_indexed_at = CASE
