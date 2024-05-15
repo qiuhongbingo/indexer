@@ -16,6 +16,7 @@ export const postResyncUserCollectionBalance: RouteOptions = {
     payload: Joi.object({
       user: Joi.string().lowercase().required(),
       collection: Joi.string().lowercase(),
+      fullResync: Joi.boolean().default(false).optional(),
     }),
   },
   handler: async (request: Request) => {
@@ -31,6 +32,7 @@ export const postResyncUserCollectionBalance: RouteOptions = {
         {
           user: payload.user,
           collectionId: payload.collection,
+          fullResync: payload.fullResync,
         },
       ]);
 

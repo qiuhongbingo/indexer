@@ -326,6 +326,15 @@ export const extractByCollectionERC1155 = async (
           baseProvider
         );
 
+        let mintFee = bn(0);
+        try {
+          mintFee = await c.mintFee();
+        } catch {
+          // Skip errors
+          mintFee = bn("700000000000000");
+          totalRewards = bn("700000000000000");
+        }
+
         const contractName = await s.contractName();
         if (contractName === "Fixed Price Sale Strategy") {
           const fixedSale = new Contract(
@@ -349,14 +358,8 @@ export const extractByCollectionERC1155 = async (
             c.getTokenInfo(tokenId),
           ]);
 
-          let mintFee = bn(0);
-          try {
-            mintFee = await c.mintFee();
-          } catch {
-            // Skip errors
-          }
-
           const price = saleConfig.pricePerToken.add(mintFee).toString();
+
           results.push({
             collection,
             contract: collection,
@@ -448,10 +451,9 @@ export const extractByCollectionERC1155 = async (
             baseProvider
           );
 
-          const [saleConfig, tokenInfo, mintFee] = await Promise.all([
+          const [saleConfig, tokenInfo] = await Promise.all([
             merkleSale.sale(collection, tokenId),
             c.getTokenInfo(tokenId),
-            c.mintFee(),
           ]);
 
           const merkleRoot = merkleSale.merkleRoot;

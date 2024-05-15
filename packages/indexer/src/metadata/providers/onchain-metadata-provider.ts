@@ -369,7 +369,7 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
       });
     }
 
-    const imageUrl =
+    let imageUrl =
       normalizeLink(metadata?.image) ||
       normalizeLink(metadata?.image_url) ||
       normalizeLink(metadata?.imageUrl) ||
@@ -387,6 +387,8 @@ export class OnchainMetadataProvider extends AbstractBaseMetadataProvider {
           metadata: JSON.stringify(metadata),
         })
       );
+
+      imageUrl = null;
     }
 
     const parsedMetadata = {

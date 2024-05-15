@@ -91,4 +91,26 @@ describe("Mints - Zora", () => {
     }
     expect(collectionMints[0]?.details.tx.data.signature).toBe("0xf54f216a");
   });
+
+  it("mint-detect-issue", async () => {
+    // Optimism
+    const collection = `0x0a7695F65733cC8a3531babfD9e1E60cbE23f178`;
+    const transcation = await utils.fetchTransaction(
+      "0x166f4fa322577a52b5a984a2224873d56ec87349b80d699dddab6723b5b963e8"
+    );
+    const collectionMints = await extractByTx(collection, transcation);
+    // expect(collectionMints.length).not.toBe(0);
+    // expect(infos[0]?.details.tx.data.signature).toBe("0x9dbb844d");
+    for (const collectionMint of collectionMints) {
+      const data = await generateCollectionMintTxData(
+        collectionMint,
+        "0x0000000000000000000000000000000000000001",
+        1
+      );
+      // console.log("data", data);
+      expect(data.txData.data.includes("0x9dbb844d")).toBe(true);
+      //     const result = await simulateCollectionMint(collectionMint);
+      //     expect(result).toBe(true);
+    }
+  });
 });

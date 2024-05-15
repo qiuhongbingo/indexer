@@ -389,7 +389,9 @@ export class RateLimitRules {
   public getTierDefaultRule(tier: number, apiTags: string[] = []) {
     // No matching rule found, return default rules
     const defaultRules = this.rulesEntities.get("/") || [];
-    for (const rule of defaultRules) {
+
+    // Evaluate first default rules with tags
+    for (const rule of _.sortBy(defaultRules, (r) => r.options.apiTag)) {
       const verifyTag = !_.isEmpty(rule.options.apiTag);
 
       if (verifyTag && rule.options.apiTag && !apiTags.includes(rule.options.apiTag)) {
