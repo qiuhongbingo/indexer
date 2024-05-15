@@ -269,7 +269,6 @@ export const extractByCollectionERC1155 = async (
           uint256 totalMinted
         )
       )`,
-      `function contractVersion() view returns (string)`,
     ]),
     baseProvider
   );
@@ -328,12 +327,11 @@ export const extractByCollectionERC1155 = async (
           baseProvider
         );
 
-        let mintFee: BigNumber = bn(0);
+        let mintFee = bn(0);
         try {
           mintFee = await c.mintFee();
         } catch {
           // Skip errors
-          // TOTAL_REWARD_PER_MINT = 0.0007 ether;
           mintFee = bn("700000000000000");
           totalRewards = bn("700000000000000");
         }
